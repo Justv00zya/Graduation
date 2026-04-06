@@ -1,9 +1,13 @@
 @page "/Register"
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using OrgTechRepair.Data
+@using OrgTechRepair.Services
 @inject NavigationManager Navigation
 @inject UserManager<IdentityUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
 <PageTitle>Регистрация</PageTitle>
 
@@ -12,7 +16,8 @@
         <div class="col-md-5">
             <div class="card">
                 <div class="card-header">
-                    <h3 class="text-center">Регистрация нового пользователя</h3>
+                    <h3 class="text-center">Регистрация клиента</h3>
+                    <p class="text-muted small text-center mb-0">Учётные записи сотрудников создаёт администратор.</p>
                 </div>
                 <div class="card-body">
                     <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister" FormName="registerForm">
@@ -29,21 +34,6 @@
                             <label class="form-label">Email <span class="text-danger">*</span></label>
                             <InputText @bind-Value="registerModel.Email" class="form-control" />
                             <ValidationMessage For="@(() => registerModel.Email)" />
-                        </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Тип пользователя <span class="text-danger">*</span></label>
-                            <InputRadioGroup @bind-Value="registerModel.UserType">
-                                <div class="form-check">
-                                    <InputRadio Value="@UserType.Team" class="form-check-input" id="userTypeTeam" />
-                                    <label class="form-check-label" for="userTypeTeam">Команда (сотрудник компании)</label>
-                                </div>
-                                <div class="form-check">
-                                    <InputRadio Value="@UserType.Client" class="form-check-input" id="userTypeClient" />
-                                    <label class="form-check-label" for="userTypeClient">Клиент</label>
-                                </div>
-                            </InputRadioGroup>
-                            <ValidationMessage For="@(() => registerModel.UserType)" />
                         </div>
                         
                         <div class="mb-3">
@@ -149,19 +139,14 @@
 
             if (result.Succeeded)
             {
-                // Назначаем роль в зависимости от выбранного типа пользователя
-                if (registerModel.UserType == UserType.Client)
-                {
-                    // Для клиентов даём роль Client
-                    await UserManager.AddToRoleAsync(user, "Client");
-                }
-                else
-                {
-                    // Для команды по умолчанию даём роль Manager,
-                    // чтобы пользователь сразу имел доступ к основным разделам системы.
-                    await UserManager.AddToRoleAsync(user, "Manager");
-                }
-                
+                await UserManager.AddToRoleAsync(user, "Client");
+                await using var db = await DbContextFactory.CreateDbContextAsync();
+                await ClientProfileProvisioner.GetOrCreateForUserAsync(
+                    db,
+                    user.Id,
+                    user.UserName,
+                    user.Email);
+
                 successMessage = "Регистрация успешна! Теперь вы можете войти в систему.";
                 registerModel = new RegisterModel();
             }
@@ -178,12 +163,6 @@
         {
             isProcessing = false;
         }
-    }
-
-    private enum UserType
-    {
-        Team,
-        Client
     }
 
     private class RegisterModel
@@ -207,7 +186,5 @@
         [System.ComponentModel.DataAnnotations.Compare(nameof(Password), ErrorMessage = "Пароли не совпадают")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Выберите тип пользователя")]
-        public UserType UserType { get; set; } = UserType.Team;
     }
 }

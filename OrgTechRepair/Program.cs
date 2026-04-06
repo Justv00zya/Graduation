@@ -8,14 +8,14 @@ using Microsoft.OpenApi.Models;
 using Npgsql;
 using OrgTechRepair.Components;
 using OrgTechRepair.Data;
-using System.Diagnostics;
-using System.Net.NetworkInformation;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Слушать на всех интерфейсах, чтобы телефон в Wi‑Fi мог подключаться по IP ПК (например 192.168.1.2:5121)
-builder.WebHost.UseUrls("http://0.0.0.0:5121");
+var portFromEnv = Environment.GetEnvironmentVariable("PORT");
+var effectivePort = int.TryParse(portFromEnv, out var parsedPort) ? parsedPort : 5121;
+// На Render порт приходит через переменную PORT. Локально используем 5121.
+builder.WebHost.UseUrls($"http://0.0.0.0:{effectivePort}");
 builder.Logging.AddConsole();
 
 // Add services to the container.
@@ -212,7 +212,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-if (!app.Environment.IsDevelopment())
+if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
 {
     app.UseHttpsRedirection();
 }
@@ -264,37 +264,8 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Проверка и освобождение порта перед запуском
-var port = 5121;
-var portInUse = IPGlobalProperties.GetIPGlobalProperties()
-    .GetActiveTcpListeners()
-    .Any(x => x.Port == port);
-
-if (portInUse)
-{
-    Console.WriteLine($"\n[WARNING] Порт {port} уже занят. Попытка освободить порт...");
-    try
-    {
-        var process = Process.Start(new ProcessStartInfo
-        {
-            FileName = "taskkill",
-            Arguments = "/IM OrgTechRepair.exe /F",
-            CreateNoWindow = true,
-            UseShellExecute = false
-        });
-        process?.WaitForExit(2000);
-        System.Threading.Thread.Sleep(1000); // Даём время порту освободиться
-        Console.WriteLine("[INFO] Попытка освобождения порта завершена.");
-    }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"[ERROR] Не удалось автоматически освободить порт: {ex.Message}");
-    }
-}
-
-// Обработка ошибки привязки порта
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-logger.LogInformation("Запуск сервера на http://0.0.0.0:5121 (доступ с телефона по http://192.168.1.2:5121)");
+logger.LogInformation("Запуск сервера на http://0.0.0.0:{Port}", effectivePort);
 
 try
 {
@@ -304,10 +275,8 @@ catch (System.IO.IOException ex) when (ex.Message.Contains("address already in u
 {
     logger.LogError(ex, "Порт уже занят. Остановите другие экземпляры приложения или измените порт в launchSettings.json");
     Console.WriteLine("\n===========================================");
-    Console.WriteLine($"ОШИБКА: Порт {port} уже занят!");
-    Console.WriteLine("Выполните команду для остановки процессов:");
-    Console.WriteLine("taskkill /IM OrgTechRepair.exe /F");
-    Console.WriteLine("Или измените порт в Properties/launchSettings.json");
+    Console.WriteLine($"ОШИБКА: Порт {effectivePort} уже занят!");
+    Console.WriteLine("Остановите другой процесс, который уже слушает этот порт.");
     Console.WriteLine("===========================================\n");
     throw; // Пробрасываем исключение дальше, чтобы приложение не запустилось с ошибкой
 }

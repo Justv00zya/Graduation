@@ -22,3 +22,6 @@ _tmp_build/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
 
+## Markdown (keep locally if needed; not published in this repo)
+*.md
+

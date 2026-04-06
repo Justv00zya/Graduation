@@ -5,7 +5,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using OrgTechRepair.Data;
-using OrgTechRepair.Models;
 using OrgTechRepair.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -145,20 +144,19 @@ public class AuthController : ControllerBase
         if (!result.Succeeded)
             return BadRequest(new { errors = result.Errors.Select(e => e.Description) });
 
-        var role = request.UserType == "Client" ? "Client" : "Manager";
-        await _userManager.AddToRoleAsync(user, role);
+        // Публичная регистрация — только клиенты; сотрудников создаёт администратор.
+        var requested = (request.UserType ?? "Client").Trim();
+        if (!string.Equals(requested, "Client", StringComparison.OrdinalIgnoreCase))
+            return BadRequest(new { message = "Регистрация сотрудников доступна только администратору. Зарегистрируйтесь как клиент или обратитесь в офис." });
 
-        if (role == "Client")
-        {
-            await using var context = await _contextFactory.CreateDbContextAsync();
-            context.Clients.Add(new Client
-            {
-                UserId = user.Id,
-                FullName = request.Username ?? "",
-                Email = request.Email
-            });
-            await context.SaveChangesAsync();
-        }
+        await _userManager.AddToRoleAsync(user, "Client");
+
+        await using var context = await _contextFactory.CreateDbContextAsync();
+        await ClientProfileProvisioner.GetOrCreateForUserAsync(
+            context,
+            user.Id,
+            user.UserName ?? request.Username,
+            user.Email);
 
         return Ok(new { message = "Регистрация успешна! Теперь вы можете войти в систему.", userId = user.Id });
     }
@@ -258,7 +256,8 @@ public class AuthController : ControllerBase
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
-        public string UserType { get; set; } = "Team"; // "Team" | "Client"
+        /// <summary>Должно быть только Client (совместимость со старыми клиентами). Иное отклоняется.</summary>
+        public string UserType { get; set; } = "Client";
     }
 
     public class ForgotPasswordRequest
