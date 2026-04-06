@@ -1,10 +1,9 @@
 services:
   - type: web
     name: orgtechrepair-web
-    runtime: dotnet
+    env: docker
+    plan: free
     rootDir: OrgTechRepair
-    buildCommand: dotnet publish OrgTechRepair.csproj -c Release -o out
-    startCommand: dotnet out/OrgTechRepair.dll
     autoDeploy: true
     envVars:
       - key: ASPNETCORE_ENVIRONMENT
