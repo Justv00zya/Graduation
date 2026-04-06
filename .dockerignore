@@ -1,0 +1,10 @@
+.git/
+.vs/
+**/bin/
+**/obj/
+**/out/
+**/*.user
+**/*.db
+**/*.log
+OrgTechRepairMobile/
+DocxReader/
