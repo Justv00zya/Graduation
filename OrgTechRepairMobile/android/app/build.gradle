@@ -1,0 +1,81 @@
+plugins {
+    id "com.android.application"
+    id "kotlin-android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
+def localProperties = new Properties()
+def localPropertiesFile = new File(rootProject.projectDir, 'local.properties')
+if (localPropertiesFile.exists()) {
+    localPropertiesFile.withReader('UTF-8') { reader ->
+        localProperties.load(reader)
+    }
+}
+
+def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+if (flutterVersionCode == null) {
+    flutterVersionCode = '1'
+}
+
+def flutterVersionName = localProperties.getProperty('flutter.versionName')
+if (flutterVersionName == null) {
+    flutterVersionName = '1.0'
+}
+
+android {
+    namespace "com.example.orgtechrepair_mobile"
+    compileSdk 36
+    ndkVersion '28.2.13676358'
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
+
+    kotlinOptions {
+        jvmTarget = '11'
+    }
+
+    sourceSets {
+        main.java.srcDirs += 'src/main/kotlin'
+    }
+
+    defaultConfig {
+        applicationId "com.example.orgtechrepair_mobile"
+        minSdkVersion flutter.minSdkVersion
+        targetSdk 34
+        versionCode flutterVersionCode.toInteger()
+        versionName flutterVersionName
+    }
+
+    buildTypes {
+        release {
+            signingConfig signingConfigs.debug
+        }
+    }
+}
+
+flutter {
+    source '../..'
+}
+
+dependencies {}
+
+// Copy APK to project_root/build/app/outputs/flutter-apk so "flutter run" can find it
+afterEvaluate {
+    def flutterRoot = rootProject.projectDir.parentFile
+    def copyApkToFlutterRoot = {
+        def gradleApkDir = file("${buildDir}/outputs/flutter-apk")
+        def flutterBuildDir = new File(flutterRoot, "build/app/outputs/flutter-apk")
+        if (gradleApkDir.exists()) {
+            flutterBuildDir.mkdirs()
+            gradleApkDir.listFiles()?.each { apk ->
+                if (apk.name.endsWith(".apk")) {
+                    copy { from(apk); into(flutterBuildDir) }
+                }
+            }
+        }
+    }
+    tasks.named("assembleDebug").configure { it.doLast(copyApkToFlutterRoot) }
+    tasks.named("assembleRelease").configure { it.doLast(copyApkToFlutterRoot) }
+}
