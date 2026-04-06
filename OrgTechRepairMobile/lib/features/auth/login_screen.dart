@@ -214,15 +214,15 @@ class _LoginScreenState extends State<LoginScreen> {
                                       crossAxisAlignment: CrossAxisAlignment.stretch,
                                       children: [
                                         Text(
-                                          'Телефон и ПК в одной Wi‑Fi, порт 5121, например: 192.168.1.2:5121',
+                                          'Облако: https://…onrender.com (можно без https — подставится). Локально в Wi‑Fi: http://IP_ПК:5121',
                                           style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                                         ),
                                         const SizedBox(height: 8),
                                         TextFormField(
                                           controller: _serverUrlController,
                                           decoration: const InputDecoration(
-                                            labelText: 'http://IP:5121',
-                                            hintText: '192.168.1.2:5121',
+                                            labelText: 'Адрес API',
+                                            hintText: 'https://your-app.onrender.com',
                                           ),
                                           keyboardType: TextInputType.url,
                                         ),

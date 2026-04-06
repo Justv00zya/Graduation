@@ -17,7 +17,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
-  String _userType = 'Team';
   bool _loading = false;
   String? _error;
   bool _success = false;
@@ -46,7 +45,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         email: _emailController.text.trim(),
         password: _passwordController.text,
         confirmPassword: _confirmController.text,
-        userType: _userType,
       );
       if (!mounted) return;
       setState(() {
@@ -90,7 +88,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    const AppBrandHeader(subtitle: 'Создание аккаунта'),
+                    const AppBrandHeader(subtitle: 'Регистрация клиента'),
                     const SizedBox(height: 24),
                     AuthFormCard(
                       child: Form(
@@ -118,26 +116,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                               textInputAction: TextInputAction.next,
                               validator: (v) => (v == null || v.trim().isEmpty || !v.contains('@')) ? 'Некорректный email' : null,
                             ),
-                            const SizedBox(height: 20),
-                            Text('Тип учётной записи', style: Theme.of(context).textTheme.titleSmall),
-                            const SizedBox(height: 8),
-                            SegmentedButton<String>(
-                              segments: const [
-                                ButtonSegment<String>(
-                                  value: 'Team',
-                                  label: Text('Сотрудник'),
-                                  icon: Icon(Icons.groups_outlined, size: 18),
-                                ),
-                                ButtonSegment<String>(
-                                  value: 'Client',
-                                  label: Text('Клиент'),
-                                  icon: Icon(Icons.person_outline_rounded, size: 18),
-                                ),
-                              ],
-                              selected: {_userType},
-                              onSelectionChanged: (s) {
-                                if (s.isNotEmpty) setState(() => _userType = s.first);
-                              },
+                            Text(
+                              'Доступна только регистрация клиента. Сотрудников добавляет администратор.',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                  ),
                             ),
                             const SizedBox(height: 16),
                             TextFormField(

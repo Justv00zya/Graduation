@@ -60,14 +60,13 @@ class ApiClient {
     required String email,
     required String password,
     required String confirmPassword,
-    required String userType,
   }) async {
     await _dio.post('/api/Auth/register-public', data: {
       'Username': username,
       'Email': email,
       'Password': password,
       'ConfirmPassword': confirmPassword,
-      'UserType': userType,
+      'UserType': 'Client',
     });
   }
 
@@ -314,13 +313,13 @@ String apiErrorMessage(dynamic e) {
     if (e.response?.statusCode == 401) return 'Неверный логин или пароль';
     final msg = (e.message ?? e.toString()).toLowerCase();
     if (msg.contains('no route to host') || msg.contains('network is unreachable')) {
-      return 'Нет доступа к серверу. Укажите правильный IP ПК в блоке «Адрес сервера» внизу экрана и нажмите «Сохранить». Телефон и ПК должны быть в одной Wi‑Fi сети.';
+      return 'Нет доступа к серверу. Проверьте интернет или адрес в «Адрес сервера» (для ПК в Wi‑Fi — http://IP:5121, для Render — https://ваш-сервис.onrender.com) и нажмите «Сохранить».';
     }
     if (msg.contains('connection refused') || msg.contains('connection reset')) {
-      return 'Сервер недоступен. Проверьте, что бэкенд OrgTechRepair запущен на ПК на порту 5121.';
+      return 'Сервер недоступен. Убедитесь, что адрес верный: для облака — https с доменом хостинга; для ПК в сети — http://IP:5121 и запущенный бэкенд.';
     }
     if (msg.contains('timeout') || msg.contains('timed out')) {
-      return 'Таймаут соединения. Проверьте адрес сервера и что бэкенд запущен.';
+      return 'Таймаут соединения. Проверьте адрес сервера и доступность сайта (облако может «просыпаться» до минуты на бесплатном плане).';
     }
     return e.message ?? 'Ошибка сети';
   }

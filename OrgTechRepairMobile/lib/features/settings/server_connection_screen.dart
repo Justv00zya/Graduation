@@ -111,15 +111,15 @@ class _ServerConnectionScreenState extends State<ServerConnectionScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  'Телефон и ПК должны быть в одной сети Wi‑Fi (или укажите публичный URL, если сервер в интернете). Порт по умолчанию: 5121.',
+                  'Облако: полный https‑адрес сайта. Локально: телефон и ПК в одной Wi‑Fi, http://IP:5121.',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(color: cs.onSurfaceVariant),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _serverUrlController,
                   decoration: const InputDecoration(
-                    labelText: 'http://IP:5121',
-                    hintText: '192.168.1.2:5121',
+                    labelText: 'Адрес API',
+                    hintText: 'https://…onrender.com или http://192.168.1.2:5121',
                   ),
                   keyboardType: TextInputType.url,
                 ),
