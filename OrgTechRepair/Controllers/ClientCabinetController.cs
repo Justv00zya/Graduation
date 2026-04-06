@@ -1,9 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OrgTechRepair.Data;
+using OrgTechRepair.Models;
 using OrgTechRepair.Models.DTOs;
+using OrgTechRepair.Services;
 using System.Security.Claims;
 
 namespace OrgTechRepair.Controllers;
@@ -14,13 +17,32 @@ namespace OrgTechRepair.Controllers;
 public class ClientCabinetController : ControllerBase
 {
     private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
+    private readonly UserManager<IdentityUser> _userManager;
 
-    public ClientCabinetController(IDbContextFactory<ApplicationDbContext> contextFactory)
+    public ClientCabinetController(
+        IDbContextFactory<ApplicationDbContext> contextFactory,
+        UserManager<IdentityUser> userManager)
     {
         _contextFactory = contextFactory;
+        _userManager = userManager;
     }
 
     private string? UserId => User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+    private async Task<Client?> GetClientOrCreateAsync(ApplicationDbContext context, string userId)
+    {
+        var existing = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (existing != null) return existing;
+
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return null;
+
+        return await ClientProfileProvisioner.GetOrCreateForUserAsync(
+            context,
+            userId,
+            user.UserName,
+            user.Email);
+    }
 
     /// <summary>Профиль клиента (данные карточки клиента, привязанной к текущему пользователю).</summary>
     [HttpGet("profile")]
@@ -30,10 +52,9 @@ public class ClientCabinetController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         await using var context = await _contextFactory.CreateDbContextAsync();
-        var client = await context.Clients
-            .FirstOrDefaultAsync(c => c.UserId == userId);
+        var client = await GetClientOrCreateAsync(context, userId);
         if (client == null)
-            return NotFound(new { message = "Профиль клиента не найден. Обратитесь к администратору." });
+            return Unauthorized();
 
         return Ok(new ClientCabinetProfileDto
         {
@@ -53,8 +74,8 @@ public class ClientCabinetController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         await using var context = await _contextFactory.CreateDbContextAsync();
-        var client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
-        if (client == null) return NotFound();
+        var client = await GetClientOrCreateAsync(context, userId);
+        if (client == null) return Unauthorized();
 
         client.FullName = dto.FullName ?? client.FullName;
         client.Email = dto.Email ?? client.Email;
@@ -72,7 +93,7 @@ public class ClientCabinetController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         await using var context = await _contextFactory.CreateDbContextAsync();
-        var client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        var client = await GetClientOrCreateAsync(context, userId);
         if (client == null) return Ok(Array.Empty<OrderDto>());
 
         var orders = await context.Orders
@@ -108,7 +129,7 @@ public class ClientCabinetController : ControllerBase
         if (string.IsNullOrEmpty(userId)) return Unauthorized();
 
         await using var context = await _contextFactory.CreateDbContextAsync();
-        var client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        var client = await GetClientOrCreateAsync(context, userId);
         if (client == null) return NotFound();
 
         var order = await context.Orders

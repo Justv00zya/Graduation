@@ -1,11 +1,14 @@
 @page "/client-cabinet"
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
 @using OrgTechRepair.Models
 @using OrgTechRepair.Data
+@using OrgTechRepair.Services
 @using Microsoft.EntityFrameworkCore
 @attribute [Authorize(Roles = "Client")]
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject UserManager<IdentityUser> UserManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject NavigationManager Navigation
 
@@ -109,8 +112,22 @@
             return;
         }
 
-        using var context = await DbContextFactory.CreateDbContextAsync();
+        await using var context = await DbContextFactory.CreateDbContextAsync();
         _client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (_client == null)
+        {
+            var user = await UserManager.FindByIdAsync(userId);
+            if (user != null)
+            {
+                await ClientProfileProvisioner.GetOrCreateForUserAsync(
+                    context,
+                    userId,
+                    user.UserName,
+                    user.Email);
+                _client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+            }
+        }
+
         if (_client != null)
         {
             _orders = await context.Orders
