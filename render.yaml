@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: orgtechrepair-web
+    runtime: dotnet
+    rootDir: OrgTechRepair
+    buildCommand: dotnet publish OrgTechRepair.csproj -c Release -o out
+    startCommand: dotnet out/OrgTechRepair.dll
+    autoDeploy: true
+    envVars:
+      - key: ASPNETCORE_ENVIRONMENT
+        value: Production
+      - key: Jwt__Issuer
+        value: OrgTechRepair
+      - key: Jwt__Audience
+        value: OrgTechRepair
+      - key: Jwt__Key
+        generateValue: true
+      - key: ConnectionStrings__DefaultConnection
+        fromDatabase:
+          name: orgtechrepair-db
+          property: connectionString
+
+databases:
+  - name: orgtechrepair-db
+    plan: free
