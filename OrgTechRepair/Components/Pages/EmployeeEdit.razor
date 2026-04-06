@@ -1,0 +1,118 @@
+@page "/employees/create"
+@page "/employees/edit/{EmployeeId:int}"
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>@(EmployeeId == 0 ? "Создание сотрудника" : "Редактирование сотрудника")</PageTitle>
+
+<div class="container-fluid">
+    <h2>@(EmployeeId == 0 ? "Создание сотрудника" : "Редактирование сотрудника")</h2>
+
+    <EditForm Model="@employee" OnValidSubmit="@SaveEmployee" FormName="employeeForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Табельный номер</label>
+                    <InputText @bind-Value="employee.TabNumber" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Фамилия</label>
+                    <InputText @bind-Value="employee.LastName" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Имя</label>
+                    <InputText @bind-Value="employee.FirstName" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Отчество</label>
+                    <InputText @bind-Value="employee.MiddleName" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Должность</label>
+                    <InputSelect @bind-Value="employee.PositionId" class="form-select">
+                        <option value="0">Выберите должность</option>
+                        @foreach (var position in positions)
+                        {
+                            <option value="@position.Id">@position.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Дата рождения</label>
+                    <InputDate @bind-Value="employee.DateOfBirth" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ИНН</label>
+                    <InputText @bind-Value="employee.INN" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Адрес</label>
+                    <InputText @bind-Value="employee.Address" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Дата приема на работу</label>
+                    <InputDate @bind-Value="employee.HireDate" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Отмена</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int EmployeeId { get; set; }
+
+    private Employee employee = new() { DateOfBirth = DateTime.Now.AddYears(-30), HireDate = DateTime.Now };
+    private List<Position> positions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        positions = await context.Positions.ToListAsync();
+
+        if (EmployeeId > 0)
+        {
+            employee = await context.Employees.FindAsync(EmployeeId) ?? new Employee();
+        }
+    }
+
+    private async Task SaveEmployee()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        
+        if (EmployeeId == 0)
+        {
+            context.Employees.Add(employee);
+        }
+        else
+        {
+            context.Employees.Update(employee);
+        }
+        
+        await context.SaveChangesAsync();
+        Navigation.NavigateTo("/employees");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/employees");
+    }
+}

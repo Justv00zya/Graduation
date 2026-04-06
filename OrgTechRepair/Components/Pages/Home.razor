@@ -1,0 +1,354 @@
+@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.EntityFrameworkCore
+@using OrgTechRepair.Data
+@using OrgTechRepair.Models
+@using OrgTechRepair.Services
+@using System.Security.Claims
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject IOrderPdfService OrderPdfService
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Главная</PageTitle>
+
+<div class="container-fluid">
+    <h1 class="mb-4">Информационная система ВузяПринт</h1>
+
+    <div class="row">
+        <div class="col-lg-7 col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Добро пожаловать в систему управления!</h5>
+                </div>
+                <div class="card-body">
+                    <p>
+                        Наша платформа создана для бесперебойной автоматизации процессов торговли и ремонта оргтехники,
+                        обеспечивая точность, скорость и удобство в ежедневной работе.
+                    </p>
+
+                    <h6 class="mt-3">Как начать работу?</h6>
+                    <ul>
+                        <li>Используйте меню навигации — легко перемещайтесь между разделами системы.</li>
+                        <li>Погрузитесь в функционал — каждый инструмент разработан с акцентом на ваш комфорт и продуктивность.</li>
+                    </ul>
+
+                    <p>
+                        Мы стремимся сделать вашу работу не просто эффективной, но и приятной.
+                        Пусть ВузяПринт станет надежным партнером в достижении ваших целей!
+                    </p>
+                    <p class="mb-0"><em>С уважением, команда ВузяПринт</em></p>
+
+                    <AuthorizeView>
+                        <Authorized Context="authContext">
+                            <hr />
+                            <p><strong>Вы вошли как:</strong> @authContext.User.Identity?.Name</p>
+                            <p><strong>Роли:</strong>
+                                @string.Join(", ", authContext.User.Claims.Where(c => c.Type == System.Security.Claims.ClaimTypes.Role).Select(c => c.Value))
+                            </p>
+                        </Authorized>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5 col-md-12">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Быстрая заявка на ремонт принтера</h5>
+                </div>
+                <div class="card-body">
+                    <EditForm Model="@requestModel" OnValidSubmit="@SubmitRequest" FormName="quickRequestForm">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary class="text-danger" />
+
+                        <div class="mb-3">
+                            <label class="form-label">ФИО / Название организации <span class="text-danger">*</span></label>
+                            <InputText @bind-Value="requestModel.ClientName" class="form-control" autocomplete="off" name="client-name" id="client-name" />
+                            <ValidationMessage For="@(() => requestModel.ClientName)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Телефон для связи <span class="text-danger">*</span></label>
+                            <InputText @bind-Value="requestModel.Phone" class="form-control" placeholder="+7 (___) ___-__-__" autocomplete="tel" name="client-phone" id="client-phone" />
+                            <ValidationMessage For="@(() => requestModel.Phone)" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Модель принтера <span class="text-danger">*</span></label>
+                            <InputSelect @bind-Value="selectedModel" @bind-Value:after="OnModelChanged" class="form-select">
+                                <option value="">Выберите модель</option>
+                                @foreach (var model in printerModels)
+                                {
+                                    <option value="@model">@model</option>
+                                }
+                                <option value="Другое">Другое</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => requestModel.PrinterModel)" />
+                        </div>
+
+                        @if (showCustomModel)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Модель принтера (введите вручную) <span class="text-danger">*</span></label>
+                                <InputText @bind-Value="requestModel.PrinterModel" class="form-control" autocomplete="off" />
+                                <ValidationMessage For="@(() => requestModel.PrinterModel)" />
+                            </div>
+                        }
+
+                        <div class="mb-3">
+                            <label class="form-label">Описание проблемы <span class="text-danger">*</span></label>
+                            <InputSelect @bind-Value="selectedProblem" @bind-Value:after="OnProblemChanged" class="form-select">
+                                <option value="">Выберите проблему</option>
+                                @foreach (var problem in commonProblems)
+                                {
+                                    <option value="@problem">@problem</option>
+                                }
+                                <option value="Другое">Другое</option>
+                            </InputSelect>
+                            <ValidationMessage For="@(() => requestModel.ProblemDescription)" />
+                        </div>
+
+                        @if (showCustomProblem)
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Неисправность (опишите вручную) <span class="text-danger">*</span></label>
+                                <InputTextArea @bind-Value="requestModel.ProblemDescription" class="form-control" rows="3" autocomplete="off" />
+                                <ValidationMessage For="@(() => requestModel.ProblemDescription)" />
+                            </div>
+                        }
+
+                        <button type="submit" class="btn btn-primary w-100" disabled="@isSubmitting">
+                            @if (isSubmitting)
+                            {
+                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                            }
+                            Отправить заявку
+                        </button>
+                    </EditForm>
+
+                    @if (!string.IsNullOrEmpty(successMessage))
+                    {
+                        <div class="alert alert-success mt-3">@successMessage</div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private QuickRequestModel requestModel = new();
+    private bool isSubmitting;
+    private string? successMessage;
+    private string? errorMessage;
+    
+    private string selectedModel = string.Empty;
+    private string selectedProblem = string.Empty;
+    private bool showCustomModel = false;
+    private bool showCustomProblem = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        if (!authState.User.IsInRole("Client")) return;
+        var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId)) return;
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (client != null)
+        {
+            requestModel.ClientName = client.FullName ?? "";
+            requestModel.Phone = client.Phone ?? "";
+        }
+    }
+
+    private readonly List<string> printerModels = new()
+    {
+        "HP LaserJet Pro M404dn",
+        "HP LaserJet Pro M402dn",
+        "HP LaserJet Pro M404dw",
+        "Canon PIXMA TR8620",
+        "Canon PIXMA G3010",
+        "Canon imageRUNNER ADVANCE C5235i",
+        "Epson Perfection V39",
+        "Epson L805",
+        "Epson WorkForce Pro WF-3720",
+        "Brother HL-L2350DW",
+        "Brother MFC-L2700DW",
+        "Xerox VersaLink C405",
+        "Xerox Phaser 6510",
+        "Samsung Xpress M2020W",
+        "Kyocera ECOSYS P5021cdn"
+    };
+
+    private readonly List<string> commonProblems = new()
+    {
+        "Застряла бумага",
+        "Не печатает",
+        "Ошибка картриджа",
+        "Низкое качество печати",
+        "Принтер не определяется компьютером",
+        "Замятие бумаги",
+        "Ошибка сканера",
+        "Проблемы с подключением по Wi-Fi",
+        "Заканчивается тонер/чернила",
+        "Принтер издает странные звуки",
+        "Не работает автоподача бумаги",
+        "Ошибка при двусторонней печати",
+        "Проблемы с драйвером",
+        "Принтер не включается"
+    };
+
+    private void OnModelChanged()
+    {
+        if (selectedModel == "Другое")
+        {
+            showCustomModel = true;
+            requestModel.PrinterModel = string.Empty;
+        }
+        else if (!string.IsNullOrEmpty(selectedModel))
+        {
+            showCustomModel = false;
+            requestModel.PrinterModel = selectedModel;
+        }
+        else
+        {
+            showCustomModel = false;
+            requestModel.PrinterModel = string.Empty;
+        }
+    }
+
+    private void OnProblemChanged()
+    {
+        if (selectedProblem == "Другое")
+        {
+            showCustomProblem = true;
+            requestModel.ProblemDescription = string.Empty;
+        }
+        else if (!string.IsNullOrEmpty(selectedProblem))
+        {
+            showCustomProblem = false;
+            requestModel.ProblemDescription = selectedProblem;
+        }
+        else
+        {
+            showCustomProblem = false;
+            requestModel.ProblemDescription = string.Empty;
+        }
+    }
+
+    private async Task SubmitRequest()
+    {
+        isSubmitting = true;
+        successMessage = null;
+        errorMessage = null;
+
+        try
+        {
+            // Нормализуем и проверяем данные перед сохранением
+            var clientName = (requestModel.ClientName ?? string.Empty).Trim();
+            var phone = (requestModel.Phone ?? string.Empty).Trim();
+            var printerModel = (requestModel.PrinterModel ?? string.Empty).Trim();
+            var problemDescription = (requestModel.ProblemDescription ?? string.Empty).Trim();
+
+            if (string.IsNullOrWhiteSpace(clientName) || 
+                string.IsNullOrWhiteSpace(phone) || 
+                string.IsNullOrWhiteSpace(printerModel) || 
+                string.IsNullOrWhiteSpace(problemDescription))
+            {
+                errorMessage = "Заполните все обязательные поля";
+                return;
+            }
+
+            await using var context = await DbContextFactory.CreateDbContextAsync();
+
+            Client? client = null;
+            var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+            var userId = authState.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            var isClientRole = authState.User.IsInRole("Client");
+
+            // Если вошёл пользователь с ролью Клиент — привязываем заявку к его карточке (чтобы отображалась в личном кабинете)
+            if (isClientRole && !string.IsNullOrEmpty(userId))
+            {
+                client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+            }
+
+            if (client == null)
+            {
+                var normalizedPhone = NormalizePhone(phone);
+                client = context.Clients
+                    .AsEnumerable()
+                    .FirstOrDefault(c => NormalizePhone(c.Phone ?? string.Empty) == normalizedPhone);
+                if (client == null)
+                {
+                    client = new Client
+                    {
+                        FullName = clientName,
+                        Phone = phone,
+                        Address = null
+                    };
+                    context.Clients.Add(client);
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            var order = new Order
+            {
+                OrderNumber = $"WEB-{DateTime.Now:yyyyMMddHHmmss}",
+                ClientId = client.Id,
+                EquipmentModel = printerModel,
+                ConditionDescription = null,
+                ComplaintDescription = problemDescription,
+                EmployeeId = null,
+                Cost = null,
+                OrderDate = DateTime.Now,
+                CompletionDate = null,
+                Status = "Принят"
+            };
+
+            context.Orders.Add(order);
+            await context.SaveChangesAsync();
+
+            var pdfPath = await OrderPdfService.GenerateOrderPdfAsync(order, client);
+            successMessage = $"Спасибо! Ваша заявка принята. PDF сохранен: {Path.GetFileName(pdfPath)}";
+            requestModel = new QuickRequestModel();
+            selectedModel = string.Empty;
+            selectedProblem = string.Empty;
+            showCustomModel = false;
+            showCustomProblem = false;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Ошибка при отправке заявки: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private static string NormalizePhone(string? phone)
+        => string.IsNullOrWhiteSpace(phone)
+            ? string.Empty
+            : new string(phone.Where(char.IsDigit).ToArray());
+
+    private class QuickRequestModel
+    {
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Укажите имя или название организации")]
+        public string ClientName { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Укажите телефон")]
+        public string Phone { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Укажите модель принтера")]
+        public string PrinterModel { get; set; } = string.Empty;
+
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Опишите проблему")]
+        public string ProblemDescription { get; set; } = string.Empty;
+    }
+}

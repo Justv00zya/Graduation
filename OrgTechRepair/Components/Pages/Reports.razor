@@ -1,0 +1,173 @@
+@page "/reports"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@using System.Linq
+@attribute [Authorize(Roles = "Accountant,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+
+<PageTitle>Отчеты</PageTitle>
+
+<div class="container-fluid">
+    <h2>Отчеты</h2>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Отчет по продажам</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Период с</label>
+                        <InputDate @bind-Value="salesReportStart" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Период по</label>
+                        <InputDate @bind-Value="salesReportEnd" class="form-control" />
+                    </div>
+                    <button class="btn btn-primary" @onclick="GenerateSalesReport">Сформировать отчет</button>
+                    <button class="btn btn-secondary" @onclick="PrintSalesReport">Печать</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Отчет по заявкам</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Период с</label>
+                        <InputDate @bind-Value="ordersReportStart" class="form-control" />
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Период по</label>
+                        <InputDate @bind-Value="ordersReportEnd" class="form-control" />
+                    </div>
+                    <button class="btn btn-primary" @onclick="GenerateOrdersReport">Сформировать отчет</button>
+                    <button class="btn btn-secondary" @onclick="PrintOrdersReport">Печать</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (showSalesReport)
+    {
+        <div class="mt-4">
+            <h4>Отчет по продажам за период: @salesReportStart.ToString("dd.MM.yyyy") - @salesReportEnd.ToString("dd.MM.yyyy")</h4>
+            <div class="table-responsive">
+                <table class="table table-striped" id="salesReportTable">
+                    <thead>
+                        <tr>
+                            <th>Номер</th>
+                            <th>Дата</th>
+                            <th>Клиент</th>
+                            <th>Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var sale in salesReport)
+                        {
+                            <tr>
+                                <td>@sale.SaleNumber</td>
+                                <td>@sale.SaleDate.ToString("dd.MM.yyyy")</td>
+                                <td>@(sale.Client?.FullName ?? "Без клиента")</td>
+                                <td>@sale.TotalAmount.ToString("N2") руб.</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="3">Итого:</th>
+                            <th>@salesReport.Sum(s => s.TotalAmount).ToString("N2") руб.</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+
+    @if (showOrdersReport)
+    {
+        <div class="mt-4">
+            <h4>Отчет по заявкам за период: @ordersReportStart.ToString("dd.MM.yyyy") - @ordersReportEnd.ToString("dd.MM.yyyy")</h4>
+            <div class="table-responsive">
+                <table class="table table-striped" id="ordersReportTable">
+                    <thead>
+                        <tr>
+                            <th>Номер</th>
+                            <th>Дата</th>
+                            <th>Клиент</th>
+                            <th>Статус</th>
+                            <th>Стоимость</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var order in ordersReport)
+                        {
+                            <tr>
+                                <td>@order.OrderNumber</td>
+                                <td>@order.OrderDate.ToString("dd.MM.yyyy")</td>
+                                <td>@order.Client?.FullName</td>
+                                <td>@order.Status</td>
+                                <td>@(order.Cost?.ToString("N2") ?? "-") руб.</td>
+                            </tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <th colspan="4">Итого:</th>
+                            <th>@ordersReport.Where(o => o.Cost.HasValue).Sum(o => o.Cost!.Value).ToString("N2") руб.</th>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private DateTime salesReportStart = DateTime.Now.AddMonths(-1);
+    private DateTime salesReportEnd = DateTime.Now;
+    private DateTime ordersReportStart = DateTime.Now.AddMonths(-1);
+    private DateTime ordersReportEnd = DateTime.Now;
+
+    private bool showSalesReport = false;
+    private bool showOrdersReport = false;
+    private List<Sale> salesReport = new();
+    private List<Order> ordersReport = new();
+
+    private async Task GenerateSalesReport()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        salesReport = await context.Sales
+            .Include(s => s.Client)
+            .Where(s => s.SaleDate >= salesReportStart && s.SaleDate <= salesReportEnd)
+            .ToListAsync();
+        showSalesReport = true;
+    }
+
+    private async Task GenerateOrdersReport()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        ordersReport = await context.Orders
+            .Include(o => o.Client)
+            .Where(o => o.OrderDate >= ordersReportStart && o.OrderDate <= ordersReportEnd)
+            .ToListAsync();
+        showOrdersReport = true;
+    }
+
+    private void PrintSalesReport()
+    {
+        // JavaScript для печати
+    }
+
+    private void PrintOrdersReport()
+    {
+        // JavaScript для печати
+    }
+}

@@ -1,0 +1,95 @@
+@page "/employees"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Accountant,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Сотрудники</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Сотрудники</h2>
+        <button class="btn btn-primary" @onclick="CreateNew">Добавить сотрудника</button>
+    </div>
+
+    @if (employees == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Табельный номер</th>
+                        <th>ФИО</th>
+                        <th>Должность</th>
+                        <th>Дата рождения</th>
+                        <th>Дата приема</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var employee in employees)
+                    {
+                        <tr>
+                            <td>@employee.TabNumber</td>
+                            <td>@($"{employee.LastName} {employee.FirstName} {employee.MiddleName}")</td>
+                            <td>@employee.Position?.Name</td>
+                            <td>@employee.DateOfBirth.ToString("dd.MM.yyyy")</td>
+                            <td>@employee.HireDate.ToString("dd.MM.yyyy")</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" @onclick="() => EditEmployee(employee.Id)">Редактировать</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteEmployee(employee.Id)">Удалить</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Employee>? employees;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadEmployees();
+    }
+
+    private async Task LoadEmployees()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        employees = await context.Employees
+            .Include(e => e.Position)
+            .ToListAsync();
+    }
+
+    private void CreateNew()
+    {
+        Navigation.NavigateTo("/employees/create");
+    }
+
+    private void EditEmployee(int id)
+    {
+        Navigation.NavigateTo($"/employees/edit/{id}");
+    }
+
+    private async Task DeleteEmployee(int id)
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        var employee = await context.Employees.FindAsync(id);
+        if (employee != null)
+        {
+            context.Employees.Remove(employee);
+            await context.SaveChangesAsync();
+            await LoadEmployees();
+        }
+    }
+}

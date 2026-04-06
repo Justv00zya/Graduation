@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Таблица 6 — Описание классов</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f5f5f5; color: #222; }
+    h1 { font-size: 1.25rem; margin-bottom: 1rem; }
+    .intro { margin-bottom: 1rem; padding: 10px; background: #e0e7ff; border-radius: 6px; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; background: #fff; }
+    th, td { border: 1px solid #333; padding: 8px 12px; text-align: left; vertical-align: top; }
+    th { background: #2563eb; color: #fff; font-weight: 600; }
+    td:first-child { width: 4%; text-align: center; }
+    td:nth-child(2) { width: 28%; }
+    kbd { background: #e2e8f0; padding: 2px 5px; border-radius: 3px; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+
+<h1>Таблица 6 — Описание классов</h1>
+<p class="intro">Выделите таблицу мышью, нажмите <kbd>Ctrl+C</kbd>, в документе Word — <kbd>Ctrl+V</kbd>. Либо откройте файл в Word (Файл → Открыть) и сохраните как .docx.</p>
+
+<table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
+  <thead>
+    <tr>
+      <th style="background: #2563eb; color: #fff;">№</th>
+      <th style="background: #2563eb; color: #fff;">Наименование класса</th>
+      <th style="background: #2563eb; color: #fff;">Назначение класса</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>1</td><td>AuthController</td><td>Контроллер авторизации: выдача JWT по логину и паролю (POST /api/auth/login), регистрация пользователя (POST /api/auth/register).</td></tr>
+    <tr><td>2</td><td>AccountController</td><td>Web-контроллер учётной записи: страницы входа, регистрации, восстановления и сброса пароля, управление cookie-аутентификацией.</td></tr>
+    <tr><td>3</td><td>OrdersController</td><td>REST API заявок на ремонт: получение списка и одной заявки, создание, обновление, удаление (CRUD).</td></tr>
+    <tr><td>4</td><td>ClientsController</td><td>REST API клиентов: получение списка и одного клиента, создание, обновление, удаление.</td></tr>
+    <tr><td>5</td><td>ProductsController</td><td>REST API товаров: получение списка и одного товара, создание, обновление, удаление.</td></tr>
+    <tr><td>6</td><td>PartsController</td><td>REST API запчастей: получение списка и одной запчасти, создание, обновление, удаление.</td></tr>
+    <tr><td>7</td><td>EmployeesController</td><td>REST API сотрудников: получение списка и одного сотрудника (просмотр).</td></tr>
+    <tr><td>8</td><td>SalesController</td><td>REST API продаж: получение списка и одной продажи с составом позиций.</td></tr>
+    <tr><td>9</td><td>ApplicationDbContext</td><td>Контекст данных Entity Framework Core: наборы сущностей (DbSet), конфигурация связей и правил удаления (OnModelCreating), наследует IdentityDbContext для пользователей и ролей.</td></tr>
+    <tr><td>10</td><td>SeedData</td><td>Статический класс начального заполнения БД: создание ролей, учётной записи администратора, справочников (должности, виды работ, при необходимости демо-данные).</td></tr>
+    <tr><td>11</td><td>RevalidatingIdentityAuthenticationStateProvider</td><td>Провайдер состояния аутентификации для Blazor Server: проверка актуальности пользователя при взаимодействии с сервером.</td></tr>
+    <tr><td>12</td><td>IOrderPdfService</td><td>Интерфейс сервиса формирования PDF-документа по заявке на ремонт.</td></tr>
+    <tr><td>13</td><td>OrderPdfService</td><td>Реализация сервиса генерации PDF по заявке (библиотека QuestPDF).</td></tr>
+    <tr><td>14</td><td>IEmailSender</td><td>Интерфейс отправки электронной почты (восстановление пароля, уведомления).</td></tr>
+    <tr><td>15</td><td>DevelopmentEmailSender</td><td>Реализация отправки почты для разработки: вывод содержимого писем в лог.</td></tr>
+    <tr><td>16</td><td>Order</td><td>Модель заявки на ремонт: номер, клиент, модель оборудования, описание неисправности, исполнитель, стоимость, даты, статус, связи с позициями запчастей и работами.</td></tr>
+    <tr><td>17</td><td>OrderPart</td><td>Модель позиции заявки по запчасти: заявка, запчасть, количество.</td></tr>
+    <tr><td>18</td><td>Work</td><td>Модель выполненной работы по заявке: заявка, вид работ, порядковый номер.</td></tr>
+    <tr><td>19</td><td>WorkType</td><td>Модель вида работ: наименование, цена.</td></tr>
+    <tr><td>20</td><td>Client</td><td>Модель клиента: ФИО или наименование, адрес, телефон.</td></tr>
+    <tr><td>21</td><td>Product</td><td>Модель товара: код, поставщик, наименование, модель, цена, количество на складе.</td></tr>
+    <tr><td>22</td><td>Part</td><td>Модель запчасти: код, поставщик, наименование, цена, количество на складе.</td></tr>
+    <tr><td>23</td><td>Supplier</td><td>Модель поставщика: наименование, адрес, ИНН, расчётный счёт, телефон.</td></tr>
+    <tr><td>24</td><td>Employee</td><td>Модель сотрудника: табельный номер, должность, ФИО, дата рождения, ИНН, адрес, дата приёма.</td></tr>
+    <tr><td>25</td><td>Position</td><td>Модель должности: наименование, оклад.</td></tr>
+    <tr><td>26</td><td>Sale</td><td>Модель продажи: номер, клиент, дата, итоговая сумма, состав позиций.</td></tr>
+    <tr><td>27</td><td>SaleItem</td><td>Модель позиции продажи: продажа, товар, количество, цена за единицу, сумма по позиции.</td></tr>
+    <tr><td>28</td><td>OrderDto</td><td>DTO заявки для API: передача данных заявки с связанными сущностями (клиент, исполнитель и т.д.).</td></tr>
+    <tr><td>29</td><td>CreateOrderDto</td><td>DTO создания заявки: поля, необходимые для POST-запроса.</td></tr>
+    <tr><td>30</td><td>UpdateOrderDto</td><td>DTO обновления заявки: поля для PUT-запроса.</td></tr>
+    <tr><td>31</td><td>ClientDto</td><td>DTO клиента для API.</td></tr>
+    <tr><td>32</td><td>CreateClientDto</td><td>DTO создания клиента.</td></tr>
+    <tr><td>33</td><td>UpdateClientDto</td><td>DTO обновления клиента.</td></tr>
+    <tr><td>34</td><td>ProductDto</td><td>DTO товара для API.</td></tr>
+    <tr><td>35</td><td>CreateProductDto</td><td>DTO создания товара.</td></tr>
+    <tr><td>36</td><td>UpdateProductDto</td><td>DTO обновления товара.</td></tr>
+    <tr><td>37</td><td>EmployeeDto</td><td>DTO сотрудника для API.</td></tr>
+    <tr><td>38</td><td>LoginRequest</td><td>Модель запроса входа в API: имя пользователя (логин) и пароль для POST /api/auth/login.</td></tr>
+    <tr><td>39</td><td>LoginResponse</td><td>Модель ответа API при успешном входе: JWT-токен и при необходимости срок действия.</td></tr>
+    <tr><td>40</td><td>RegisterRequest</td><td>Модель запроса регистрации в API: логин, пароль, электронная почта для POST /api/auth/register.</td></tr>
+  </tbody>
+</table>
+
+</body>
+</html>

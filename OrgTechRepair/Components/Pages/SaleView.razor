@@ -1,0 +1,91 @@
+@page "/sales/{SaleId:int}"
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Manager,Accountant,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Продажа</PageTitle>
+
+<div class="container-fluid py-3">
+    @if (sale == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <h2 class="h4 mb-1">Продажа @sale.SaleNumber</h2>
+                <p class="text-muted mb-0">@sale.SaleDate.ToString("dd.MM.yyyy") · @(sale.Client?.FullName ?? "Без клиента")</p>
+            </div>
+            <button type="button" class="btn btn-outline-secondary" @onclick="Back">К списку</button>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <strong>Сумма</strong>
+                        <p class="fs-4 text-primary mb-0">@sale.TotalAmount.ToString("N2") ₽</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h3 class="h6 text-uppercase text-muted mb-3">Позиции</h3>
+        <div class="row g-3">
+            @foreach (var item in sale.SaleItems)
+            {
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 border-0 shadow-sm">
+                        <div class="row g-0">
+                            <div class="col-4">
+                                @if (!string.IsNullOrEmpty(item.Product?.ImageUrl))
+                                {
+                                    <img src="@GetImg(item.Product!.ImageUrl!)" class="img-fluid rounded-start h-100 object-fit-cover" style="min-height: 100px;" alt="" />
+                                }
+                                else
+                                {
+                                    <div class="bg-light rounded-start h-100 d-flex align-items-center justify-content-center text-muted small" style="min-height: 100px;">Нет фото</div>
+                                }
+                            </div>
+                            <div class="col-8">
+                                <div class="card-body py-2 px-3">
+                                    <div class="fw-semibold small">@item.Product?.Name</div>
+                                    <div class="text-muted small">@item.Quantity × @item.UnitPrice.ToString("N2") = @item.TotalPrice.ToString("N2") ₽</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int SaleId { get; set; }
+
+    private Sale? sale;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        sale = await context.Sales
+            .Include(s => s.Client)
+            .Include(s => s.SaleItems)
+            .ThenInclude(si => si.Product)
+            .FirstOrDefaultAsync(s => s.Id == SaleId);
+    }
+
+    private string GetImg(string url)
+    {
+        if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return url;
+        return Navigation.ToAbsoluteUri(url).AbsoluteUri;
+    }
+
+    private void Back() => Navigation.NavigateTo("/sales");
+}

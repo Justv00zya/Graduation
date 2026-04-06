@@ -1,0 +1,110 @@
+@page "/orders"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Manager,Engineer,ServiceEngineer,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Заявки</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Заявки на ремонт</h2>
+        <AuthorizeView Roles="Manager,ServiceEngineer,Administrator">
+            <button class="btn btn-primary" @onclick="CreateNew">Создать заявку</button>
+        </AuthorizeView>
+    </div>
+
+    @if (orders == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Номер</th>
+                        <th>Клиент</th>
+                        <th>Модель техники</th>
+                        <th>Дата заказа</th>
+                        <th>Статус</th>
+                        <th>Стоимость</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in orders)
+                    {
+                        <tr>
+                            <td>@order.OrderNumber</td>
+                            <td>@order.Client?.FullName</td>
+                            <td>@order.EquipmentModel</td>
+                            <td>@order.OrderDate.ToString("dd.MM.yyyy")</td>
+                            <td>
+                                <span class="badge bg-@GetStatusColor(order.Status)">@order.Status</span>
+                            </td>
+                            <td>@(order.Cost?.ToString("N2") ?? "-") руб.</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" @onclick="() => ViewOrder(order.Id)">Просмотр</button>
+                                <AuthorizeView Roles="Manager,Engineer,ServiceEngineer,Administrator">
+                                    <button class="btn btn-sm btn-warning" @onclick="() => EditOrder(order.Id)">Редактировать</button>
+                                </AuthorizeView>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Order>? orders;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrders();
+    }
+
+    private async Task LoadOrders()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        orders = await context.Orders
+            .Include(o => o.Client)
+            .Include(o => o.Employee)
+            .OrderByDescending(o => o.OrderDate)
+            .ToListAsync();
+    }
+
+    private void CreateNew()
+    {
+        Navigation.NavigateTo("/orders/create");
+    }
+
+    private void ViewOrder(int id)
+    {
+        Navigation.NavigateTo($"/orders/{id}");
+    }
+
+    private void EditOrder(int id)
+    {
+        Navigation.NavigateTo($"/orders/edit/{id}");
+    }
+
+    private string GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Принят" => "primary",
+            "В работе" => "warning",
+            "Выполнен" => "success",
+            "Отменен" => "danger",
+            _ => "secondary"
+        };
+    }
+}

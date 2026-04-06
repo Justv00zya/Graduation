@@ -1,0 +1,96 @@
+@page "/client-cabinet/order/{OrderId:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Client")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Заявка @(_order?.OrderNumber ?? "")</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Заявка № @(_order?.OrderNumber ?? "")</h2>
+        <a href="/client-cabinet" class="btn btn-secondary">В личный кабинет</a>
+    </div>
+
+    @if (_order == null && !_forbidden)
+    {
+        <div class="alert alert-info">Загрузка...</div>
+    }
+    else if (_forbidden)
+    {
+        <div class="alert alert-danger">Заявка не найдена или у вас нет доступа к ней.</div>
+    }
+    else if (_order != null)
+    {
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Номер заявки:</dt>
+                            <dd class="col-sm-8">@_order.OrderNumber</dd>
+                            <dt class="col-sm-4">Модель техники:</dt>
+                            <dd class="col-sm-8">@_order.EquipmentModel</dd>
+                            <dt class="col-sm-4">Описание проблемы:</dt>
+                            <dd class="col-sm-8">@(_order.ComplaintDescription ?? "-")</dd>
+                            <dt class="col-sm-4">Состояние:</dt>
+                            <dd class="col-sm-8">@(_order.ConditionDescription ?? "-")</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Дата заказа:</dt>
+                            <dd class="col-sm-8">@_order.OrderDate.ToString("dd.MM.yyyy HH:mm")</dd>
+                            <dt class="col-sm-4">Статус:</dt>
+                            <dd class="col-sm-8"><span class="badge bg-@_statusColor">@_order.Status</span></dd>
+                            <dt class="col-sm-4">Стоимость:</dt>
+                            <dd class="col-sm-8">@(_order.Cost?.ToString("N2") ?? "—") руб.</dd>
+                            <dt class="col-sm-4">Дата выполнения:</dt>
+                            <dd class="col-sm-8">@(_order.CompletionDate?.ToString("dd.MM.yyyy") ?? "—")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private Order? _order;
+    private bool _forbidden;
+    private string _statusColor = "secondary";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            _forbidden = true;
+            return;
+        }
+
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        var client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (client == null)
+        {
+            _forbidden = true;
+            return;
+        }
+
+        _order = await context.Orders
+            .Include(o => o.Client)
+            .FirstOrDefaultAsync(o => o.Id == OrderId && o.ClientId == client.Id);
+        if (_order == null)
+            _forbidden = true;
+        else
+            _statusColor = _order.Status switch { "Принят" => "primary", "В работе" => "warning", "Выполнен" => "success", "Отменен" => "danger", _ => "secondary" };
+    }
+}

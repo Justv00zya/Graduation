@@ -1,0 +1,89 @@
+@page "/suppliers/create"
+@page "/suppliers/edit/{SupplierId:int}"
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>@(SupplierId == 0 ? "Создание поставщика" : "Редактирование поставщика")</PageTitle>
+
+<div class="container-fluid">
+    <h2>@(SupplierId == 0 ? "Создание поставщика" : "Редактирование поставщика")</h2>
+
+    <EditForm Model="@supplier" OnValidSubmit="@SaveSupplier" FormName="supplierForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Наименование</label>
+                    <InputText @bind-Value="supplier.Name" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Адрес</label>
+                    <InputText @bind-Value="supplier.Address" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">ИНН</label>
+                    <InputText @bind-Value="supplier.INN" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Расчетный счет</label>
+                    <InputText @bind-Value="supplier.AccountNumber" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Телефон</label>
+                    <InputText @bind-Value="supplier.Phone" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Отмена</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int SupplierId { get; set; }
+
+    private Supplier supplier = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (SupplierId > 0)
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            supplier = await context.Suppliers.FindAsync(SupplierId) ?? new Supplier();
+        }
+    }
+
+    private async Task SaveSupplier()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        
+        if (SupplierId == 0)
+        {
+            context.Suppliers.Add(supplier);
+        }
+        else
+        {
+            context.Suppliers.Update(supplier);
+        }
+        
+        await context.SaveChangesAsync();
+        Navigation.NavigateTo("/suppliers");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/suppliers");
+    }
+}

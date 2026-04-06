@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Логическая модель БД из физической — ВузяПринт</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #f5f5f5; color: #222; font-size: 12px; }
+    h1 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    h2 { font-size: 1.1rem; margin: 1.25rem 0 0.5rem; }
+    .intro { margin-bottom: 1rem; padding: 10px; background: #e0e7ff; border-radius: 6px; font-size: 0.9rem; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-bottom: 1rem; }
+    th, td { border: 1px solid #333; padding: 6px 10px; text-align: left; vertical-align: top; }
+    th { background: #2563eb; color: #fff; font-weight: 600; }
+    .entity { margin-bottom: 12px; }
+    .entity-name { font-weight: 700; margin-bottom: 4px; }
+    kbd { background: #eee; padding: 1px 4px; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+<h1>Логическая модель БД, полученная из физической модели</h1>
+<p class="intro">Информационная система «ВузяПринт». Логическая модель построена по физической (схема <code>public</code>, 12 таблиц). Для копирования в Word: выделите таблицу или фрагмент → <kbd>Ctrl+C</kbd>, в Word → <kbd>Ctrl+V</kbd>.</p>
+
+<h2>Соответствие: физическая таблица → логическая сущность</h2>
+<table>
+  <thead>
+    <tr><th>Физическая таблица (public.*)</th><th>Логическая сущность</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>employees</td><td>Сотрудники</td></tr>
+    <tr><td>positions</td><td>Должности</td></tr>
+    <tr><td>clients</td><td>Клиенты</td></tr>
+    <tr><td>suppliers</td><td>Поставщики</td></tr>
+    <tr><td>orders</td><td>Заявки на ремонт</td></tr>
+    <tr><td>parts</td><td>Запчасти</td></tr>
+    <tr><td>worktypes</td><td>Виды работ</td></tr>
+    <tr><td>products</td><td>Товары</td></tr>
+    <tr><td>sales</td><td>Продажи</td></tr>
+    <tr><td>orderparts</td><td>Позиции заявки по запчастям</td></tr>
+    <tr><td>works</td><td>Работы по заявке</td></tr>
+    <tr><td>saleitems</td><td>Позиции продаж</td></tr>
+  </tbody>
+</table>
+
+<h2>1. Сущности и атрибуты (логическое описание)</h2>
+
+<div class="entity">
+  <div class="entity-name">Сотрудники (employees)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ сущности</td><td>id (serial)</td></tr>
+    <tr><td>Табельный номер</td><td>Номер сотрудника в организации</td><td>tabnumber</td></tr>
+    <tr><td>Должность</td><td>Ссылка на сущность «Должности»</td><td>positionid (FK)</td></tr>
+    <tr><td>Имя</td><td>Имя сотрудника</td><td>firstname</td></tr>
+    <tr><td>Фамилия</td><td>Фамилия сотрудника</td><td>lastname</td></tr>
+    <tr><td>Отчество</td><td>Отчество сотрудника</td><td>middlename</td></tr>
+    <tr><td>Дата рождения</td><td>Дата рождения</td><td>dateofbirth</td></tr>
+    <tr><td>ИНН</td><td>ИНН сотрудника</td><td>inn</td></tr>
+    <tr><td>Адрес</td><td>Адрес проживания</td><td>address</td></tr>
+    <tr><td>Дата приёма</td><td>Дата приёма на работу</td><td>hiredate</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Должности (positions)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Наименование</td><td>Название должности</td><td>name</td></tr>
+    <tr><td>Оклад</td><td>Размер оклада</td><td>salary</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Клиенты (clients)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>ФИО или наименование</td><td>ФИО физлица или название организации</td><td>fullname</td></tr>
+    <tr><td>Адрес</td><td>Адрес</td><td>address</td></tr>
+    <tr><td>Телефон</td><td>Телефон для связи</td><td>phone</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Поставщики (suppliers)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Наименование</td><td>Название поставщика</td><td>name</td></tr>
+    <tr><td>Адрес</td><td>Адрес</td><td>address</td></tr>
+    <tr><td>ИНН</td><td>ИНН</td><td>inn</td></tr>
+    <tr><td>Расчётный счёт</td><td>Банковский счёт</td><td>accountnumber</td></tr>
+    <tr><td>Телефон</td><td>Телефон</td><td>phone</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Заявки на ремонт (orders)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Номер заявки</td><td>Уникальный номер заявки</td><td>ordernumber</td></tr>
+    <tr><td>Клиент</td><td>Ссылка на сущность «Клиенты»</td><td>clientid (FK)</td></tr>
+    <tr><td>Модель оборудования</td><td>Модель принтера/оргтехники</td><td>equipmentmodel</td></tr>
+    <tr><td>Описание состояния</td><td>Состояние оборудования при приёме</td><td>conditiondescription</td></tr>
+    <tr><td>Описание неисправности</td><td>Жалоба, описание неисправности</td><td>complaintdescription</td></tr>
+    <tr><td>Исполнитель</td><td>Ссылка на сущность «Сотрудники»</td><td>employeeid (FK)</td></tr>
+    <tr><td>Стоимость</td><td>Стоимость ремонта</td><td>cost</td></tr>
+    <tr><td>Дата приёма</td><td>Дата приёма заявки</td><td>orderdate</td></tr>
+    <tr><td>Дата выполнения</td><td>Дата завершения ремонта</td><td>completiondate</td></tr>
+    <tr><td>Статус</td><td>Принят / В работе / Выполнен / Отменён</td><td>status</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Запчасти (parts)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Код запчасти</td><td>Артикул/код</td><td>code</td></tr>
+    <tr><td>Поставщик</td><td>Ссылка на сущность «Поставщики»</td><td>supplierid (FK)</td></tr>
+    <tr><td>Наименование</td><td>Название запчасти</td><td>name</td></tr>
+    <tr><td>Цена</td><td>Цена за единицу</td><td>price</td></tr>
+    <tr><td>Количество</td><td>Остаток на складе</td><td>quantity</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Виды работ (worktypes)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Наименование</td><td>Название вида работ</td><td>name</td></tr>
+    <tr><td>Цена</td><td>Цена за единицу</td><td>price</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Товары (products)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Код товара</td><td>Артикул/код</td><td>code</td></tr>
+    <tr><td>Поставщик</td><td>Ссылка на сущность «Поставщики»</td><td>supplierid (FK)</td></tr>
+    <tr><td>Наименование</td><td>Название товара</td><td>name</td></tr>
+    <tr><td>Модель</td><td>Модель (при необходимости)</td><td>model</td></tr>
+    <tr><td>Цена</td><td>Цена за единицу</td><td>price</td></tr>
+    <tr><td>Количество</td><td>Остаток на складе</td><td>quantity</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Продажи (sales)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Номер продажи</td><td>Уникальный номер продажи</td><td>salenumber</td></tr>
+    <tr><td>Клиент</td><td>Ссылка на сущность «Клиенты»</td><td>clientid (FK)</td></tr>
+    <tr><td>Дата продажи</td><td>Дата операции</td><td>saledate</td></tr>
+    <tr><td>Итоговая сумма</td><td>Сумма продажи</td><td>totalamount</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Позиции заявки по запчастям (orderparts)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Заявка</td><td>Ссылка на сущность «Заявки»</td><td>orderid (FK)</td></tr>
+    <tr><td>Запчасть</td><td>Ссылка на сущность «Запчасти»</td><td>partid (FK)</td></tr>
+    <tr><td>Количество</td><td>Количество использованных шт.</td><td>quantity</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Работы по заявке (works)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Заявка</td><td>Ссылка на сущность «Заявки»</td><td>orderid (FK)</td></tr>
+    <tr><td>Вид работ</td><td>Ссылка на сущность «Виды работ»</td><td>worktypeid (FK)</td></tr>
+    <tr><td>Порядковый номер</td><td>Номер операции в заявке</td><td>sequencenumber</td></tr>
+  </table>
+</div>
+
+<div class="entity">
+  <div class="entity-name">Позиции продаж (saleitems)</div>
+  <table>
+    <tr><th>Логический атрибут</th><th>Назначение</th><th>Физический столбец</th></tr>
+    <tr><td>Идентификатор</td><td>Уникальный ключ</td><td>id (serial)</td></tr>
+    <tr><td>Продажа</td><td>Ссылка на сущность «Продажи»</td><td>saleid (FK)</td></tr>
+    <tr><td>Товар</td><td>Ссылка на сущность «Товары»</td><td>productid (FK)</td></tr>
+    <tr><td>Количество</td><td>Количество единиц</td><td>quantity</td></tr>
+    <tr><td>Цена за единицу</td><td>Цена на момент продажи</td><td>unitprice</td></tr>
+    <tr><td>Сумма по позиции</td><td>Итог по строке</td><td>totalprice</td></tr>
+  </table>
+</div>
+
+<h2>2. Связи между сущностями (логическая модель)</h2>
+<table>
+  <thead>
+    <tr>
+      <th>Родитель (логическая сущность)</th>
+      <th>Связь</th>
+      <th>Дочерняя сущность</th>
+      <th>Внешний ключ в физической модели</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>Клиенты</td><td>1 → *</td><td>Заявки на ремонт</td><td>orders.clientid → clients.id</td></tr>
+    <tr><td>Сотрудники</td><td>1 → *</td><td>Заявки на ремонт</td><td>orders.employeeid → employees.id</td></tr>
+    <tr><td>Заявки на ремонт</td><td>1 → *</td><td>Позиции заявки по запчастям</td><td>orderparts.orderid → orders.id</td></tr>
+    <tr><td>Запчасти</td><td>1 → *</td><td>Позиции заявки по запчастям</td><td>orderparts.partid → parts.id</td></tr>
+    <tr><td>Заявки на ремонт</td><td>1 → *</td><td>Работы по заявке</td><td>works.orderid → orders.id</td></tr>
+    <tr><td>Виды работ</td><td>1 → *</td><td>Работы по заявке</td><td>works.worktypeid → worktypes.id</td></tr>
+    <tr><td>Клиенты</td><td>1 → *</td><td>Продажи</td><td>sales.clientid → clients.id</td></tr>
+    <tr><td>Продажи</td><td>1 → *</td><td>Позиции продаж</td><td>saleitems.saleid → sales.id</td></tr>
+    <tr><td>Товары</td><td>1 → *</td><td>Позиции продаж</td><td>saleitems.productid → products.id</td></tr>
+    <tr><td>Поставщики</td><td>1 → *</td><td>Товары</td><td>products.supplierid → suppliers.id</td></tr>
+    <tr><td>Поставщики</td><td>1 → *</td><td>Запчасти</td><td>parts.supplierid → suppliers.id</td></tr>
+    <tr><td>Должности</td><td>1 → *</td><td>Сотрудники</td><td>employees.positionid → positions.id</td></tr>
+  </tbody>
+</table>
+<p><strong>Обозначения:</strong> 1 → * — связь «один ко многим»; FK — внешний ключ. Логическая модель соответствует третьей нормальной форме (3НФ).</p>
+
+</body>
+</html>

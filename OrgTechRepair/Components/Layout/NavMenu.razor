@@ -1,0 +1,130 @@
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<div class="top-row ps-3 navbar navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="/"><span class="cyber-brand">ВУЗЯПРИНТ</span></a>
+    </div>
+</div>
+
+<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
+
+<div class="nav-scrollable">
+    <nav class="flex-column">
+        <AuthorizeView>
+            <Authorized Context="authContext">
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">
+                        <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Главная
+                    </NavLink>
+                </div>
+
+                <AuthorizeView Roles="Client">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/client-cabinet">
+                            <span class="bi bi-person-circle" aria-hidden="true"></span> Личный кабинет
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Manager,Director,Administrator">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/orders">
+                            <span class="bi bi-clipboard-check" aria-hidden="true"></span> Заявки
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/products">
+                            <span class="bi bi-box-seam" aria-hidden="true"></span> Товары
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/sales">
+                            <span class="bi bi-cart-check" aria-hidden="true"></span> Продажи
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/clients">
+                            <span class="bi bi-people" aria-hidden="true"></span> Клиенты
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/suppliers">
+                            <span class="bi bi-truck" aria-hidden="true"></span> Поставщики
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                @* Сервисный инженер: заявки, запчасти, клиенты (только просмотр) — урезанный менеджер *@
+                <AuthorizeView Roles="ServiceEngineer">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/orders">
+                            <span class="bi bi-clipboard-check" aria-hidden="true"></span> Заявки
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/parts">
+                            <span class="bi bi-tools" aria-hidden="true"></span> Запчасти и тонер
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/clients">
+                            <span class="bi bi-people" aria-hidden="true"></span> Клиенты
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Engineer,Director,Administrator">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/parts">
+                            <span class="bi bi-tools" aria-hidden="true"></span> Запчасти и тонер
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Accountant,Director,Administrator">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/employees">
+                            <span class="bi bi-person-badge" aria-hidden="true"></span> Сотрудники
+                        </NavLink>
+                    </div>
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/reports">
+                            <span class="bi bi-file-earmark-text" aria-hidden="true"></span> Отчеты
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                <AuthorizeView Roles="Administrator">
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="/admin">
+                            <span class="bi bi-gear" aria-hidden="true"></span> Администрирование
+                        </NavLink>
+                    </div>
+                </AuthorizeView>
+
+                <div class="nav-item px-3">
+                    <form method="get" action="/Account/Logout" class="d-inline">
+                    <button type="submit" class="nav-link border-0 bg-transparent w-100 text-start">
+                        <span class="bi bi-box-arrow-right" aria-hidden="true"></span> Выход
+                    </button>
+                </form>
+                </div>
+            </Authorized>
+            <NotAuthorized>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/login">
+                        <span class="bi bi-box-arrow-in-right" aria-hidden="true"></span> Вход
+                    </NavLink>
+                </div>
+                <div class="nav-item px-3">
+                    <NavLink class="nav-link" href="/register">
+                        <span class="bi bi-person-plus" aria-hidden="true"></span> Регистрация
+                    </NavLink>
+                </div>
+            </NotAuthorized>
+        </AuthorizeView>
+    </nav>
+</div>
+

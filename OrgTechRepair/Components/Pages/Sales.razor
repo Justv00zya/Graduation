@@ -1,0 +1,91 @@
+@page "/sales"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Manager,Accountant,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Продажи</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Продажи</h2>
+        <AuthorizeView Roles="Manager,Administrator">
+            <button class="btn btn-primary" @onclick="CreateNew">Создать продажу</button>
+        </AuthorizeView>
+    </div>
+
+    @if (sales == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Номер</th>
+                        <th>Клиент</th>
+                        <th>Дата</th>
+                        <th>Сумма</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var sale in sales)
+                    {
+                        <tr>
+                            <td>@sale.SaleNumber</td>
+                            <td>@(sale.Client?.FullName ?? "Без клиента")</td>
+                            <td>@sale.SaleDate.ToString("dd.MM.yyyy")</td>
+                            <td>@sale.TotalAmount.ToString("N2") руб.</td>
+                            <td>
+                                <button class="btn btn-sm btn-info" @onclick="() => ViewSale(sale.Id)">Просмотр</button>
+                                <AuthorizeView Roles="Manager,Administrator">
+                                    <button class="btn btn-sm btn-warning" @onclick="() => EditSale(sale.Id)">Редактировать</button>
+                                </AuthorizeView>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Sale>? sales;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSales();
+    }
+
+    private async Task LoadSales()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        sales = await context.Sales
+            .Include(s => s.Client)
+            .OrderByDescending(s => s.SaleDate)
+            .ToListAsync();
+    }
+
+    private void CreateNew()
+    {
+        Navigation.NavigateTo("/sales/create");
+    }
+
+    private void ViewSale(int id)
+    {
+        Navigation.NavigateTo($"/sales/{id}");
+    }
+
+    private void EditSale(int id)
+    {
+        Navigation.NavigateTo($"/sales/edit/{id}");
+    }
+}

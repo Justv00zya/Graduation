@@ -1,0 +1,197 @@
+@page "/products/create"
+@page "/products/edit/{ProductId:int}"
+@using Microsoft.AspNetCore.Components.Forms
+@using Microsoft.AspNetCore.Hosting
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+@inject IWebHostEnvironment Env
+
+<PageTitle>@(ProductId == 0 ? "Создание товара" : "Редактирование товара")</PageTitle>
+
+<div class="container-fluid">
+    <h2>@(ProductId == 0 ? "Создание товара" : "Редактирование товара")</h2>
+
+    <EditForm Model="@product" OnValidSubmit="@SaveProduct" FormName="productForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="mb-3">
+                    <label class="form-label">Код товара</label>
+                    <InputText @bind-Value="product.Code" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Наименование</label>
+                    <InputText @bind-Value="product.Name" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Модель</label>
+                    <InputText @bind-Value="product.Model" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Поставщик</label>
+                    <InputSelect @bind-Value="product.SupplierId" class="form-select">
+                        <option value="0">Выберите поставщика</option>
+                        @foreach (var supplier in suppliers)
+                        {
+                            <option value="@supplier.Id">@supplier.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Цена</label>
+                    <InputNumber @bind-Value="product.Price" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Количество</label>
+                    <InputNumber @bind-Value="product.Quantity" class="form-control" />
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body">
+                        <label class="form-label fw-semibold">Фото для карточки товара</label>
+                        @if (ProductId > 0)
+                        {
+                            @if (!string.IsNullOrEmpty(product.ImageUrl))
+                            {
+                                <div class="mb-3 text-center">
+                                    <img src="@GetAbsoluteImageUrl(product.ImageUrl)" alt="@product.Name" class="img-fluid rounded-3 border" style="max-height: 240px; object-fit: contain;" />
+                                </div>
+                                <button type="button" class="btn btn-outline-danger btn-sm mb-3" @onclick="RemoveImage">Удалить фото</button>
+                            }
+                            else
+                            {
+                                <div class="text-muted small mb-3">Фото не загружено — выберите файл (до 10 МБ).</div>
+                            }
+                            <InputFile OnChange="OnImageSelected" accept="image/*" class="form-control" />
+                        }
+                        else
+                        {
+                            <p class="text-muted small mb-0">После сохранения нового товара вы сможете добавить фото на следующем экране.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Отмена</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int ProductId { get; set; }
+
+    private Product product = new();
+    private List<Supplier> suppliers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        suppliers = await context.Suppliers.ToListAsync();
+
+        if (ProductId > 0)
+        {
+            product = await context.Products.FindAsync(ProductId) ?? new Product();
+        }
+    }
+
+    private string GetAbsoluteImageUrl(string relative)
+    {
+        if (string.IsNullOrEmpty(relative)) return "";
+        if (relative.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return relative;
+        return Navigation.ToAbsoluteUri(relative).AbsoluteUri;
+    }
+
+    private async Task SaveProduct()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+
+        if (ProductId == 0)
+        {
+            context.Products.Add(product);
+            await context.SaveChangesAsync();
+            Navigation.NavigateTo($"/products/edit/{product.Id}");
+            return;
+        }
+
+        context.Products.Update(product);
+        await context.SaveChangesAsync();
+        Navigation.NavigateTo("/products");
+    }
+
+    private async Task OnImageSelected(InputFileChangeEventArgs e)
+    {
+        if (ProductId <= 0) return;
+        var file = e.File;
+        if (file == null) return;
+
+        var ext = Path.GetExtension(file.Name).ToLowerInvariant();
+        if (ext is not (".jpg" or ".jpeg" or ".png" or ".webp" or ".gif"))
+            return;
+
+        var uploadsDir = Path.Combine(Env.WebRootPath, "uploads", "products");
+        Directory.CreateDirectory(uploadsDir);
+
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var dbProduct = await context.Products.FindAsync(ProductId);
+        if (dbProduct == null) return;
+
+        DeleteOldFile(dbProduct.ImageUrl);
+        var fileName = $"{ProductId}_{Guid.NewGuid():N}{ext}";
+        var physicalPath = Path.Combine(uploadsDir, fileName);
+
+        await using (var fs = File.Create(physicalPath))
+            await file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024).CopyToAsync(fs);
+
+        dbProduct.ImageUrl = $"/uploads/products/{fileName}";
+        await context.SaveChangesAsync();
+        product.ImageUrl = dbProduct.ImageUrl;
+        StateHasChanged();
+    }
+
+    private async Task RemoveImage()
+    {
+        if (ProductId <= 0) return;
+        await using var context = await DbContextFactory.CreateDbContextAsync();
+        var dbProduct = await context.Products.FindAsync(ProductId);
+        if (dbProduct == null) return;
+
+        DeleteOldFile(dbProduct.ImageUrl);
+        dbProduct.ImageUrl = null;
+        await context.SaveChangesAsync();
+        product.ImageUrl = null;
+        StateHasChanged();
+    }
+
+    private void DeleteOldFile(string? imageUrl)
+    {
+        if (string.IsNullOrEmpty(imageUrl) || !imageUrl.StartsWith("/uploads/products/", StringComparison.OrdinalIgnoreCase))
+            return;
+        var relative = imageUrl.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+        var full = Path.Combine(Env.WebRootPath, relative);
+        try
+        {
+            if (File.Exists(full))
+                File.Delete(full);
+        }
+        catch { /* ignore */ }
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/products");
+    }
+}

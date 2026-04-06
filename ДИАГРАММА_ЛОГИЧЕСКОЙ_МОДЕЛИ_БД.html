@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Диаграмма логической модели БД — ВузяПринт</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 16px; background: #fff; color: #000; }
+    h1 { font-size: 1.2rem; margin-bottom: 8px; }
+    .intro { margin-bottom: 12px; font-size: 0.9rem; color: #333; }
+    .diagram-wrap { overflow: auto; }
+    .diagram-wrap svg { display: block; }
+  </style>
+</head>
+<body>
+
+<h1>Диаграмма логической модели БД (ER-диаграмма)</h1>
+<p class="intro">Информационная система «ВузяПринт». Нотация: | — один (обязательно), тройная вилка — много; пунктир — связь. Сохранение: Печать → Сохранить как PDF или скриншот.</p>
+
+<div class="diagram-wrap">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 520" font-family="Segoe UI, Tahoma, sans-serif" font-size="10">
+  <defs>
+    <!-- Тройная вилка «много» (crow's foot): три луча от точки -->
+    <marker id="crowfoot" markerWidth="12" markerHeight="10" refX="12" refY="5" orient="auto">
+      <path d="M12 5 L0 2 M12 5 L0 5 M12 5 L0 8" stroke="#000" stroke-width="1" fill="none"/>
+    </marker>
+  </defs>
+
+  <!-- Сущности: прямоугольники с заголовком и атрибутами (чёрный текст на белом, как в примере) -->
+  <!-- Должности -->
+  <g>
+    <rect x="10" y="10" width="118" height="58" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="69" y="26" text-anchor="middle" font-weight="700">Должности</text>
+    <line x1="10" y1="28" x2="128" y2="28" stroke="#000" stroke-width="1"/>
+    <text x="16" y="42">ID</text>
+    <text x="16" y="54">Название</text>
+    <text x="16" y="66">Оклад</text>
+  </g>
+  <!-- Сотрудники -->
+  <g>
+    <rect x="10" y="78" width="148" height="128" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="84" y="94" text-anchor="middle" font-weight="700">Сотрудники</text>
+    <line x1="10" y1="96" x2="158" y2="96" stroke="#000" stroke-width="1"/>
+    <text x="16" y="110">ID</text>
+    <text x="16" y="122">Табельный номер</text>
+    <text x="16" y="134">ID Должности</text>
+    <text x="16" y="146">Имя, Фамилия, Отчество</text>
+    <text x="16" y="158">Дата рождения</text>
+    <text x="16" y="170">ИНН, Адрес</text>
+    <text x="16" y="182">Дата приёма</text>
+  </g>
+  <!-- Клиенты -->
+  <g>
+    <rect x="10" y="216" width="118" height="68" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="69" y="232" text-anchor="middle" font-weight="700">Клиенты</text>
+    <line x1="10" y1="234" x2="128" y2="234" stroke="#000" stroke-width="1"/>
+    <text x="16" y="248">ID</text>
+    <text x="16" y="260">ФИО / наименование</text>
+    <text x="16" y="272">Адрес, Телефон</text>
+  </g>
+  <!-- Поставщики -->
+  <g>
+    <rect x="10" y="294" width="148" height="88" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="84" y="310" text-anchor="middle" font-weight="700">Поставщики</text>
+    <line x1="10" y1="312" x2="158" y2="312" stroke="#000" stroke-width="1"/>
+    <text x="16" y="326">ID</text>
+    <text x="16" y="338">Название</text>
+    <text x="16" y="350">Адрес, ИНН</text>
+    <text x="16" y="362">Расчётный счёт, Телефон</text>
+  </g>
+
+  <!-- Виды работ -->
+  <g>
+    <rect x="178" y="10" width="118" height="58" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="237" y="26" text-anchor="middle" font-weight="700">Виды работ</text>
+    <line x1="178" y1="28" x2="296" y2="28" stroke="#000" stroke-width="1"/>
+    <text x="184" y="42">ID</text>
+    <text x="184" y="54">Название</text>
+    <text x="184" y="66">Цена</text>
+  </g>
+  <!-- Заявки на ремонт -->
+  <g>
+    <rect x="178" y="78" width="168" height="128" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="262" y="94" text-anchor="middle" font-weight="700">Заявки на ремонт</text>
+    <line x1="178" y1="96" x2="346" y2="96" stroke="#000" stroke-width="1"/>
+    <text x="184" y="110">ID</text>
+    <text x="184" y="122">Номер заявки</text>
+    <text x="184" y="134">ID Клиента, ID Сотрудника</text>
+    <text x="184" y="146">Модель оборудования</text>
+    <text x="184" y="158">Описание состояния / неисправности</text>
+    <text x="184" y="170">Стоимость</text>
+    <text x="184" y="182">Дата приёма, Дата выполнения</text>
+    <text x="184" y="194">Статус</text>
+  </g>
+  <!-- Продажи -->
+  <g>
+    <rect x="178" y="216" width="168" height="68" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="262" y="232" text-anchor="middle" font-weight="700">Продажи</text>
+    <line x1="178" y1="234" x2="346" y2="234" stroke="#000" stroke-width="1"/>
+    <text x="184" y="248">ID</text>
+    <text x="184" y="260">Номер продажи</text>
+    <text x="184" y="272">ID Клиента</text>
+    <text x="184" y="284">Дата продажи, Итоговая сумма</text>
+  </g>
+
+  <!-- Работы по заявке -->
+  <g>
+    <rect x="366" y="78" width="148" height="68" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="440" y="94" text-anchor="middle" font-weight="700">Работы по заявке</text>
+    <line x1="366" y1="96" x2="514" y2="96" stroke="#000" stroke-width="1"/>
+    <text x="372" y="110">ID</text>
+    <text x="372" y="122">ID Заявки</text>
+    <text x="372" y="134">ID Вида работ</text>
+    <text x="372" y="146">Порядковый номер</text>
+  </g>
+  <!-- Позиции заявки по запчастям -->
+  <g>
+    <rect x="366" y="156" width="168" height="68" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="450" y="172" text-anchor="middle" font-weight="700">Позиции заявки по запчастям</text>
+    <line x1="366" y1="174" x2="534" y2="174" stroke="#000" stroke-width="1"/>
+    <text x="372" y="188">ID</text>
+    <text x="372" y="200">ID Заявки</text>
+    <text x="372" y="212">ID Запчасти</text>
+    <text x="372" y="224">Количество</text>
+  </g>
+  <!-- Позиции продаж -->
+  <g>
+    <rect x="366" y="234" width="168" height="68" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="450" y="250" text-anchor="middle" font-weight="700">Позиции продаж</text>
+    <line x1="366" y1="252" x2="534" y2="252" stroke="#000" stroke-width="1"/>
+    <text x="372" y="266">ID</text>
+    <text x="372" y="278">ID Продажи</text>
+    <text x="372" y="290">ID Товара</text>
+    <text x="372" y="302">Количество, Цена за ед., Сумма</text>
+  </g>
+
+  <!-- Запчасти -->
+  <g>
+    <rect x="554" y="78" width="128" height="78" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="618" y="94" text-anchor="middle" font-weight="700">Запчасти</text>
+    <line x1="554" y1="96" x2="682" y2="96" stroke="#000" stroke-width="1"/>
+    <text x="560" y="110">ID</text>
+    <text x="560" y="122">Код</text>
+    <text x="560" y="134">ID Поставщика</text>
+    <text x="560" y="146">Название, Цена, Количество</text>
+  </g>
+  <!-- Товары -->
+  <g>
+    <rect x="554" y="166" width="128" height="88" fill="#fff" stroke="#000" stroke-width="1"/>
+    <text x="618" y="182" text-anchor="middle" font-weight="700">Товары</text>
+    <line x1="554" y1="184" x2="682" y2="184" stroke="#000" stroke-width="1"/>
+    <text x="560" y="198">ID</text>
+    <text x="560" y="210">Код</text>
+    <text x="560" y="222">ID Поставщика</text>
+    <text x="560" y="234">Название, Модель</text>
+    <text x="560" y="246">Цена, Количество</text>
+  </g>
+
+  <!-- Связи: пунктир; у «один» — вертикальная черта |, у «много» — тройная вилка -->
+  <!-- Должности | — — — * Сотрудники -->
+  <path d="M 128 39 L 158 142" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="128" y1="37" x2="128" y2="41" stroke="#000" stroke-width="1.5"/>
+  <!-- Сотрудники | — — — * Заявки -->
+  <path d="M 158 142 L 178 142" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="158" y1="140" x2="158" y2="144" stroke="#000" stroke-width="1.5"/>
+  <!-- Клиенты | — — — * Заявки -->
+  <path d="M 69 284 L 69 310 L 178 310 L 178 206" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="67" y1="284" x2="71" y2="284" stroke="#000" stroke-width="1.5"/>
+  <!-- Клиенты | — — — * Продажи -->
+  <path d="M 128 250 L 178 250" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="128" y1="248" x2="128" y2="252" stroke="#000" stroke-width="1.5"/>
+  <!-- Виды работ | — — — * Работы по заявке -->
+  <path d="M 296 39 L 366 112" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="294" y1="39" x2="298" y2="39" stroke="#000" stroke-width="1.5"/>
+  <!-- Заявки | — — — * Работы по заявке -->
+  <path d="M 346 142 L 366 142" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="346" y1="140" x2="346" y2="144" stroke="#000" stroke-width="1.5"/>
+  <!-- Заявки | — — — * Позиции заявки по запчастям -->
+  <path d="M 346 170 L 366 190" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="346" y1="168" x2="346" y2="172" stroke="#000" stroke-width="1.5"/>
+  <!-- Запчасти | — — — * Позиции заявки -->
+  <path d="M 554 117 L 534 190" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="552" y1="117" x2="556" y2="117" stroke="#000" stroke-width="1.5"/>
+  <!-- Поставщики | — — — * Запчасти -->
+  <path d="M 158 338 L 380 200 L 554 117" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="158" y1="336" x2="158" y2="340" stroke="#000" stroke-width="1.5"/>
+  <!-- Поставщики | — — — * Товары -->
+  <path d="M 158 338 L 380 254 L 554 210" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <!-- Продажи | — — — * Позиции продаж -->
+  <path d="M 346 284 L 366 268" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="346" y1="282" x2="346" y2="286" stroke="#000" stroke-width="1.5"/>
+  <!-- Товары | — — — * Позиции продаж -->
+  <path d="M 554 254 L 534 268" stroke="#000" stroke-width="1" fill="none" stroke-dasharray="4 3" marker-end="url(#crowfoot)"/>
+  <line x1="554" y1="252" x2="554" y2="256" stroke="#000" stroke-width="1.5"/>
+</svg>
+</div>
+
+</body>
+</html>

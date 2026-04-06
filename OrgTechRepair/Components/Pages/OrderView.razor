@@ -1,0 +1,145 @@
+@page "/orders/{OrderId:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Manager,Engineer,ServiceEngineer,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Просмотр заявки</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Просмотр заявки</h2>
+        <button class="btn btn-secondary" @onclick="GoBack">Назад к списку</button>
+    </div>
+
+    @if (order == null)
+    {
+        <div class="alert alert-info">Загрузка данных заявки...</div>
+    }
+    else
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Заявка № @order.OrderNumber</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Номер заявки:</dt>
+                            <dd class="col-sm-8">@order.OrderNumber</dd>
+
+                            <dt class="col-sm-4">Клиент:</dt>
+                            <dd class="col-sm-8">@(order.Client?.FullName ?? "Не указан")</dd>
+
+                            <dt class="col-sm-4">Модель техники:</dt>
+                            <dd class="col-sm-8">@order.EquipmentModel</dd>
+
+                            <dt class="col-sm-4">Описание состояния:</dt>
+                            <dd class="col-sm-8">@(order.ConditionDescription ?? "-")</dd>
+
+                            <dt class="col-sm-4">Описание проблемы:</dt>
+                            <dd class="col-sm-8">@(order.ComplaintDescription ?? "-")</dd>
+                        </dl>
+                    </div>
+
+                    <div class="col-md-6">
+                        <dl class="row">
+                            <dt class="col-sm-4">Дата заказа:</dt>
+                            <dd class="col-sm-8">@order.OrderDate.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">Статус:</dt>
+                            <dd class="col-sm-8">
+                                <span class="badge bg-@GetStatusColor(order.Status)">@order.Status</span>
+                            </dd>
+
+                            <dt class="col-sm-4">Сотрудник:</dt>
+                            <dd class="col-sm-8">
+                                @if (order.Employee != null)
+                                {
+                                    <text>@order.Employee.LastName @order.Employee.FirstName @order.Employee.MiddleName</text>
+                                }
+                                else
+                                {
+                                    <text>-</text>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-4">Стоимость:</dt>
+                            <dd class="col-sm-8">@(order.Cost?.ToString("N2") ?? "-") руб.</dd>
+
+                            <dt class="col-sm-4">Дата выполнения:</dt>
+                            <dd class="col-sm-8">@(order.CompletionDate?.ToString("dd.MM.yyyy HH:mm") ?? "-")</dd>
+                        </dl>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <AuthorizeView Roles="Manager,Engineer,ServiceEngineer,Administrator">
+                        <button class="btn btn-warning" @onclick="EditOrder">Редактировать</button>
+                    </AuthorizeView>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private Order? order;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadOrder();
+    }
+
+    private async Task LoadOrder()
+    {
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            order = await context.Orders
+                .Include(o => o.Client)
+                .Include(o => o.Employee)
+                .FirstOrDefaultAsync(o => o.Id == OrderId);
+
+            if (order == null)
+            {
+                // Если заявка не найдена, перенаправляем на список
+                Navigation.NavigateTo("/orders");
+            }
+        }
+        catch (Exception)
+        {
+            // В случае ошибки перенаправляем на список
+            Navigation.NavigateTo("/orders");
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/orders");
+    }
+
+    private void EditOrder()
+    {
+        Navigation.NavigateTo($"/orders/edit/{OrderId}");
+    }
+
+    private string GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Принят" => "primary",
+            "В работе" => "warning",
+            "Выполнен" => "success",
+            "Отменен" => "danger",
+            _ => "secondary"
+        };
+    }
+}

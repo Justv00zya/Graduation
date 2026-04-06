@@ -1,0 +1,335 @@
+@page "/admin"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using OrgTechRepair.Data
+@using OrgTechRepair.Services
+@using System.Linq
+@attribute [Authorize(Roles = "Administrator")]
+@inject UserManager<IdentityUser> UserManager
+@inject RoleManager<IdentityRole> RoleManager
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ILogStore LogStore
+
+<PageTitle>Администрирование</PageTitle>
+
+<div class="container-fluid">
+    <h2>Администрирование системы</h2>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Пользователи</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <button class="btn btn-primary" @onclick="ShowCreateUser">Создать пользователя</button>
+                    </div>
+
+                    @if (users != null)
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Логин</th>
+                                        <th>Email</th>
+                                        <th>Роли</th>
+                                        <th>Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var user in users)
+                                    {
+                                        <tr>
+                                            <td>@user.UserName</td>
+                                            <td>@user.Email</td>
+                                            <td>
+                                                @string.Join(", ", GetUserRoles(user))
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-warning" @onclick="() => EditUserRoles(user.Id)">Изменить роли</button>
+                                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteUser(user.Id)">Удалить</button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Логи приложения</h5>
+                    <a class="btn btn-sm btn-success" href="/api/admin/logs/csv" download="logs.csv" target="_blank">Скачать CSV</a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                        <table class="table table-sm table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Время</th>
+                                    <th>Уровень</th>
+                                    <th>Категория</th>
+                                    <th>Сообщение</th>
+                                    <th>Исключение</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (logEntries != null)
+                                {
+                                    @foreach (var e in logEntries.OrderByDescending(x => x.Timestamp).Take(500))
+                                    {
+                                        <tr>
+                                            <td class="text-nowrap">@e.Timestamp.ToString("dd.MM.yyyy HH:mm:ss")</td>
+                                            <td><span class="badge bg-@GetLogLevelBadge(e.Level)">@e.Level</span></td>
+                                            <td class="small text-muted">@e.Category</td>
+                                            <td class="small">@e.Message</td>
+                                            <td class="small text-danger">@(e.Exception ?? "-")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Резервная копия БД</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-2">Создать и скачать резервную копию базы данных (SQLite — файл .db, PostgreSQL — дамп .sql).</p>
+                    <a class="btn btn-primary" href="/api/admin/backup" target="_blank">Сохранить копию БД</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @if (showCreateUser)
+    {
+        <div class="modal show d-block" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Создать пользователя</h5>
+                        <button type="button" class="btn-close" @onclick="CloseCreateUser"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="@newUser" OnValidSubmit="@CreateUser" FormName="createUserForm">
+                            <div class="mb-3">
+                                <label class="form-label">Логин</label>
+                                <InputText @bind-Value="newUser.Username" class="form-control" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <InputText type="email" @bind-Value="newUser.Email" class="form-control" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Пароль</label>
+                                <InputText type="password" @bind-Value="newUser.Password" class="form-control" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Роль</label>
+                                <InputSelect @bind-Value="newUser.Role" class="form-select">
+                                    <option value="">Выберите роль</option>
+                                    <option value="Manager">Менеджер</option>
+                                    <option value="Engineer">Инженер</option>
+                                    <option value="ServiceEngineer">Сервисный инженер</option>
+                                    <option value="Accountant">Бухгалтер</option>
+                                    <option value="Director">Директор</option>
+                                    <option value="Administrator">Администратор</option>
+                                </InputSelect>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Создать</button>
+                            <button type="button" class="btn btn-secondary" @onclick="CloseCreateUser">Отмена</button>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (showEditRoles && editRolesUser != null)
+    {
+        <div class="modal show d-block" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Изменить роли — @editRolesUser.UserName</h5>
+                        <button type="button" class="btn-close" @onclick="CloseEditRoles"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Роль</label>
+                            <select class="form-select" @bind="editRolesSelectedRole">
+                                <option value="">Без роли</option>
+                                @foreach (var r in availableRoles)
+                                {
+                                    <option value="@r">@RoleDisplayName(r)</option>
+                                }
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" @onclick="SaveEditRoles">Сохранить</button>
+                        <button type="button" class="btn btn-secondary" @onclick="CloseEditRoles">Отмена</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private List<IdentityUser>? users;
+    private Dictionary<string, List<string>> userRoles = new();
+    private IReadOnlyList<LogEntry>? logEntries;
+    private bool showCreateUser = false;
+    private NewUserModel newUser = new();
+    private bool showEditRoles = false;
+    private IdentityUser? editRolesUser;
+    private string editRolesSelectedRole = string.Empty;
+    private List<string> availableRoles = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadUsers();
+        logEntries = LogStore.GetEntries(5000);
+        availableRoles = RoleManager.Roles.OrderBy(r => r.Name).Select(r => r.Name!).Where(n => !string.IsNullOrEmpty(n)).ToList();
+    }
+
+    private Task LoadUsers()
+    {
+        return LoadUsersAsync();
+    }
+
+    private async Task LoadUsersAsync()
+    {
+        users = UserManager.Users.ToList();
+        userRoles = new Dictionary<string, List<string>>();
+        foreach (var u in users)
+        {
+            var roles = await UserManager.GetRolesAsync(u);
+            userRoles[u.Id] = roles.ToList();
+        }
+    }
+
+    private void ShowCreateUser()
+    {
+        showCreateUser = true;
+        newUser = new();
+    }
+
+    private void CloseCreateUser()
+    {
+        showCreateUser = false;
+    }
+
+    private async Task CreateUser()
+    {
+        var user = new IdentityUser
+        {
+            UserName = newUser.Username,
+            Email = newUser.Email
+        };
+
+        var result = await UserManager.CreateAsync(user, newUser.Password);
+        if (result.Succeeded && !string.IsNullOrEmpty(newUser.Role))
+        {
+            await UserManager.AddToRoleAsync(user, newUser.Role);
+            await LoadUsers();
+            CloseCreateUser();
+        }
+    }
+
+    private List<string> GetUserRoles(IdentityUser user)
+        => userRoles.TryGetValue(user.Id, out var roles) ? roles : new List<string>();
+
+    private async Task EditUserRoles(string userId)
+    {
+        var user = await UserManager.FindByIdAsync(userId);
+        if (user == null) return;
+        var currentRoles = await UserManager.GetRolesAsync(user);
+        editRolesUser = user;
+        editRolesSelectedRole = currentRoles.FirstOrDefault() ?? string.Empty;
+        showEditRoles = true;
+    }
+
+    private void CloseEditRoles()
+    {
+        showEditRoles = false;
+        editRolesUser = null;
+        editRolesSelectedRole = string.Empty;
+    }
+
+    private async Task SaveEditRoles()
+    {
+        if (editRolesUser == null) return;
+        var currentRoles = await UserManager.GetRolesAsync(editRolesUser);
+        if (currentRoles.Count > 0)
+        {
+            var removeResult = await UserManager.RemoveFromRolesAsync(editRolesUser, currentRoles);
+            if (!removeResult.Succeeded) return;
+        }
+        if (!string.IsNullOrEmpty(editRolesSelectedRole))
+            await UserManager.AddToRoleAsync(editRolesUser, editRolesSelectedRole);
+        await LoadUsers();
+        CloseEditRoles();
+    }
+
+    private static string RoleDisplayName(string role) => role switch
+    {
+        "Administrator" => "Администратор",
+        "Manager" => "Менеджер",
+        "Engineer" => "Инженер",
+        "ServiceEngineer" => "Сервисный инженер",
+        "Accountant" => "Бухгалтер",
+        "Director" => "Директор",
+        "Client" => "Клиент",
+        _ => role
+    };
+
+    private async Task DeleteUser(string userId)
+    {
+        var user = await UserManager.FindByIdAsync(userId);
+        if (user != null)
+        {
+            await UserManager.DeleteAsync(user);
+            await LoadUsers();
+        }
+    }
+
+    private static string GetLogLevelBadge(string level)
+    {
+        return level switch
+        {
+            "Information" => "info",
+            "Warning" => "warning",
+            "Error" => "danger",
+            "Critical" => "danger",
+            "Debug" => "secondary",
+            "Trace" => "secondary",
+            _ => "secondary"
+        };
+    }
+
+    private class NewUserModel
+    {
+        public string Username { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Role { get; set; } = string.Empty;
+    }
+}

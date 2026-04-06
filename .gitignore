@@ -1,0 +1,24 @@
+## Build artifacts
+**/bin/
+**/obj/
+_tmp_build/
+
+## IDE
+.vs/
+.vscode/
+
+## Local user files
+**/*.user
+**/*.suo
+
+## Local database / logs
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/logs/
+
+## Flutter / Dart local caches (if present)
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+

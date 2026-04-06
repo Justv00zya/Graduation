@@ -1,0 +1,146 @@
+@page "/db-test"
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject ILoggerFactory LoggerFactory
+
+<PageTitle>Проверка подключения к БД</PageTitle>
+
+<div class="container-fluid">
+    <h2>Проверка подключения к базе данных</h2>
+
+    <div class="card mt-3">
+        <div class="card-header">
+            <h5>Результаты проверки</h5>
+        </div>
+        <div class="card-body">
+            @if (testResults == null)
+            {
+                <p>Выполняется проверка...</p>
+            }
+            else
+            {
+                <div class="mb-3">
+                    <strong>Статус подключения:</strong>
+                    @if (testResults.IsConnected)
+                    {
+                        <span class="badge bg-success">Подключено</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger">Не подключено</span>
+                    }
+                </div>
+
+                @if (!string.IsNullOrEmpty(testResults.ErrorMessage))
+                {
+                    <div class="alert alert-danger">
+                        <strong>Ошибка:</strong> @testResults.ErrorMessage
+                    </div>
+                }
+
+                @if (testResults.IsConnected)
+                {
+                    <div class="mb-3">
+                        <strong>Строка подключения:</strong>
+                        <code>@testResults.ConnectionString</code>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Проверка таблиц:</strong>
+                        <ul>
+                            @foreach (var table in testResults.Tables)
+                            {
+                                <li>@table</li>
+                            }
+                        </ul>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Количество записей:</strong>
+                        <ul>
+                            <li>Сотрудники: @testResults.EmployeeCount</li>
+                            <li>Клиенты: @testResults.ClientCount</li>
+                            <li>Товары: @testResults.ProductCount</li>
+                            <li>Заявки: @testResults.OrderCount</li>
+                            <li>Пользователи: @testResults.UserCount</li>
+                        </ul>
+                    </div>
+                }
+            }
+
+            <button class="btn btn-primary" @onclick="TestConnection">Проверить снова</button>
+        </div>
+    </div>
+</div>
+
+@code {
+    private TestResult? testResults;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await TestConnection();
+    }
+
+    private async Task TestConnection()
+    {
+        testResults = new TestResult();
+        
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var connection = context.Database.GetDbConnection();
+            
+            testResults.ConnectionString = connection.ConnectionString?.Replace("Password=***", "Password=***") ?? "Не указана";
+            
+            // Попытка открыть подключение
+            await connection.OpenAsync();
+            testResults.IsConnected = true;
+            
+            // Получаем список таблиц
+            var tables = new List<string>();
+            var command = connection.CreateCommand();
+            command.CommandText = @"
+                SELECT TABLE_NAME 
+                FROM INFORMATION_SCHEMA.TABLES 
+                WHERE TABLE_TYPE = 'BASE TABLE'
+                ORDER BY TABLE_NAME";
+            
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                tables.Add(reader.GetString(0));
+            }
+            testResults.Tables = tables;
+            
+            // Подсчитываем записи
+            testResults.EmployeeCount = await context.Employees.CountAsync();
+            testResults.ClientCount = await context.Clients.CountAsync();
+            testResults.ProductCount = await context.Products.CountAsync();
+            testResults.OrderCount = await context.Orders.CountAsync();
+            testResults.UserCount = await context.Users.CountAsync();
+            
+            await connection.CloseAsync();
+        }
+        catch (Exception ex)
+        {
+            testResults.IsConnected = false;
+            testResults.ErrorMessage = ex.Message;
+            var logger = LoggerFactory.CreateLogger("DatabaseTest");
+            logger.LogError(ex, "Ошибка при проверке подключения к БД");
+        }
+    }
+
+    private class TestResult
+    {
+        public bool IsConnected { get; set; }
+        public string? ErrorMessage { get; set; }
+        public string ConnectionString { get; set; } = string.Empty;
+        public List<string> Tables { get; set; } = new();
+        public int EmployeeCount { get; set; }
+        public int ClientCount { get; set; }
+        public int ProductCount { get; set; }
+        public int OrderCount { get; set; }
+        public int UserCount { get; set; }
+    }
+}

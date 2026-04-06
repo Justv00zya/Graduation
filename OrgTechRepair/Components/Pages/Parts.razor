@@ -1,0 +1,95 @@
+@page "/parts"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Engineer,ServiceEngineer,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Запчасти и тонер</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Запчасти и тонер</h2>
+        <button class="btn btn-primary" @onclick="CreateNew">Добавить запчасть/тонер</button>
+    </div>
+
+    @if (parts == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Код</th>
+                        <th>Наименование</th>
+                        <th>Поставщик</th>
+                        <th>Цена</th>
+                        <th>Количество</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var part in parts)
+                    {
+                        <tr>
+                            <td>@part.Code</td>
+                            <td>@part.Name</td>
+                            <td>@part.Supplier?.Name</td>
+                            <td>@part.Price.ToString("N2") руб.</td>
+                            <td>@part.Quantity</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" @onclick="() => EditPart(part.Id)">Редактировать</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeletePart(part.Id)">Удалить</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Part>? parts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadParts();
+    }
+
+    private async Task LoadParts()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        parts = await context.Parts
+            .Include(p => p.Supplier)
+            .ToListAsync();
+    }
+
+    private void CreateNew()
+    {
+        Navigation.NavigateTo("/parts/create");
+    }
+
+    private void EditPart(int id)
+    {
+        Navigation.NavigateTo($"/parts/edit/{id}");
+    }
+
+    private async Task DeletePart(int id)
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        var part = await context.Parts.FindAsync(id);
+        if (part != null)
+        {
+            context.Parts.Remove(part);
+            await context.SaveChangesAsync();
+            await LoadParts();
+        }
+    }
+}

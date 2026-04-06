@@ -1,0 +1,268 @@
+@page "/orders/create"
+@page "/orders/edit/{OrderId:int}"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Manager,Engineer,ServiceEngineer,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>@(OrderId == 0 ? "Создание заявки" : "Редактирование заявки")</PageTitle>
+
+<div class="container-fluid">
+    <h2>@(OrderId == 0 ? "Создание заявки" : "Редактирование заявки")</h2>
+
+    <EditForm Model="@order" OnValidSubmit="@SaveOrder" FormName="orderForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Номер заявки</label>
+                    <InputText @bind-Value="order.OrderNumber" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Клиент</label>
+                    <InputSelect @bind-Value="order.ClientId" class="form-select">
+                        <option value="0">Выберите клиента</option>
+                        @foreach (var client in clients)
+                        {
+                            <option value="@client.Id">@client.FullName</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Модель техники</label>
+                    <InputSelect @bind-Value="selectedModel" @bind-Value:after="OnModelChanged" class="form-select">
+                        <option value="">Выберите модель</option>
+                        @foreach (var model in printerModels)
+                        {
+                            <option value="@model">@model</option>
+                        }
+                        <option value="Другое">Другое</option>
+                    </InputSelect>
+                </div>
+
+                @if (showCustomModel)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Модель принтера (введите вручную)</label>
+                        <InputText @bind-Value="order.EquipmentModel" class="form-control" />
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="form-label">Описание состояния</label>
+                    <InputTextArea @bind-Value="order.ConditionDescription" class="form-control" rows="3" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Описание проблемы</label>
+                    <InputSelect @bind-Value="selectedProblem" @bind-Value:after="OnProblemChanged" class="form-select">
+                        <option value="">Выберите проблему</option>
+                        @foreach (var problem in commonProblems)
+                        {
+                            <option value="@problem">@problem</option>
+                        }
+                        <option value="Другое">Другое</option>
+                    </InputSelect>
+                </div>
+
+                @if (showCustomProblem)
+                {
+                    <div class="mb-3">
+                        <label class="form-label">Неисправность (опишите вручную)</label>
+                        <InputTextArea @bind-Value="order.ComplaintDescription" class="form-control" rows="3" />
+                    </div>
+                }
+            </div>
+
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Дата заказа</label>
+                    <InputDate @bind-Value="order.OrderDate" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Статус</label>
+                    <InputSelect @bind-Value="order.Status" class="form-select">
+                        <option value="Принят">Принят</option>
+                        <option value="В работе">В работе</option>
+                        <option value="Выполнен">Выполнен</option>
+                        <option value="Отменен">Отменен</option>
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Стоимость</label>
+                    <InputNumber @bind-Value="order.Cost" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Дата выполнения</label>
+                    <InputDate @bind-Value="order.CompletionDate" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Отмена</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int OrderId { get; set; }
+
+    private Order order = new() { OrderDate = DateTime.Now, Status = "Принят" };
+    private List<Client> clients = new();
+    
+    private string selectedModel = string.Empty;
+    private string selectedProblem = string.Empty;
+    private bool showCustomModel = false;
+    private bool showCustomProblem = false;
+
+    private readonly List<string> printerModels = new()
+    {
+        "HP LaserJet Pro M404dn",
+        "HP LaserJet Pro M402dn",
+        "HP LaserJet Pro M404dw",
+        "Canon PIXMA TR8620",
+        "Canon PIXMA G3010",
+        "Canon imageRUNNER ADVANCE C5235i",
+        "Epson Perfection V39",
+        "Epson L805",
+        "Epson WorkForce Pro WF-3720",
+        "Brother HL-L2350DW",
+        "Brother MFC-L2700DW",
+        "Xerox VersaLink C405",
+        "Xerox Phaser 6510",
+        "Samsung Xpress M2020W",
+        "Kyocera ECOSYS P5021cdn"
+    };
+
+    private readonly List<string> commonProblems = new()
+    {
+        "Застряла бумага",
+        "Не печатает",
+        "Ошибка картриджа",
+        "Низкое качество печати",
+        "Принтер не определяется компьютером",
+        "Замятие бумаги",
+        "Ошибка сканера",
+        "Проблемы с подключением по Wi-Fi",
+        "Заканчивается тонер/чернила",
+        "Принтер издает странные звуки",
+        "Не работает автоподача бумаги",
+        "Ошибка при двусторонней печати",
+        "Проблемы с драйвером",
+        "Принтер не включается"
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        clients = await context.Clients.ToListAsync();
+
+        if (OrderId > 0)
+        {
+            order = await context.Orders
+                .FirstOrDefaultAsync(o => o.Id == OrderId) ?? new Order();
+            
+            // Инициализация выбранных значений при редактировании
+            if (!string.IsNullOrEmpty(order.EquipmentModel))
+            {
+                if (printerModels.Contains(order.EquipmentModel))
+                {
+                    selectedModel = order.EquipmentModel;
+                    showCustomModel = false;
+                }
+                else
+                {
+                    selectedModel = "Другое";
+                    showCustomModel = true;
+                }
+            }
+            
+            if (!string.IsNullOrEmpty(order.ComplaintDescription))
+            {
+                if (commonProblems.Contains(order.ComplaintDescription))
+                {
+                    selectedProblem = order.ComplaintDescription;
+                    showCustomProblem = false;
+                }
+                else
+                {
+                    selectedProblem = "Другое";
+                    showCustomProblem = true;
+                }
+            }
+        }
+    }
+
+    private void OnModelChanged()
+    {
+        if (selectedModel == "Другое")
+        {
+            showCustomModel = true;
+            order.EquipmentModel = string.Empty;
+        }
+        else if (!string.IsNullOrEmpty(selectedModel))
+        {
+            showCustomModel = false;
+            order.EquipmentModel = selectedModel;
+        }
+        else
+        {
+            showCustomModel = false;
+            order.EquipmentModel = string.Empty;
+        }
+    }
+
+    private void OnProblemChanged()
+    {
+        if (selectedProblem == "Другое")
+        {
+            showCustomProblem = true;
+            order.ComplaintDescription = string.Empty;
+        }
+        else if (!string.IsNullOrEmpty(selectedProblem))
+        {
+            showCustomProblem = false;
+            order.ComplaintDescription = selectedProblem;
+        }
+        else
+        {
+            showCustomProblem = false;
+            order.ComplaintDescription = string.Empty;
+        }
+    }
+
+    private async Task SaveOrder()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        
+        if (OrderId == 0)
+        {
+            context.Orders.Add(order);
+        }
+        else
+        {
+            context.Orders.Update(order);
+        }
+        
+        await context.SaveChangesAsync();
+        Navigation.NavigateTo("/orders");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/orders");
+    }
+}

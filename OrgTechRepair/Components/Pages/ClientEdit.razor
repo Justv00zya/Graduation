@@ -1,0 +1,79 @@
+@page "/clients/create"
+@page "/clients/edit/{ClientId:int}"
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>@(ClientId == 0 ? "Создание клиента" : "Редактирование клиента")</PageTitle>
+
+<div class="container-fluid">
+    <h2>@(ClientId == 0 ? "Создание клиента" : "Редактирование клиента")</h2>
+
+    <EditForm Model="@client" OnValidSubmit="@SaveClient" FormName="clientForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">ФИО</label>
+                    <InputText @bind-Value="client.FullName" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Адрес</label>
+                    <InputText @bind-Value="client.Address" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Телефон</label>
+                    <InputText @bind-Value="client.Phone" class="form-control" placeholder="11 цифр" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Отмена</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int ClientId { get; set; }
+
+    private Client client = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (ClientId > 0)
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            client = await context.Clients.FindAsync(ClientId) ?? new Client();
+        }
+    }
+
+    private async Task SaveClient()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        
+        if (ClientId == 0)
+        {
+            context.Clients.Add(client);
+        }
+        else
+        {
+            context.Clients.Update(client);
+        }
+        
+        await context.SaveChangesAsync();
+        Navigation.NavigateTo("/clients");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/clients");
+    }
+}

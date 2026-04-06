@@ -1,0 +1,88 @@
+@page "/suppliers"
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>Поставщики</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Поставщики</h2>
+        <button class="btn btn-primary" @onclick="CreateNew">Добавить поставщика</button>
+    </div>
+
+    @if (suppliers == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Наименование</th>
+                        <th>Адрес</th>
+                        <th>ИНН</th>
+                        <th>Телефон</th>
+                        <th>Действия</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var supplier in suppliers)
+                    {
+                        <tr>
+                            <td>@supplier.Name</td>
+                            <td>@(supplier.Address ?? "-")</td>
+                            <td>@(supplier.INN ?? "-")</td>
+                            <td>@(supplier.Phone ?? "-")</td>
+                            <td>
+                                <button class="btn btn-sm btn-warning" @onclick="() => EditSupplier(supplier.Id)">Редактировать</button>
+                                <button class="btn btn-sm btn-danger" @onclick="() => DeleteSupplier(supplier.Id)">Удалить</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private List<Supplier>? suppliers;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSuppliers();
+    }
+
+    private async Task LoadSuppliers()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        suppliers = await context.Suppliers.ToListAsync();
+    }
+
+    private void CreateNew()
+    {
+        Navigation.NavigateTo("/suppliers/create");
+    }
+
+    private void EditSupplier(int id)
+    {
+        Navigation.NavigateTo($"/suppliers/edit/{id}");
+    }
+
+    private async Task DeleteSupplier(int id)
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        var supplier = await context.Suppliers.FindAsync(id);
+        if (supplier != null)
+        {
+            context.Suppliers.Remove(supplier);
+            await context.SaveChangesAsync();
+            await LoadSuppliers();
+        }
+    }
+}

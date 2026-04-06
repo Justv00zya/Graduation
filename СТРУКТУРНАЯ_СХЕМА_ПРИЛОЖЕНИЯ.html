@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Структурная схема приложения ВузяПринт</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 20px; background: #e8e8e8; color: #000; font-size: 12px; }
+    .part { margin-bottom: 40px; padding: 20px; background: #f0f0f0; border: 1px solid #999; position: relative; }
+    .part-title { font-weight: 700; font-size: 14px; margin-bottom: 16px; text-align: center; }
+    .box { border: 1px solid #000; background: #fff; padding: 6px 10px; white-space: nowrap; display: inline-block; }
+    .box-sm { padding: 4px 8px; font-size: 11px; }
+    .col { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+    .row { display: flex; flex-direction: row; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
+    .branch { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .conn-v { width: 2px; height: 12px; background: #000; }
+    .conn-h { height: 2px; width: 40px; background: #000; }
+    .arrow { width: 0; height: 0; border-left: 5px solid transparent; border-right: 5px solid transparent; border-top: 6px solid #000; }
+    .arrow-r { border-top: 5px solid transparent; border-bottom: 5px solid transparent; border-left: 6px solid #000; }
+    svg.conn { position: absolute; pointer-events: none; overflow: visible; }
+    .tree-conn { display: flex; flex-direction: column; align-items: center; }
+    .tree-conn .h-line { display: flex; align-items: center; }
+    .tree-conn .v-line { width: 2px; height: 14px; background: #000; }
+    .tree-conn .h-bar { width: 120px; height: 2px; background: #000; }
+    .tree-conn .h-bar.l { width: 200px; }
+    .tree-conn .arrow-down { width: 0; height: 0; border-left: 6px solid transparent; border-right: 6px solid transparent; border-top: 8px solid #000; }
+    .diagram-a .main-row { display: flex; justify-content: center; gap: 60px; margin-top: 8px; }
+    .diagram-a .section { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .diagram-a .group { border: 1px solid #000; background: #fff; padding: 8px 12px; }
+    .diagram-a .group-title { font-weight: 700; margin-bottom: 6px; }
+    .diagram-a .item { padding: 2px 0; font-size: 11px; }
+    .diagram-b .three-cols { display: flex; gap: 24px; margin-top: 12px; justify-content: center; }
+    .diagram-b .col-block { border: 1px solid #000; background: #fff; padding: 10px 14px; min-width: 180px; }
+    .diagram-b .col-title { font-weight: 700; margin-bottom: 8px; border-bottom: 1px solid #000; padding-bottom: 4px; }
+    .diagram-b .col-item { padding: 3px 0; font-size: 11px; }
+    .diagram-c .top-row { display: flex; align-items: flex-start; gap: 16px; margin-top: 8px; flex-wrap: wrap; }
+    .diagram-c .block { border: 1px solid #000; background: #fff; padding: 8px 12px; }
+    .diagram-c .block-title { font-weight: 700; margin-bottom: 6px; }
+    .diagram-c .block-item { padding: 2px 0; font-size: 11px; }
+  </style>
+</head>
+<body>
+
+<!-- ========== ЧАСТЬ А ========== -->
+<div class="part diagram-a">
+  <div class="part-title">Часть А</div>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="box">main</div>
+    <div class="tree-conn">
+      <div class="v-line"></div>
+      <div class="arrow-down"></div>
+    </div>
+    <div class="row" style="gap: 80px;">
+      <div class="section">
+        <div class="box">Components</div>
+        <div class="tree-conn"><div class="v-line"></div><div class="arrow-down"></div></div>
+        <div class="box group">
+          <div class="group-title">Pages</div>
+          <div class="item">Home.razor</div>
+          <div class="item">Login.razor</div>
+          <div class="item">Register.razor</div>
+          <div class="item">Orders.razor</div>
+          <div class="item">OrderEdit.razor</div>
+          <div class="item">OrderView.razor</div>
+          <div class="item">Clients.razor</div>
+          <div class="item">ClientEdit.razor</div>
+          <div class="item">Products.razor</div>
+          <div class="item">ProductEdit.razor</div>
+          <div class="item">Parts.razor</div>
+          <div class="item">PartEdit.razor</div>
+          <div class="item">Suppliers.razor</div>
+          <div class="item">SupplierEdit.razor</div>
+          <div class="item">Sales.razor</div>
+          <div class="item">Employees.razor</div>
+          <div class="item">EmployeeEdit.razor</div>
+          <div class="item">Reports.razor</div>
+          <div class="item">Admin.razor</div>
+          <div class="item">ForgotPassword.razor</div>
+          <div class="item">ResetPassword.razor</div>
+          <div class="item">AccessDenied.razor</div>
+        </div>
+        <div class="box group" style="margin-top: 8px;">
+          <div class="group-title">Layout</div>
+          <div class="item">MainLayout.razor</div>
+          <div class="item">NavMenu.razor</div>
+        </div>
+      </div>
+      <div class="section">
+        <div class="box">OrgTechRepair</div>
+        <div class="tree-conn"><div class="v-line"></div><div class="arrow-down"></div></div>
+        <div class="row" style="gap: 12px;">
+          <div class="box group">
+            <div class="group-title">Controllers</div>
+            <div class="item">AuthController</div>
+            <div class="item">AccountController</div>
+            <div class="item">OrdersController</div>
+            <div class="item">ClientsController</div>
+            <div class="item">ProductsController</div>
+            <div class="item">PartsController</div>
+            <div class="item">EmployeesController</div>
+            <div class="item">SalesController</div>
+          </div>
+          <div class="box group">
+            <div class="group-title">Data</div>
+            <div class="item">ApplicationDbContext</div>
+            <div class="item">SeedData</div>
+          </div>
+          <div class="box group">
+            <div class="group-title">Models</div>
+            <div class="item">Order</div>
+            <div class="item">Client</div>
+            <div class="item">Product</div>
+            <div class="item">Part</div>
+            <div class="item">Supplier</div>
+            <div class="item">Employee</div>
+            <div class="item">Position</div>
+            <div class="item">WorkType</div>
+            <div class="item">Work</div>
+            <div class="item">OrderPart</div>
+            <div class="item">Sale</div>
+            <div class="item">SaleItem</div>
+          </div>
+          <div class="box group">
+            <div class="group-title">Services</div>
+            <div class="item">IOrderPdfService</div>
+            <div class="item">OrderPdfService</div>
+            <div class="item">IEmailSender</div>
+            <div class="item">DevelopmentEmailSender</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ЧАСТЬ Б ========== -->
+<div class="part diagram-b">
+  <div class="part-title">Часть Б</div>
+  <div style="display: flex; flex-direction: column; align-items: center;">
+    <div class="box">OrgTechRepair</div>
+    <div class="tree-conn"><div class="v-line"></div><div class="arrow-down"></div></div>
+    <div class="three-cols">
+      <div class="col-block">
+        <div class="col-title">entity</div>
+        <div class="col-item">Order</div>
+        <div class="col-item">Client</div>
+        <div class="col-item">Product</div>
+        <div class="col-item">Part</div>
+        <div class="col-item">Supplier</div>
+        <div class="col-item">Employee</div>
+        <div class="col-item">Position</div>
+        <div class="col-item">WorkType</div>
+        <div class="col-item">Work</div>
+        <div class="col-item">OrderPart</div>
+        <div class="col-item">Sale</div>
+        <div class="col-item">SaleItem</div>
+        <div class="col-item">IdentityUser</div>
+        <div class="col-item">IdentityRole</div>
+      </div>
+      <div class="col-block">
+        <div class="col-title">data</div>
+        <div class="col-item">ApplicationDbContext</div>
+        <div class="col-item">SeedData</div>
+        <div class="col-item">DbSet&lt;Order&gt;</div>
+        <div class="col-item">DbSet&lt;Client&gt;</div>
+        <div class="col-item">DbSet&lt;Product&gt;</div>
+        <div class="col-item">DbSet&lt;Part&gt;</div>
+        <div class="col-item">DbSet&lt;Supplier&gt;</div>
+        <div class="col-item">DbSet&lt;Employee&gt;</div>
+        <div class="col-item">DbSet&lt;Sale&gt;</div>
+        <div class="col-item">OnModelCreating</div>
+      </div>
+      <div class="col-block">
+        <div class="col-title">service</div>
+        <div class="col-item">OrdersController</div>
+        <div class="col-item">ClientsController</div>
+        <div class="col-item">ProductsController</div>
+        <div class="col-item">PartsController</div>
+        <div class="col-item">EmployeesController</div>
+        <div class="col-item">SalesController</div>
+        <div class="col-item">AuthController</div>
+        <div class="col-item">AccountController</div>
+        <div class="col-item">OrderPdfService</div>
+        <div class="col-item">IOrderPdfService</div>
+        <div class="col-item">IEmailSender</div>
+        <div class="col-item">DevelopmentEmailSender</div>
+        <div class="col-item">RevalidatingIdentityAuthenticationStateProvider</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========== ЧАСТЬ В ========== -->
+<div class="part diagram-c">
+  <div class="part-title">Часть В</div>
+  <div style="display: flex; flex-direction: column; align-items: flex-start;">
+    <div class="box">web</div>
+    <div class="tree-conn"><div class="v-line"></div><div class="arrow-down"></div></div>
+    <div class="top-row">
+      <div class="block">
+        <div class="block-title">orders</div>
+        <div class="block-item">OrdersController</div>
+        <div class="block-item">Orders.razor</div>
+        <div class="block-item">OrderEdit.razor</div>
+        <div class="block-item">OrderView.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">clients</div>
+        <div class="block-item">ClientsController</div>
+        <div class="block-item">Clients.razor</div>
+        <div class="block-item">ClientEdit.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">products</div>
+        <div class="block-item">ProductsController</div>
+        <div class="block-item">Products.razor</div>
+        <div class="block-item">ProductEdit.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">parts</div>
+        <div class="block-item">PartsController</div>
+        <div class="block-item">Parts.razor</div>
+        <div class="block-item">PartEdit.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">suppliers</div>
+        <div class="block-item">Suppliers.razor</div>
+        <div class="block-item">SupplierEdit.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">sales</div>
+        <div class="block-item">SalesController</div>
+        <div class="block-item">Sales.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">employees</div>
+        <div class="block-item">EmployeesController</div>
+        <div class="block-item">Employees.razor</div>
+        <div class="block-item">EmployeeEdit.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">reports</div>
+        <div class="block-item">Reports.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">admin</div>
+        <div class="block-item">Admin.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">auth</div>
+        <div class="block-item">AuthController</div>
+        <div class="block-item">AccountController</div>
+        <div class="block-item">Login.razor</div>
+        <div class="block-item">Register.razor</div>
+        <div class="block-item">ForgotPassword.razor</div>
+        <div class="block-item">ResetPassword.razor</div>
+      </div>
+      <div class="block">
+        <div class="block-title">dto</div>
+        <div class="block-item">OrderDto</div>
+        <div class="block-item">ClientDto</div>
+        <div class="block-item">ProductDto</div>
+        <div class="block-item">EmployeeDto</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<p style="margin-top: 20px; padding: 10px; background: #e0e7ff; border-radius: 6px; font-size: 12px;">Схему можно скопировать в Word: выделите нужную часть (Часть А, Б или В) или весь документ, Ctrl+C, в Word — Ctrl+V. Либо откройте файл в Word (Файл → Открыть) и сохраните как .docx.</p>
+
+</body>
+</html>

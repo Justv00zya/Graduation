@@ -1,0 +1,135 @@
+@page "/client-cabinet"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Client")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject NavigationManager Navigation
+
+<PageTitle>Личный кабинет</PageTitle>
+
+<div class="container-fluid">
+    <h2>Личный кабинет</h2>
+
+    @if (_client == null && !_loading)
+    {
+        <div class="alert alert-warning">Профиль клиента не найден. Обратитесь к администратору.</div>
+    }
+    else if (_loading)
+    {
+        <p>Загрузка...</p>
+    }
+    else if (_client != null)
+    {
+        <div class="row mt-4">
+            <div class="col-md-5">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Мои данные</h5>
+                    </div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">ФИО / Название:</dt>
+                            <dd class="col-sm-8">@_client.FullName</dd>
+                            <dt class="col-sm-4">Email:</dt>
+                            <dd class="col-sm-8">@(_client.Email ?? "—")</dd>
+                            <dt class="col-sm-4">Телефон:</dt>
+                            <dd class="col-sm-8">@(_client.Phone ?? "—")</dd>
+                            <dt class="col-sm-4">Адрес:</dt>
+                            <dd class="col-sm-8">@(_client.Address ?? "—")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-7">
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Мои заявки</h5>
+                    </div>
+                    <div class="card-body">
+                        @if (_orders == null || _orders.Count == 0)
+                        {
+                            <p class="text-muted mb-0">У вас пока нет заявок.</p>
+                            <p class="small text-muted mt-2">Оставить заявку можно на <a href="/">главной странице</a>.</p>
+                        }
+                        else
+                        {
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Номер</th>
+                                            <th>Дата</th>
+                                            <th>Техника</th>
+                                            <th>Статус</th>
+                                            <th>Стоимость</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var o in _orders!)
+                                        {
+                                            <tr>
+                                                <td>@o.OrderNumber</td>
+                                                <td>@o.OrderDate.ToString("dd.MM.yyyy")</td>
+                                                <td>@o.EquipmentModel</td>
+                                                <td><span class="badge bg-@GetStatusColor(o.Status)">@o.Status</span></td>
+                                                <td>@(o.Cost?.ToString("N0") ?? "—") руб.</td>
+                                                <td>
+                                                    <a href="/client-cabinet/order/@o.Id">Подробнее</a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private Client? _client;
+    private List<Order>? _orders;
+    private bool _loading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userId = authState.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userId))
+        {
+            _loading = false;
+            return;
+        }
+
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        _client = await context.Clients.FirstOrDefaultAsync(c => c.UserId == userId);
+        if (_client != null)
+        {
+            _orders = await context.Orders
+                .Where(o => o.ClientId == _client.Id)
+                .OrderByDescending(o => o.OrderDate)
+                .ToListAsync();
+        }
+        _loading = false;
+    }
+
+    private static string GetStatusColor(string status)
+    {
+        return status switch
+        {
+            "Принят" => "primary",
+            "В работе" => "warning",
+            "Выполнен" => "success",
+            "Отменен" => "danger",
+            _ => "secondary"
+        };
+    }
+}

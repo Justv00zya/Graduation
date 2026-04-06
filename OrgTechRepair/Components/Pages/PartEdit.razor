@@ -1,0 +1,100 @@
+@page "/parts/create"
+@page "/parts/edit/{PartId:int}"
+@using Microsoft.AspNetCore.Authorization
+@using OrgTechRepair.Models
+@using OrgTechRepair.Data
+@using Microsoft.EntityFrameworkCore
+@attribute [Authorize(Roles = "Engineer,ServiceEngineer,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject NavigationManager Navigation
+
+<PageTitle>@(PartId == 0 ? "Создание запчасти" : "Редактирование запчасти")</PageTitle>
+
+<div class="container-fluid">
+    <h2>@(PartId == 0 ? "Создание запчасти/тонера" : "Редактирование запчасти/тонера")</h2>
+
+    <EditForm Model="@part" OnValidSubmit="@SavePart" FormName="partForm">
+        <DataAnnotationsValidator />
+        <ValidationSummary class="text-danger" />
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Код</label>
+                    <InputText @bind-Value="part.Code" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Наименование</label>
+                    <InputText @bind-Value="part.Name" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Поставщик</label>
+                    <InputSelect @bind-Value="part.SupplierId" class="form-select">
+                        <option value="0">Выберите поставщика</option>
+                        @foreach (var supplier in suppliers)
+                        {
+                            <option value="@supplier.Id">@supplier.Name</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Цена</label>
+                    <InputNumber @bind-Value="part.Price" class="form-control" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Количество</label>
+                    <InputNumber @bind-Value="part.Quantity" class="form-control" />
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <button type="submit" class="btn btn-primary">Сохранить</button>
+            <button type="button" class="btn btn-secondary" @onclick="Cancel">Отмена</button>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    [Parameter] public int PartId { get; set; }
+
+    private Part part = new();
+    private List<Supplier> suppliers = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        suppliers = await context.Suppliers.ToListAsync();
+
+        if (PartId > 0)
+        {
+            part = await context.Parts.FindAsync(PartId) ?? new Part();
+        }
+    }
+
+    private async Task SavePart()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        
+        if (PartId == 0)
+        {
+            context.Parts.Add(part);
+        }
+        else
+        {
+            context.Parts.Update(part);
+        }
+        
+        await context.SaveChangesAsync();
+        Navigation.NavigateTo("/parts");
+    }
+
+    private void Cancel()
+    {
+        Navigation.NavigateTo("/parts");
+    }
+}

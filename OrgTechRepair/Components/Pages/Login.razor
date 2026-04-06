@@ -1,0 +1,87 @@
+@page "/Login"
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.AspNetCore.Antiforgery
+@inject NavigationManager Navigation
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IAntiforgery Antiforgery
+
+<PageTitle>Вход в систему</PageTitle>
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="text-center">Вход в систему</h3>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="/Account/Login">
+                        <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Логин или Email</label>
+                            <input type="text" name="loginOrEmail" class="form-control" autocomplete="username" required />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Пароль</label>
+                            <input type="password" name="password" class="form-control" autocomplete="current-password" required />
+                        </div>
+                        
+                        <div class="mb-3">
+                            <input type="checkbox" name="rememberMe" value="true" class="form-check-input" id="rememberMe" />
+                            <label class="form-check-label" for="rememberMe">Запомнить меня</label>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">Войти</button>
+                    </form>
+                    
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mt-3">@errorMessage</div>
+                    }
+                    
+                    <div class="text-center mt-3">
+                        <a href="/ForgotPassword" class="btn btn-link">Забыли пароль?</a>
+                    </div>
+                    
+                    <div class="text-center mt-2">
+                        <p>Нет аккаунта? <a href="/Register">Зарегистрироваться</a></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string? errorMessage;
+    private string? returnUrl;
+
+    protected override void OnInitialized()
+    {
+        // Получаем сообщение об ошибке и ReturnUrl из query string
+        var uri = new Uri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        
+        if (query.ContainsKey("error"))
+        {
+            errorMessage = query["error"].ToString();
+        }
+        
+        returnUrl = query.ContainsKey("returnUrl") ? query["returnUrl"].ToString() : 
+                    query.ContainsKey("ReturnUrl") ? query["ReturnUrl"].ToString() : null;
+    }
+
+    private string GetAntiforgeryToken()
+    {
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext != null)
+        {
+            var tokenSet = Antiforgery.GetAndStoreTokens(httpContext);
+            return tokenSet.RequestToken ?? string.Empty;
+        }
+        return string.Empty;
+    }
+}
