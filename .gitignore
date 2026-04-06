@@ -25,3 +25,6 @@ _tmp_build/
 ## Markdown (keep locally if needed; not published in this repo)
 *.md
 
+## Root-level HTML docs (courseware / diagrams), not part of the app
+/*.html
+
