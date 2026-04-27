@@ -66,7 +66,7 @@ public class ClientsController : ControllerBase
 
     // POST: api/clients
     [HttpPost]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,Administrator")]
     public async Task<ActionResult<ClientDto>> CreateClient(CreateClientDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -86,7 +86,7 @@ public class ClientsController : ControllerBase
 
     // PUT: api/clients/5
     [HttpPut("{id}")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,Administrator")]
     public async Task<IActionResult> UpdateClient(int id, UpdateClientDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -108,7 +108,7 @@ public class ClientsController : ControllerBase
 
     // DELETE: api/clients/5
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,Administrator")]
     public async Task<IActionResult> DeleteClient(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

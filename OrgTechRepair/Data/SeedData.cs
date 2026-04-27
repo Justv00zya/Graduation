@@ -13,8 +13,8 @@ public static class SeedData
         var userManager = serviceProvider.GetRequiredService<UserManager<IdentityUser>>();
         var roleManager = serviceProvider.GetRequiredService<RoleManager<IdentityRole>>();
 
-        // Create roles (включая роль клиента)
-        string[] roles = { "Administrator", "Manager", "Engineer", "ServiceEngineer", "Accountant", "Director", "Client" };
+        // Create roles (включая роли по диаграмме: офис-менеджер, кассир, кладовщик)
+        string[] roles = { "Administrator", "Manager", "OfficeManager", "Engineer", "ServiceEngineer", "Accountant", "Cashier", "WarehouseKeeper", "Director", "Client" };
         foreach (var role in roles)
         {
             if (!await roleManager.RoleExistsAsync(role))
@@ -164,6 +164,46 @@ public static class SeedData
             {
                 await userManager.AddToRoleAsync(demoService, "ServiceEngineer");
             }
+        }
+
+        // Демо: офис-менеджер, кассир, кладовщик (роли по диаграмме)
+        if (await userManager.FindByNameAsync("demo_office") == null)
+        {
+            var u = new IdentityUser
+            {
+                UserName = "demo_office",
+                Email = "demo_office@example.com",
+                EmailConfirmed = true
+            };
+            var r = await userManager.CreateAsync(u, "111111");
+            if (r.Succeeded)
+                await userManager.AddToRoleAsync(u, "OfficeManager");
+        }
+
+        if (await userManager.FindByNameAsync("demo_cashier") == null)
+        {
+            var u = new IdentityUser
+            {
+                UserName = "demo_cashier",
+                Email = "demo_cashier@example.com",
+                EmailConfirmed = true
+            };
+            var r = await userManager.CreateAsync(u, "111111");
+            if (r.Succeeded)
+                await userManager.AddToRoleAsync(u, "Cashier");
+        }
+
+        if (await userManager.FindByNameAsync("demo_warehouse") == null)
+        {
+            var u = new IdentityUser
+            {
+                UserName = "demo_warehouse",
+                Email = "demo_warehouse@example.com",
+                EmailConfirmed = true
+            };
+            var r = await userManager.CreateAsync(u, "111111");
+            if (r.Succeeded)
+                await userManager.AddToRoleAsync(u, "WarehouseKeeper");
         }
 
         // Поставщики для товаров

@@ -203,7 +203,7 @@ public class OrdersController : ControllerBase
 
     // POST: api/orders
     [HttpPost]
-    [Authorize(Roles = "Manager,ServiceEngineer,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,ServiceEngineer,Administrator")]
     public async Task<ActionResult<OrderDto>> CreateOrder(CreateOrderDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -229,7 +229,7 @@ public class OrdersController : ControllerBase
 
     // PUT: api/orders/5
     [HttpPut("{id}")]
-    [Authorize(Roles = "Manager,Engineer,ServiceEngineer,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,Engineer,ServiceEngineer,Administrator")]
     public async Task<IActionResult> UpdateOrder(int id, UpdateOrderDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

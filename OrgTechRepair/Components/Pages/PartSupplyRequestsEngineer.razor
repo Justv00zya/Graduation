@@ -1,0 +1,237 @@
+@page "/part-supply-requests"
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.EntityFrameworkCore
+@using OrgTechRepair.Data
+@using OrgTechRepair.Models
+@attribute [Authorize(Roles = "ServiceEngineer,Engineer")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Заявки на склад</PageTitle>
+
+<div class="container-fluid">
+    <h2 class="mb-3">Запросить детали у кладовщика</h2>
+
+    @if (!string.IsNullOrEmpty(formError))
+    {
+        <div class="alert alert-danger">@formError</div>
+    }
+    @if (!string.IsNullOrEmpty(formSuccess))
+    {
+        <div class="alert alert-success">@formSuccess</div>
+    }
+
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row g-3 align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label">Запчасть</label>
+                    <select class="form-select" @bind="selectedPartId">
+                        <option value="0">— выберите —</option>
+                        @if (parts != null)
+                        {
+                            @foreach (var p in parts)
+                            {
+                                <option value="@p.Id">@p.Code — @p.Name (на складе: @p.Quantity)</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">Количество</label>
+                    <input type="number" class="form-control" min="1" @bind="requestQty" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Заявка на ремонт (необязательно)</label>
+                    <select class="form-select" @bind="selectedOrderId">
+                        <option value="">— не привязывать —</option>
+                        @if (orders != null)
+                        {
+                            @foreach (var o in orders)
+                            {
+                                <option value="@o.Id">№ @o.OrderNumber · @o.EquipmentModel</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100" @onclick="SubmitRequest" disabled="@isSubmitting">Отправить</button>
+                </div>
+            </div>
+            <div class="mt-2">
+                <label class="form-label">Комментарий для кладовщика</label>
+                <input type="text" class="form-control" @bind="requestComment" placeholder="Например, срочно к заказу" />
+            </div>
+        </div>
+    </div>
+
+    <h3 class="h5 mb-2">Мои заявки</h3>
+    @if (myRequests == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else if (myRequests.Count == 0)
+    {
+        <p class="text-muted">Пока нет заявок.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-sm table-striped">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Деталь</th>
+                        <th>Кол-во</th>
+                        <th>Ремонт</th>
+                        <th>Статус</th>
+                        <th>Ответ склада</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in myRequests)
+                    {
+                        <tr>
+                            <td>@r.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@(r.Part?.Code) @(r.Part?.Name)</td>
+                            <td>@r.Quantity</td>
+                            <td>@(r.Order != null ? $"№ {r.Order.OrderNumber}" : "—")</td>
+                            <td><span class="badge bg-@StatusBadge(r.Status)">@StatusLabel(r.Status)</span></td>
+                            <td>@(r.WarehouseComment ?? "—")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private string? currentUserId;
+    private List<Part>? parts;
+    private List<Order>? orders;
+    private List<PartSupplyRequest>? myRequests;
+    private int selectedPartId;
+    private int requestQty = 1;
+    private string selectedOrderId = "";
+    private string? requestComment;
+    private string? formError;
+    private string? formSuccess;
+    private bool isSubmitting;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await ReloadData();
+    }
+
+    private async Task ReloadData()
+    {
+        formError = null;
+        formSuccess = null;
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        parts = await context.Parts.OrderBy(p => p.Name).AsNoTracking().ToListAsync();
+        orders = await context.Orders
+            .OrderByDescending(o => o.OrderDate)
+            .Take(100)
+            .AsNoTracking()
+            .ToListAsync();
+
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            myRequests = await context.PartSupplyRequests
+                .Include(r => r.Part)
+                .Include(r => r.Order)
+                .Where(r => r.RequestedByUserId == currentUserId)
+                .OrderByDescending(r => r.CreatedAt)
+                .AsNoTracking()
+                .ToListAsync();
+        }
+        else
+            myRequests = new List<PartSupplyRequest>();
+    }
+
+    private async Task SubmitRequest()
+    {
+        formError = null;
+        formSuccess = null;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            formError = "Не удалось определить пользователя.";
+            return;
+        }
+
+        if (selectedPartId <= 0)
+        {
+            formError = "Выберите запчасть.";
+            return;
+        }
+
+        if (requestQty < 1)
+        {
+            formError = "Укажите количество не менее 1.";
+            return;
+        }
+
+        int? orderId = int.TryParse(selectedOrderId, out var oid) && oid > 0 ? oid : null;
+
+        isSubmitting = true;
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            if (!await context.Parts.AnyAsync(p => p.Id == selectedPartId))
+            {
+                formError = "Запчасть не найдена.";
+                return;
+            }
+
+            if (orderId is int o && !await context.Orders.AnyAsync(x => x.Id == o))
+            {
+                formError = "Заявка на ремонт не найдена.";
+                return;
+            }
+
+            context.PartSupplyRequests.Add(new PartSupplyRequest
+            {
+                PartId = selectedPartId,
+                Quantity = requestQty,
+                RequestedByUserId = currentUserId,
+                OrderId = orderId,
+                Comment = string.IsNullOrWhiteSpace(requestComment) ? null : requestComment.Trim(),
+                Status = "Pending",
+                CreatedAt = DateTime.UtcNow
+            });
+            await context.SaveChangesAsync();
+            formSuccess = "Заявка отправлена кладовщику.";
+            requestComment = null;
+            await ReloadData();
+        }
+        catch (Exception ex)
+        {
+            formError = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private static string StatusLabel(string s) => s switch
+    {
+        "Pending" => "Ожидает",
+        "Completed" => "Выдано",
+        "Rejected" => "Отклонено",
+        _ => s
+    };
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "Pending" => "warning",
+        "Completed" => "success",
+        "Rejected" => "danger",
+        _ => "secondary"
+    };
+}

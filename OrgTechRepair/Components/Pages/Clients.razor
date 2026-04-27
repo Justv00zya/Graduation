@@ -4,7 +4,7 @@
 @using OrgTechRepair.Models
 @using OrgTechRepair.Data
 @using Microsoft.EntityFrameworkCore
-@attribute [Authorize(Roles = "Manager,ServiceEngineer,Director,Administrator")]
+@attribute [Authorize(Roles = "Manager,OfficeManager,ServiceEngineer,Director,Administrator")]
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject NavigationManager Navigation
 

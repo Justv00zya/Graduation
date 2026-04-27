@@ -23,7 +23,7 @@ public class SalesController : ControllerBase
 
     // GET: api/sales
     [HttpGet]
-    [Authorize(Roles = "Manager,Accountant,Director,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,Accountant,Cashier,Director,Administrator")]
     public async Task<ActionResult<IEnumerable<object>>> GetSales()
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -45,7 +45,7 @@ public class SalesController : ControllerBase
 
     // GET: api/sales/5
     [HttpGet("{id}")]
-    [Authorize(Roles = "Manager,Accountant,Director,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,Accountant,Cashier,Director,Administrator")]
     public async Task<ActionResult<object>> GetSale(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

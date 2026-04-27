@@ -147,9 +147,12 @@
                                 <InputSelect @bind-Value="newUser.Role" class="form-select">
                                     <option value="">Выберите роль</option>
                                     <option value="Manager">Менеджер</option>
+                                    <option value="OfficeManager">Офис-менеджер</option>
                                     <option value="Engineer">Инженер</option>
                                     <option value="ServiceEngineer">Сервисный инженер</option>
                                     <option value="Accountant">Бухгалтер</option>
+                                    <option value="Cashier">Кассир</option>
+                                    <option value="WarehouseKeeper">Кладовщик</option>
                                     <option value="Director">Директор</option>
                                     <option value="Administrator">Администратор</option>
                                 </InputSelect>
@@ -293,9 +296,12 @@
     {
         "Administrator" => "Администратор",
         "Manager" => "Менеджер",
+        "OfficeManager" => "Офис-менеджер",
         "Engineer" => "Инженер",
         "ServiceEngineer" => "Сервисный инженер",
         "Accountant" => "Бухгалтер",
+        "Cashier" => "Кассир",
+        "WarehouseKeeper" => "Кладовщик",
         "Director" => "Директор",
         "Client" => "Клиент",
         _ => role

@@ -20,6 +20,7 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public DbSet<Part> Parts { get; set; }
     public DbSet<Order> Orders { get; set; }
     public DbSet<OrderPart> OrderParts { get; set; }
+    public DbSet<PartSupplyRequest> PartSupplyRequests { get; set; }
     public DbSet<WorkType> WorkTypes { get; set; }
     public DbSet<Work> Works { get; set; }
     public DbSet<Sale> Sales { get; set; }
@@ -71,6 +72,18 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
             .WithMany(p => p.OrderParts)
             .HasForeignKey(op => op.PartId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PartSupplyRequest>()
+            .HasOne(r => r.Part)
+            .WithMany()
+            .HasForeignKey(r => r.PartId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        builder.Entity<PartSupplyRequest>()
+            .HasOne(r => r.Order)
+            .WithMany()
+            .HasForeignKey(r => r.OrderId)
+            .OnDelete(DeleteBehavior.SetNull);
 
         builder.Entity<Work>()
             .HasOne(w => w.Order)
