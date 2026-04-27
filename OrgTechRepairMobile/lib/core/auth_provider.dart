@@ -23,12 +23,12 @@ class AuthProvider extends ChangeNotifier {
 
   bool hasRole(String role) => _roles.any((r) => r.toLowerCase() == role.toLowerCase());
   bool get isManagerOrDirectorOrAdmin =>
-      hasRole('Manager') || hasRole('Director') || hasRole('Administrator');
+      hasRole('Manager') || hasRole('OfficeManager') || hasRole('Director') || hasRole('Administrator');
   bool get isServiceEngineer => hasRole('ServiceEngineer');
   bool get isEngineerOrDirectorOrAdmin =>
-      hasRole('Engineer') || hasRole('Director') || hasRole('Administrator');
+      hasRole('Engineer') || hasRole('WarehouseKeeper') || hasRole('Director') || hasRole('Administrator');
   bool get isAccountantOrDirectorOrAdmin =>
-      hasRole('Accountant') || hasRole('Director') || hasRole('Administrator');
+      hasRole('Accountant') || hasRole('Cashier') || hasRole('Director') || hasRole('Administrator');
   bool get isAdministrator => hasRole('Administrator');
   bool get isClient => hasRole('Client');
 

@@ -21,6 +21,7 @@ _tmp_build/
 **/.dart_tool/
 **/.flutter-plugins
 **/.flutter-plugins-dependencies
+**/android/app/.cxx/
 
 ## Markdown (keep locally if needed; not published in this repo)
 *.md

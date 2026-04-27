@@ -128,8 +128,7 @@ class _ProductEditScreenState extends State<ProductEditScreen> {
       } else {
         final res = await api.createProduct(dto);
         savedId = _parseId(res['id'] ?? res['Id']);
-      }
-      if (_pickedImagePath != null && savedId != null) {
+       if (_pickedImagePath != null && savedId != null) {
         setState(() => _uploadingImage = true);
         final updated = await api.uploadProductImage(savedId, _pickedImagePath!);
         if (mounted) {

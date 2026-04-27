@@ -19,7 +19,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _confirmController = TextEditingController();
   bool _loading = false;
   String? _error;
-  bool _success = false;
 
   @override
   void dispose() {
@@ -39,43 +38,30 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } 
     setState(() => _loading = true);
     try {
-      final api = context.read<AuthProvider>().api;
+      final auth = context.read<AuthProvider>();
+      final api = auth.api;
+      final username = _usernameController.text.trim();
+      final password = _passwordController.text;
       await api.registerPublic(
-        username: _usernameController.text.trim(),
+        username: username,
         email: _emailController.text.trim(),
-        password: _passwordController.text,
+        password: password,
         confirmPassword: _confirmController.text,
       );
+
+      // Сразу выполняем вход после успешной регистрации.
+      await auth.login(username, password);
       if (!mounted) return;
-      setState(() {
-        _success = true;
-        _loading = false;
-      });
+      Navigator.pushReplacementNamed(context, '/');
     } catch (e) {
       setState(() => _error = apiErrorMessage(e));
     } finally {
-      if (mounted && !_success) setState(() => _loading = false);
+      if (mounted) setState(() => _loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_success) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Регистрация')),
-        body: AuthDecoratedBody(
-          child: SafeArea(
-            child: AuthSuccessPanel(
-              icon: Icons.check_circle_rounded,
-              message: 'Регистрация прошла успешно. Теперь можно войти в систему.',
-              buttonLabel: 'Перейти к входу',
-              onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-            ),
-          ),
-        ),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: const Text('Регистрация')),
       body: AuthDecoratedBody(

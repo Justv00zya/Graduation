@@ -29,6 +29,14 @@ class _OrderEditScreenState extends State<OrderEditScreen> {
   bool _loading = true;
   String? _error;
 
+  bool _isServiceEngineer(Map<String, dynamic> employee) {
+    final position = employee['positionName']?.toString().toLowerCase() ?? '';
+    final first = employee['firstName']?.toString().toLowerCase() ?? '';
+    final last = employee['lastName']?.toString().toLowerCase() ?? '';
+    final full = '$last $first $position';
+    return full.contains('service') || full.contains('сервис');
+  }
+
   @override
   void initState() {
     super.initState();
@@ -104,6 +112,12 @@ class _OrderEditScreenState extends State<OrderEditScreen> {
   @override
   Widget build(BuildContext context) {
     if (_loading) return buildAppScaffold(context, title: widget.orderId == null ? 'Новая заявка' : 'Редактирование заявки', body: const Center(child: CircularProgressIndicator()));
+    final engineerEmployees = _employees
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .where(_isServiceEngineer)
+        .toList();
+    final dropdownEmployees = engineerEmployees.isNotEmpty ? engineerEmployees : _employees;
     return buildAppScaffold(
       context,
       title: widget.orderId == null ? 'Новая заявка' : 'Редактирование заявки',
@@ -134,9 +148,9 @@ class _OrderEditScreenState extends State<OrderEditScreen> {
             const SizedBox(height: 12),
             DropdownButtonFormField<int?>(
               value: _employeeId,
-              decoration: const InputDecoration(labelText: 'Исполнитель'),
+              decoration: const InputDecoration(labelText: 'Сервисный инженер'),
               items: [const DropdownMenuItem<int?>(value: null, child: Text('—'))] +
-                  _employees.map<DropdownMenuItem<int?>>((e) {
+                  dropdownEmployees.map<DropdownMenuItem<int?>>((e) {
                     final id = e['id'] as int;
                     final name = '${e['lastName']} ${e['firstName']}';
                     return DropdownMenuItem(value: id, child: Text(name));

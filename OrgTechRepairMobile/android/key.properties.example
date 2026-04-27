@@ -1,0 +1,6 @@
+# Copy to key.properties and set paths. Generate keystore:
+# keytool -genkeypair -v -keystore vuzyaprint-release.jks -alias vuzyaprint -keyalg RSA -keysize 2048 -validity 10000
+storePassword=
+keyPassword=
+keyAlias=vuzyaprint
+storeFile=vuzyaprint-release.jks

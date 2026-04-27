@@ -21,6 +21,8 @@ import 'features/sales/sales_list_screen.dart';
 import 'features/sales/sale_view_screen.dart';
 import 'features/employees/employees_list_screen.dart';
 import 'features/parts/parts_list_screen.dart';
+import 'features/parts/part_supply_request_screen.dart';
+import 'features/parts/warehouse_part_supply_screen.dart';
 import 'features/reports/reports_screen.dart';
 import 'features/admin/admin_screen.dart';
 import 'features/client_cabinet/client_cabinet_screen.dart';
@@ -102,6 +104,14 @@ class OrgTechRepairApp extends StatelessWidget {
               return MaterialPageRoute(builder: (_) => const EmployeesListScreen());
             case '/parts':
               return MaterialPageRoute(builder: (_) => const PartsListScreen());
+            case '/part-supply-requests':
+              final args = settings.arguments;
+              final partId = args is Map && args['partId'] is int ? args['partId'] as int : null;
+              return MaterialPageRoute(
+                builder: (_) => PartSupplyRequestScreen(initialPartId: partId),
+              );
+            case '/warehouse-part-supply-requests':
+              return MaterialPageRoute(builder: (_) => const WarehousePartSupplyScreen());
             case '/reports':
               return MaterialPageRoute(builder: (_) => const ReportsScreen());
             case '/admin':
@@ -170,10 +180,13 @@ Widget buildAppScaffold(
 Drawer _buildDrawer(BuildContext context, AuthProvider auth) {
   final canOrders = auth.isManagerOrDirectorOrAdmin || auth.isServiceEngineer;
   final canProducts = auth.isManagerOrDirectorOrAdmin;
-  final canSales = auth.isManagerOrDirectorOrAdmin;
+  final canSales = auth.isManagerOrDirectorOrAdmin || auth.hasRole('Cashier');
   final canClients = auth.isManagerOrDirectorOrAdmin || auth.isServiceEngineer;
-  final canSuppliers = auth.isManagerOrDirectorOrAdmin;
-  final canParts = auth.isEngineerOrDirectorOrAdmin || auth.isServiceEngineer;
+  final canSuppliers = auth.isManagerOrDirectorOrAdmin || auth.hasRole('WarehouseKeeper');
+  final canParts = auth.isEngineerOrDirectorOrAdmin || auth.isServiceEngineer || auth.hasRole('WarehouseKeeper');
+  final canPartSupplyRequest = auth.isServiceEngineer || auth.hasRole('Engineer');
+  final canWarehouseSupplyQueue =
+      auth.hasRole('WarehouseKeeper') || auth.isManagerOrDirectorOrAdmin;
   final canEmployees = auth.isAccountantOrDirectorOrAdmin;
   final canReports = auth.isAccountantOrDirectorOrAdmin;
   final canAdmin = auth.isAdministrator;
@@ -280,6 +293,18 @@ Drawer _buildDrawer(BuildContext context, AuthProvider auth) {
             leading: const Icon(Icons.build),
             title: const Text('Запчасти и тонер'),
             onTap: () { Navigator.pop(context); Navigator.pushNamed(context, '/parts'); },
+          ),
+        if (canPartSupplyRequest)
+          ListTile(
+            leading: const Icon(Icons.send),
+            title: const Text('Заявка на склад'),
+            onTap: () { Navigator.pop(context); Navigator.pushNamed(context, '/part-supply-requests'); },
+          ),
+        if (canWarehouseSupplyQueue)
+          ListTile(
+            leading: const Icon(Icons.inventory),
+            title: const Text('Выдача со склада'),
+            onTap: () { Navigator.pop(context); Navigator.pushNamed(context, '/warehouse-part-supply-requests'); },
           ),
         if (canEmployees)
           ListTile(

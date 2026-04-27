@@ -35,6 +35,8 @@ class _PartsListScreenState extends State<PartsListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final canRequestFromWarehouse = auth.isServiceEngineer || auth.hasRole('Engineer');
     return buildAppScaffold(
       context,
       title: 'Запчасти и тонер',
@@ -66,11 +68,24 @@ class _PartsListScreenState extends State<PartsListScreen> {
                       final code = p['code']?.toString() ?? '';
                       final supplier = p['supplierName']?.toString() ?? '';
                       final price = p['price'];
+                      final qty = p['quantity'];
+                      final id = p['id'] as int?;
                       return Card(
                         margin: const EdgeInsets.only(bottom: 8),
                         child: ListTile(
                           title: Text(name),
-                          subtitle: Text('$code · $supplier · ${price != null ? price.toString() : ""} ₽'),
+                          subtitle: Text('$code · $supplier · на складе: $qty · ${price != null ? price.toString() : ""} ₽'),
+                          trailing: canRequestFromWarehouse && id != null
+                              ? IconButton(
+                                  tooltip: 'Запросить со склада',
+                                  icon: const Icon(Icons.send),
+                                  onPressed: () => Navigator.pushNamed(
+                                    context,
+                                    '/part-supply-requests',
+                                    arguments: {'partId': id},
+                                  ),
+                                )
+                              : null,
                         ),
                       );
                     },

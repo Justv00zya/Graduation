@@ -296,6 +296,46 @@ class ApiClient {
     return r.data as Map<String, dynamic>;
   }
 
+  // ——— Part supply requests (инженер → кладовщик) ———
+  Future<List<dynamic>> getPartSupplyRequestsQueue({String? status}) async {
+    final r = await _dio.get(
+      '/api/PartSupplyRequests',
+      queryParameters: status != null ? {'status': status} : null,
+    );
+    return r.data as List<dynamic>;
+  }
+
+  Future<List<dynamic>> getMyPartSupplyRequests() async {
+    final r = await _dio.get('/api/PartSupplyRequests/my');
+    return r.data as List<dynamic>;
+  }
+
+  Future<void> createPartSupplyRequest({
+    required int partId,
+    required int quantity,
+    int? orderId,
+    String? comment,
+  }) async {
+    await _dio.post('/api/PartSupplyRequests', data: {
+      'partId': partId,
+      'quantity': quantity,
+      if (orderId != null) 'orderId': orderId,
+      if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+    });
+  }
+
+  Future<void> completePartSupplyRequest(int id, {String? comment}) async {
+    await _dio.post('/api/PartSupplyRequests/$id/complete', data: {
+      if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+    });
+  }
+
+  Future<void> rejectPartSupplyRequest(int id, {String? comment}) async {
+    await _dio.post('/api/PartSupplyRequests/$id/reject', data: {
+      if (comment != null && comment.trim().isNotEmpty) 'comment': comment.trim(),
+    });
+  }
+
   AuthStorage get authStorage => _authStorage;
 }
 
