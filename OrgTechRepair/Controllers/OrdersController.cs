@@ -224,6 +224,8 @@ public class OrdersController : ControllerBase
         context.Orders.Add(order);
         await context.SaveChangesAsync();
 
+        await TryArchiveOrderPdfAsync(context, order);
+
         return CreatedAtAction(nameof(GetOrder), new { id = order.Id }, order);
     }
 
@@ -252,7 +254,26 @@ public class OrdersController : ControllerBase
 
         await context.SaveChangesAsync();
 
+        await TryArchiveOrderPdfAsync(context, order);
+
         return NoContent();
+    }
+
+    private async Task TryArchiveOrderPdfAsync(ApplicationDbContext context, Order order)
+    {
+        if (_orderPdfService == null)
+            return;
+        var client = await context.Clients.FindAsync(order.ClientId);
+        if (client == null)
+            return;
+        try
+        {
+            await _orderPdfService.GenerateOrderPdfAsync(order, client);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "PDF заявки {OrderId} не сохранён в папку архива", order.Id);
+        }
     }
 
     // DELETE: api/orders/5

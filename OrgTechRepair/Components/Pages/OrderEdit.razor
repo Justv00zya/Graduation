@@ -5,9 +5,11 @@
 @using OrgTechRepair.Models
 @using OrgTechRepair.Data
 @using Microsoft.EntityFrameworkCore
+@using OrgTechRepair.Services
 @attribute [Authorize(Roles = "Manager,OfficeManager,Engineer,ServiceEngineer,Administrator")]
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject NavigationManager Navigation
+@inject IOrderPdfService OrderPdfService
 
 <PageTitle>@(OrderId == 0 ? "Создание заявки" : "Редактирование заявки")</PageTitle>
 
@@ -258,6 +260,20 @@
         }
         
         await context.SaveChangesAsync();
+
+        try
+        {
+            var savedId = order.Id;
+            await using var ctx2 = await DbContextFactory.CreateDbContextAsync();
+            var fresh = await ctx2.Orders.Include(o => o.Client).FirstOrDefaultAsync(o => o.Id == savedId);
+            if (fresh?.Client != null)
+                await OrderPdfService.GenerateOrderPdfAsync(fresh, fresh.Client);
+        }
+        catch
+        {
+            // PDF в папку на рабочем столе — необязателен для сохранения заявки в БД
+        }
+
         Navigation.NavigateTo("/orders");
     }
 

@@ -1,13 +1,11 @@
 @page "/Register"
 @using Microsoft.AspNetCore.Components.Authorization
-@using Microsoft.AspNetCore.Identity
-@using Microsoft.EntityFrameworkCore
-@using OrgTechRepair.Data
-@using OrgTechRepair.Services
+@using Microsoft.AspNetCore.WebUtilities
+@using Microsoft.AspNetCore.Antiforgery
 @inject NavigationManager Navigation
-@inject UserManager<IdentityUser> UserManager
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IAntiforgery Antiforgery
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 
 <PageTitle>Регистрация</PageTitle>
 
@@ -20,57 +18,38 @@
                     <p class="text-muted small text-center mb-0">Учётные записи сотрудников создаёт администратор.</p>
                 </div>
                 <div class="card-body">
-                    <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister" FormName="registerForm">
-                        <DataAnnotationsValidator />
-                        <ValidationSummary class="text-danger" />
-                        
+                    <form method="post" action="/Account/Register">
+                        <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
+
                         <div class="mb-3">
                             <label class="form-label">Логин <span class="text-danger">*</span></label>
-                            <InputText @bind-Value="registerModel.Username" class="form-control" />
-                            <ValidationMessage For="@(() => registerModel.Username)" />
+                            <input type="text" name="username" class="form-control" autocomplete="username" required minlength="3" maxlength="50" />
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Email <span class="text-danger">*</span></label>
-                            <InputText @bind-Value="registerModel.Email" class="form-control" />
-                            <ValidationMessage For="@(() => registerModel.Email)" />
+                            <input type="email" name="email" class="form-control" autocomplete="email" required />
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Пароль <span class="text-danger">*</span></label>
-                            <InputText type="password" @bind-Value="registerModel.Password" class="form-control" />
-                            <ValidationMessage For="@(() => registerModel.Password)" />
+                            <input type="password" name="password" class="form-control" autocomplete="new-password" required minlength="6" />
                             <small class="form-text text-muted">Минимум 6 символов (для учебного проекта допускаются простые пароли)</small>
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Подтверждение пароля <span class="text-danger">*</span></label>
-                            <InputText type="password" @bind-Value="registerModel.ConfirmPassword" class="form-control" />
-                            <ValidationMessage For="@(() => registerModel.ConfirmPassword)" />
+                            <input type="password" name="confirmPassword" class="form-control" autocomplete="new-password" required minlength="6" />
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100" disabled="@isProcessing">
-                            @if (isProcessing)
-                            {
-                                <span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                            }
-                            Зарегистрироваться
-                        </button>
-                    </EditForm>
-                    
-                    @if (!string.IsNullOrEmpty(successMessage))
-                    {
-                        <div class="alert alert-success mt-3">@successMessage</div>
-                        <div class="text-center mt-3">
-                            <a href="/Login" class="btn btn-link">Перейти к входу</a>
-                        </div>
-                    }
-                    
+
+                        <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
+                    </form>
+
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
                         <div class="alert alert-danger mt-3">@errorMessage</div>
                     }
-                    
+
                     <div class="text-center mt-3">
                         <p>Уже есть аккаунт? <a href="/Login">Войти</a></p>
                     </div>
@@ -81,110 +60,33 @@
 </div>
 
 @code {
-    private RegisterModel registerModel = new();
     private string? errorMessage;
-    private string? successMessage;
-    private bool isProcessing = false;
 
     protected override async Task OnInitializedAsync()
     {
-        // Проверяем, не авторизован ли уже пользователь
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
             Navigation.NavigateTo("/", forceLoad: false);
+            return;
+        }
+
+        var uri = new Uri(Navigation.Uri);
+        var query = QueryHelpers.ParseQuery(uri.Query);
+        if (query.TryGetValue("error", out var err) && !string.IsNullOrEmpty(err))
+        {
+            errorMessage = err.ToString();
         }
     }
 
-    private async Task HandleRegister()
+    private string GetAntiforgeryToken()
     {
-        errorMessage = null;
-        successMessage = null;
-        isProcessing = true;
-
-        try
+        var httpContext = HttpContextAccessor.HttpContext;
+        if (httpContext != null)
         {
-            // Проверка совпадения паролей
-            if (registerModel.Password != registerModel.ConfirmPassword)
-            {
-                errorMessage = "Пароли не совпадают";
-                isProcessing = false;
-                return;
-            }
-
-            // Проверка существования пользователя
-            if (await UserManager.FindByNameAsync(registerModel.Username) != null)
-            {
-                errorMessage = "Пользователь с таким логином уже существует";
-                isProcessing = false;
-                return;
-            }
-
-            if (await UserManager.FindByEmailAsync(registerModel.Email) != null)
-            {
-                errorMessage = "Пользователь с таким email уже существует";
-                isProcessing = false;
-                return;
-            }
-
-            // Создание пользователя
-            var user = new IdentityUser
-            {
-                UserName = registerModel.Username,
-                Email = registerModel.Email,
-                EmailConfirmed = true // Для упрощения, в продакшене нужно подтверждение email
-            };
-
-            var result = await UserManager.CreateAsync(user, registerModel.Password);
-
-            if (result.Succeeded)
-            {
-                await UserManager.AddToRoleAsync(user, "Client");
-                await using var db = await DbContextFactory.CreateDbContextAsync();
-                await ClientProfileProvisioner.GetOrCreateForUserAsync(
-                    db,
-                    user.Id,
-                    user.UserName,
-                    user.Email);
-
-                successMessage = "Регистрация успешна! Теперь вы можете войти в систему.";
-                registerModel = new RegisterModel();
-            }
-            else
-            {
-                errorMessage = string.Join("; ", result.Errors.Select(e => e.Description));
-            }
+            var tokenSet = Antiforgery.GetAndStoreTokens(httpContext);
+            return tokenSet.RequestToken ?? string.Empty;
         }
-        catch (Exception ex)
-        {
-            errorMessage = $"Ошибка при регистрации: {ex.Message}";
-        }
-        finally
-        {
-            isProcessing = false;
-        }
-    }
-
-    private class RegisterModel
-    {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Логин обязателен")]
-        [System.ComponentModel.DataAnnotations.StringLength(50, MinimumLength = 3, ErrorMessage = "Логин должен быть от 3 до 50 символов")]
-        [System.ComponentModel.DataAnnotations.RegularExpression(
-            @"^[a-zA-Z0-9\-._@+ абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ]+$",
-            ErrorMessage = "Логин содержит недопустимые символы")]
-        public string Username { get; set; } = string.Empty;
-
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Email обязателен")]
-        [System.ComponentModel.DataAnnotations.EmailAddress(ErrorMessage = "Некорректный email адрес")]
-        public string Email { get; set; } = string.Empty;
-
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Пароль обязателен")]
-        [System.ComponentModel.DataAnnotations.StringLength(100, MinimumLength = 6, ErrorMessage = "Пароль должен быть от 6 до 100 символов")]
-        public string Password { get; set; } = string.Empty;
-
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Подтверждение пароля обязательно")]
-        [System.ComponentModel.DataAnnotations.Compare(nameof(Password), ErrorMessage = "Пароли не совпадают")]
-        public string ConfirmPassword { get; set; } = string.Empty;
-
+        return string.Empty;
     }
 }

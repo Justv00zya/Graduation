@@ -158,7 +158,15 @@ public class AuthController : ControllerBase
             user.UserName ?? request.Username,
             user.Email);
 
-        return Ok(new { message = "Регистрация успешна! Теперь вы можете войти в систему.", userId = user.Id });
+        var roles = await _userManager.GetRolesAsync(user);
+        var token = GenerateJwtToken(user, roles);
+        return Ok(new LoginResponse
+        {
+            Token = token,
+            Username = user.UserName!,
+            Email = user.Email,
+            Roles = roles.ToList()
+        });
     }
 
     // POST: api/auth/forgot-password

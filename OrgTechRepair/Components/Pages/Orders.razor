@@ -13,7 +13,7 @@
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2>Заявки на ремонт</h2>
-        <AuthorizeView Roles="Manager,ServiceEngineer,Administrator">
+        <AuthorizeView Roles="Manager,OfficeManager,ServiceEngineer,Administrator">
             <button class="btn btn-primary" @onclick="CreateNew">Создать заявку</button>
         </AuthorizeView>
     </div>
@@ -51,7 +51,7 @@
                             <td>@(order.Cost?.ToString("N2") ?? "-") руб.</td>
                             <td>
                                 <button class="btn btn-sm btn-info" @onclick="() => ViewOrder(order.Id)">Просмотр</button>
-                                <AuthorizeView Roles="Manager,Engineer,ServiceEngineer,Administrator">
+                                <AuthorizeView Roles="Manager,OfficeManager,Engineer,ServiceEngineer,Administrator">
                                     <button class="btn btn-sm btn-warning" @onclick="() => EditOrder(order.Id)">Редактировать</button>
                                 </AuthorizeView>
                             </td>

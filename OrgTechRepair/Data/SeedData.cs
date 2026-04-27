@@ -265,6 +265,120 @@ public static class SeedData
             }
         }
 
+        // Демо-заявки на ремонт (таблица на странице /orders)
+        if (!context.Orders.Any() && context.Clients.Any())
+        {
+            if (await context.Clients.CountAsync() < 3)
+            {
+                context.Clients.AddRange(
+                    new Client { FullName = "Иванов Пётр Сергеевич", Phone = "+79001112233", Address = "г. Москва, ул. Садовая, д. 15" },
+                    new Client { FullName = "ООО «ТехноПлюс»", Phone = "+74951234567", Address = "г. Москва, ул. Заводская, д. 3" }
+                );
+                await context.SaveChangesAsync();
+            }
+
+            var clients = await context.Clients.OrderBy(c => c.Id).ToListAsync();
+            var emp = await context.Employees.FirstOrDefaultAsync();
+            int? empId = emp?.Id;
+            Client C(int index) => clients[Math.Min(index, clients.Count - 1)];
+            var today = DateTime.Today;
+
+            context.Orders.AddRange(
+                new Order
+                {
+                    OrderNumber = "ZR-2025-001",
+                    ClientId = C(0).Id,
+                    EquipmentModel = "HP LaserJet Pro M404dn",
+                    ConditionDescription = "Внешний вид удовлетворительный",
+                    ComplaintDescription = "Полосы на оттиске, износ РВ",
+                    EmployeeId = empId,
+                    Cost = 4500,
+                    OrderDate = today.AddDays(-12),
+                    CompletionDate = today.AddDays(-10),
+                    Status = "Выполнен"
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-002",
+                    ClientId = C(1).Id,
+                    EquipmentModel = "Canon PIXMA MG2540S",
+                    ConditionDescription = "Царапины на крышке сканера",
+                    ComplaintDescription = "Не захватывает бумагу из нижнего лотка",
+                    OrderDate = today.AddDays(-10),
+                    Status = "В работе",
+                    EmployeeId = empId,
+                    Cost = 1800
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-003",
+                    ClientId = C(2).Id,
+                    EquipmentModel = "Brother DCP-L2500DR",
+                    ComplaintDescription = "Ошибка замятия (Jam Inside)",
+                    OrderDate = today.AddDays(-7),
+                    Status = "Принят",
+                    EmployeeId = null
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-004",
+                    ClientId = C(0).Id,
+                    EquipmentModel = "Samsung Xpress M2020W",
+                    ConditionDescription = "Комплект полный",
+                    ComplaintDescription = "Слабая печать, выцветание",
+                    OrderDate = today.AddDays(-5),
+                    Status = "В работе",
+                    EmployeeId = empId,
+                    Cost = 3200
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-005",
+                    ClientId = C(1).Id,
+                    EquipmentModel = "Xerox Phaser 3020",
+                    ComplaintDescription = "Заправка, счётчик остановлен",
+                    OrderDate = today.AddDays(-3),
+                    Status = "Принят",
+                    EmployeeId = null
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-006",
+                    ClientId = C(2).Id,
+                    EquipmentModel = "Epson L805",
+                    ConditionDescription = "Сублимационная установка",
+                    ComplaintDescription = "Полосы при цветной фотопечати",
+                    OrderDate = today.AddDays(-2),
+                    Status = "Выполнен",
+                    EmployeeId = empId,
+                    Cost = 5600,
+                    CompletionDate = today.AddDays(-1)
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-007",
+                    ClientId = C(0).Id,
+                    EquipmentModel = "Kyocera ECOSYS P2235dw",
+                    ComplaintDescription = "Отказ в печати, код ошибки 6000",
+                    OrderDate = today.AddDays(-1),
+                    Status = "Принят",
+                    EmployeeId = null
+                },
+                new Order
+                {
+                    OrderNumber = "ZR-2025-008",
+                    ClientId = C(1).Id,
+                    EquipmentModel = "HP DeskJet 2320",
+                    ComplaintDescription = "Отказ клиента после диагностики",
+                    OrderDate = today.AddDays(-4),
+                    Status = "Отменен",
+                    EmployeeId = empId,
+                    Cost = null
+                }
+            );
+            await context.SaveChangesAsync();
+        }
+
         // Демо-продажи (если есть клиенты и товары)
         if (!context.Sales.Any() && context.Clients.Any() && context.Products.Any())
         {
