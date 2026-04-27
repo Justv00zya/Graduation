@@ -23,7 +23,7 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpGet]
-    [Authorize(Roles = "Manager,Director,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Director,Administrator")]
     public async Task<ActionResult<IEnumerable<SupplierDto>>> GetSuppliers()
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -42,7 +42,7 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpGet("{id}")]
-    [Authorize(Roles = "Manager,Director,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Director,Administrator")]
     public async Task<ActionResult<SupplierDto>> GetSupplier(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -60,7 +60,7 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<ActionResult<SupplierDto>> CreateSupplier(CreateSupplierDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -86,7 +86,7 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<IActionResult> UpdateSupplier(int id, UpdateSupplierDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -102,7 +102,7 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<IActionResult> DeleteSupplier(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

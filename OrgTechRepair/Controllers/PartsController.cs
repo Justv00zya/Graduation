@@ -23,7 +23,7 @@ public class PartsController : ControllerBase
 
     // GET: api/parts
     [HttpGet]
-    [Authorize(Roles = "Engineer,ServiceEngineer,Director,Administrator")]
+    [Authorize(Roles = "Engineer,ServiceEngineer,WarehouseKeeper,Director,Administrator")]
     public async Task<ActionResult<IEnumerable<object>>> GetParts()
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -46,7 +46,7 @@ public class PartsController : ControllerBase
 
     // GET: api/parts/5
     [HttpGet("{id}")]
-    [Authorize(Roles = "Engineer,ServiceEngineer,Director,Administrator")]
+    [Authorize(Roles = "Engineer,ServiceEngineer,WarehouseKeeper,Director,Administrator")]
     public async Task<ActionResult<object>> GetPart(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

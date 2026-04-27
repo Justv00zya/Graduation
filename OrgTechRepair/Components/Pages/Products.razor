@@ -5,7 +5,7 @@
 @using OrgTechRepair.Data
 @using Microsoft.EntityFrameworkCore
 @using Microsoft.AspNetCore.Hosting
-@attribute [Authorize(Roles = "Manager,Director,Administrator")]
+@attribute [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Director,Administrator")]
 @inject IDbContextFactory<ApplicationDbContext> DbContextFactory
 @inject NavigationManager Navigation
 @inject IWebHostEnvironment Env

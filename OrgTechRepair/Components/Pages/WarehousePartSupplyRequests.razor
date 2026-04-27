@@ -1,0 +1,273 @@
+@page "/warehouse-part-supply-requests"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.EntityFrameworkCore
+@using System.Security.Claims
+@using OrgTechRepair.Data
+@using OrgTechRepair.Models
+@attribute [Authorize(Roles = "WarehouseKeeper,Manager,OfficeManager,Director,Administrator")]
+@inject IDbContextFactory<ApplicationDbContext> DbContextFactory
+@inject UserManager<IdentityUser> UserManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+<PageTitle>Очередь выдачи со склада</PageTitle>
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Заявки инженеров на детали</h2>
+        <div class="btn-group">
+            <button class="btn btn-sm @(filterPendingOnly ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetFilter(true)">Ожидающие</button>
+            <button class="btn btn-sm @(!filterPendingOnly ? "btn-primary" : "btn-outline-primary")" @onclick="() => SetFilter(false)">Все</button>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(actionMessage))
+    {
+        <div class="alert @(actionError ? "alert-danger" : "alert-success")">@actionMessage</div>
+    }
+
+    @if (rows == null)
+    {
+        <p>Загрузка...</p>
+    }
+    else if (rows.Count == 0)
+    {
+        <p class="text-muted">Нет заявок.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-striped align-middle">
+                <thead>
+                    <tr>
+                        <th>Дата</th>
+                        <th>Инженер</th>
+                        <th>Деталь</th>
+                        <th>Запрошено</th>
+                        <th>На складе</th>
+                        <th>Ремонт</th>
+                        <th>Комментарий</th>
+                        <th>Статус</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var r in rows)
+                    {
+                        <tr>
+                            <td>@r.Request.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@r.RequesterName</td>
+                            <td>@(r.Request.Part?.Code) @(r.Request.Part?.Name)</td>
+                            <td>@r.Request.Quantity</td>
+                            <td>@(r.Request.Part?.Quantity ?? 0)</td>
+                            <td>
+                                @if (r.Request.OrderId is int oid)
+                                {
+                                    <a href="/orders/@oid">№ @(r.Request.Order?.OrderNumber)</a>
+                                }
+                                else { <text>—</text> }
+                            </td>
+                            <td>@(r.Request.Comment ?? "—")</td>
+                            <td><span class="badge bg-@StatusBadge(r.Request.Status)">@StatusLabel(r.Request.Status)</span></td>
+                            <td>
+                                @if (r.Request.Status == "Pending")
+                                {
+                                    <button class="btn btn-sm btn-success me-1" @onclick="() => Complete(r.Request.Id)">Выдать</button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => Reject(r.Request.Id)">Отклонить</button>
+                                }
+                                else
+                                {
+                                    <small class="text-muted">@(r.Request.WarehouseComment ?? "")</small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@code {
+    private const string Pending = "Pending";
+
+    private List<RowVm>? rows;
+    private bool filterPendingOnly = true;
+    private string? currentUserId;
+    private string? actionMessage;
+    private bool actionError;
+
+    private class RowVm
+    {
+        public PartSupplyRequest Request { get; set; } = null!;
+        public string RequesterName { get; set; } = "";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var auth = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        currentUserId = auth.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        await Load();
+    }
+
+    private async Task SetFilter(bool pendingOnly)
+    {
+        filterPendingOnly = pendingOnly;
+        actionMessage = null;
+        await Load();
+    }
+
+    private async Task Load()
+    {
+        using var context = await DbContextFactory.CreateDbContextAsync();
+        var q = context.PartSupplyRequests
+            .Include(r => r.Part)
+            .Include(r => r.Order)
+            .AsQueryable();
+        if (filterPendingOnly)
+            q = q.Where(r => r.Status == Pending);
+
+        var list = await q
+            .OrderBy(r => r.Status == Pending ? 0 : 1)
+            .ThenBy(r => r.CreatedAt)
+            .ToListAsync();
+
+        var ids = list.Select(r => r.RequestedByUserId).Distinct().ToList();
+        var names = await UserManager.Users
+            .Where(u => ids.Contains(u.Id))
+            .Select(u => new { u.Id, u.UserName })
+            .ToDictionaryAsync(x => x.Id, x => x.UserName ?? x.Id);
+
+        rows = list.Select(r => new RowVm
+        {
+            Request = r,
+            RequesterName = names.TryGetValue(r.RequestedByUserId, out var n) ? n : r.RequestedByUserId
+        }).ToList();
+    }
+
+    private async Task Complete(int id)
+    {
+        actionMessage = null;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            actionError = true;
+            actionMessage = "Не удалось определить пользователя.";
+            return;
+        }
+
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            await using var tx = await context.Database.BeginTransactionAsync();
+            var req = await context.PartSupplyRequests
+                .Include(r => r.Part)
+                .FirstOrDefaultAsync(r => r.Id == id);
+            if (req == null || req.Part == null)
+            {
+                actionError = true;
+                actionMessage = "Заявка не найдена.";
+                return;
+            }
+
+            if (req.Status != Pending)
+            {
+                actionError = true;
+                actionMessage = "Заявка уже обработана.";
+                return;
+            }
+
+            if (req.Part.Quantity < req.Quantity)
+            {
+                actionError = true;
+                actionMessage = $"Недостаточно на складе (есть {req.Part.Quantity}).";
+                return;
+            }
+
+            req.Part.Quantity -= req.Quantity;
+
+            if (req.OrderId is int orderId)
+            {
+                var existing = await context.OrderParts
+                    .FirstOrDefaultAsync(op => op.OrderId == orderId && op.PartId == req.PartId);
+                if (existing != null)
+                    existing.Quantity += req.Quantity;
+                else
+                    context.OrderParts.Add(new OrderPart { OrderId = orderId, PartId = req.PartId, Quantity = req.Quantity });
+            }
+
+            req.Status = "Completed";
+            req.ProcessedAt = DateTime.UtcNow;
+            req.ProcessedByUserId = currentUserId;
+            await context.SaveChangesAsync();
+            await tx.CommitAsync();
+            actionError = false;
+            actionMessage = "Выдача зафиксирована, остаток обновлён.";
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            actionError = true;
+            actionMessage = ex.Message;
+        }
+    }
+
+    private async Task Reject(int id)
+    {
+        actionMessage = null;
+        if (string.IsNullOrEmpty(currentUserId))
+        {
+            actionError = true;
+            actionMessage = "Не удалось определить пользователя.";
+            return;
+        }
+
+        try
+        {
+            using var context = await DbContextFactory.CreateDbContextAsync();
+            var req = await context.PartSupplyRequests.FindAsync(id);
+            if (req == null)
+            {
+                actionError = true;
+                actionMessage = "Заявка не найдена.";
+                return;
+            }
+
+            if (req.Status != Pending)
+            {
+                actionError = true;
+                actionMessage = "Заявка уже обработана.";
+                return;
+            }
+
+            req.Status = "Rejected";
+            req.ProcessedAt = DateTime.UtcNow;
+            req.ProcessedByUserId = currentUserId;
+            await context.SaveChangesAsync();
+            actionError = false;
+            actionMessage = "Заявка отклонена.";
+            await Load();
+        }
+        catch (Exception ex)
+        {
+            actionError = true;
+            actionMessage = ex.Message;
+        }
+    }
+
+    private static string StatusLabel(string s) => s switch
+    {
+        "Pending" => "Ожидает",
+        "Completed" => "Выдано",
+        "Rejected" => "Отклонено",
+        _ => s
+    };
+
+    private static string StatusBadge(string s) => s switch
+    {
+        "Pending" => "warning",
+        "Completed" => "success",
+        "Rejected" => "danger",
+        _ => "secondary"
+    };
+}

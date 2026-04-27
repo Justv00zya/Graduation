@@ -24,7 +24,7 @@ public class EmployeesController : ControllerBase
 
     // GET: api/employees
     [HttpGet]
-    [Authorize(Roles = "Accountant,Director,Administrator")]
+    [Authorize(Roles = "Accountant,Cashier,Director,Administrator")]
     public async Task<ActionResult<IEnumerable<EmployeeDto>>> GetEmployees()
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -51,7 +51,7 @@ public class EmployeesController : ControllerBase
 
     // GET: api/employees/5
     [HttpGet("{id}")]
-    [Authorize(Roles = "Accountant,Director,Administrator")]
+    [Authorize(Roles = "Accountant,Cashier,Director,Administrator")]
     public async Task<ActionResult<EmployeeDto>> GetEmployee(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

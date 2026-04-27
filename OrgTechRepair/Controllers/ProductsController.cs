@@ -99,7 +99,7 @@ public class ProductsController : ControllerBase
 
     // POST: api/products
     [HttpPost]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<ActionResult<ProductDto>> CreateProduct(CreateProductDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -123,7 +123,7 @@ public class ProductsController : ControllerBase
 
     // PUT: api/products/5
     [HttpPut("{id:int}")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<IActionResult> UpdateProduct(int id, UpdateProductDto dto)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -146,7 +146,7 @@ public class ProductsController : ControllerBase
 
     /// <summary>Загрузить или заменить фото товара (multipart, поле file).</summary>
     [HttpPost("{id:int}/image")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     [RequestSizeLimit(10 * 1024 * 1024)]
     public async Task<ActionResult<ProductDto>> UploadProductImage(int id, IFormFile? file, CancellationToken cancellationToken)
     {
@@ -181,7 +181,7 @@ public class ProductsController : ControllerBase
 
     /// <summary>Удалить фото товара.</summary>
     [HttpDelete("{id:int}/image")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<IActionResult> DeleteProductImage(int id, CancellationToken cancellationToken)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -197,7 +197,7 @@ public class ProductsController : ControllerBase
 
     // DELETE: api/products/5
     [HttpDelete("{id:int}")]
-    [Authorize(Roles = "Manager,Administrator")]
+    [Authorize(Roles = "Manager,OfficeManager,WarehouseKeeper,Administrator")]
     public async Task<IActionResult> DeleteProduct(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();

@@ -253,6 +253,7 @@ using (var scope = app.Services.CreateScope())
         ApplyClientColumnsMigration.Apply(context);
         ApplyProductImageColumnMigration.Apply(context);
         ApplyDateColumnsMigration.Apply(context);
+        ApplyPartSupplyRequestsTableMigration.Apply(context);
 
         // Seed initial data
         await SeedData.Initialize(services);
