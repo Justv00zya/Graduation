@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>3. Технологическая часть — 3.1. Инструментальные средства (OrgTechRepair)</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; font-size: 14pt; line-height: 1.45; margin: 2cm; color: #000; }
+    h1 { font-size: 16pt; text-align: center; margin: 24px 0 16px; }
+    h2 { font-size: 15pt; margin: 20px 0 10px; }
+    h3 { font-size: 14pt; margin: 16px 0 8px; }
+    p { text-align: justify; margin: 0 0 10px; text-indent: 1.25cm; }
+    p.no-indent { text-indent: 0; }
+    ul { margin: 8px 0 12px 0; }
+    li { margin-bottom: 6px; }
+    .small { font-size: 12pt; }
+  </style>
+</head>
+<body>
+
+  <h1>3. Технологическая часть</h1>
+
+  <h2>3.1. Инструментальные средства</h2>
+
+  <p>В качестве системы управления базами данных (СУБД) в разрабатываемой информационной системе «ВузяПринт» (веб-приложение OrgTechRepair и связанный с ним API) используется <strong>PostgreSQL</strong> — объектно-реляционная СУБД с открытым исходным кодом, поддерживающая декларативные ограничения целостности, транзакции и типы данных, необходимые для учёта заявок на ремонт, клиентов, складских позиций и продаж.</p>
+
+  <p>Для проектирования и сопровождения базы данных применялись следующие инструменты: среда <strong>pgAdmin</strong> (или иной клиент к PostgreSQL) для выполнения SQL-запросов, просмотра схемы и проверки ограничений; встроенные средства <strong>JetBrains Rider / Visual Studio</strong> для отладки приложения и просмотра данных через Entity Framework Core; при необходимости развёртывания на новом сервере используются <strong>SQL-скрипты</strong>, включённые в репозиторий проекта (<code>database_postgres.sql</code>, <code>database_full_setup.sql</code>, <code>database_seed_data.sql</code> и др.), что облегчает повторяемую инициализацию структуры БД.</p>
+
+  <p>Доступ к данным из программного кода веб-приложения реализован через технологию <strong>Entity Framework Core</strong>: контекст <code>ApplicationDbContext</code> описывает набор сущностей предметной области и правила связей (внешние ключи, каскадное удаление, поведение при удалении связанных записей — <code>Restrict</code>, <code>SetNull</code>, <code>Cascade</code> в соответствии с бизнес-логикой). Таблицы подсистемы учёта пользователей и ролей формируются средствами <strong>ASP.NET Core Identity</strong> (в той же базе данных хранятся пользователи, роли и назначения ролей).</p>
+
+  <h3 class="small">Реализованные основные таблицы (логические сущности)</h3>
+  <p class="no-indent">В составе базы данных реализованы, в частности, следующие таблицы (имена приведены в форме, соответствующей соглашению Entity Framework по умолчанию — во множественном числе):</p>
+  <ul>
+    <li>таблицы <strong>ASP.NET Identity</strong>: пользователи, роли, связи пользователь–роль и вспомогательные таблицы (<code>AspNetUsers</code>, <code>AspNetRoles</code>, <code>AspNetUserRoles</code> и др.);</li>
+    <li><strong>Positions</strong> — должности сотрудников;</li>
+    <li><strong>Employees</strong> — карточки сотрудников;</li>
+    <li><strong>Clients</strong> — клиенты сервиса (с опциональной привязкой к учётной записи пользователя);</li>
+    <li><strong>Suppliers</strong> — поставщики;</li>
+    <li><strong>Products</strong> — товары (расходные материалы);</li>
+    <li><strong>Parts</strong> — запчасти и тонер на складе сервиса;</li>
+    <li><strong>Orders</strong> — заявки на ремонт оргтехники;</li>
+    <li><strong>OrderParts</strong> — использование запчастей в рамках заявки;</li>
+    <li><strong>WorkTypes</strong> и <strong>Works</strong> — справочник видов работ и выполненные работы по заявке;</li>
+    <li><strong>PartSupplyRequests</strong> — заявки инженеров на выдачу запчастей со склада;</li>
+    <li><strong>Sales</strong> и <strong>SaleItems</strong> — документы продаж и строки чека.</li>
+  </ul>
+
+  <p>Ограничения целостности (первичные и внешние ключи) и правила удаления настроены в коде конфигурации модели (<code>OnModelCreating</code> в <code>ApplicationDbContext</code>), что обеспечивает согласованность данных при операциях с заявками, клиентами, складом и продажами. Резервное копирование базы в административном модуле может выполняться утилитой <strong>pg_dump</strong> (путь к исполняемому файлу задаётся в конфигурации приложения).</p>
+
+  <p class="no-indent small" style="margin-top:20px">Файл сгенерирован для проекта OrgTechRepair. Для вставки в документ Word: откройте в браузере, выделите текст, скопируйте; либо сохраните как PDF из браузера.</p>
+
+</body>
+</html>

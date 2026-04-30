@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Полный перечень файлов проекта OrgTechRepair</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; font-size: 10pt; margin: 16px; color: #000; }
+    h1 { font-size: 13pt; text-align: center; font-weight: bold; margin-bottom: 8px; }
+    .meta { font-size: 9pt; text-align: center; margin-bottom: 12px; color: #333; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+    th, td { border: 1px solid #000; padding: 4px 6px; vertical-align: top; word-wrap: break-word; }
+    th { background: #e0e0e0; font-weight: bold; text-align: center; font-size: 9pt; }
+    td.num { width: 3%; text-align: center; font-size: 9pt; }
+    td.path { width: 34%; font-family: Consolas, monospace; font-size: 8.5pt; }
+    td.desc { width: 63%; font-size: 9pt; }
+    thead { display: table-header-group; }
+    tr { page-break-inside: avoid; }
+    @media print { body { margin: 8mm; } }
+  </style>
+</head>
+<body>
+  <h1>Таблица — описание всех файлов веб-проекта OrgTechRepair</h1>
+  <p class="meta">Строки 1–100: проект <strong>OrgTechRepair/OrgTechRepair</strong> (исходный код сайта). Строки 101–106: корень репозитория (SQL и файл решения .sln). Не включены <code>bin/</code>, <code>obj/</code>, каталоги IDE и пакеты NuGet. Мобильный клиент <strong>OrgTechRepairMobile</strong> — отдельный репозиторий/папка; по запросу можно оформить аналогичную таблицу для Dart/Flutter.</p>
+  <table>
+    <thead>
+      <tr>
+        <th>№</th>
+        <th>Путь к файлу (от папки проекта OrgTechRepair)</th>
+        <th>Назначение</th>
+      </tr>
+    </thead>
+    <tbody>
+<tr><td class="num">1</td><td class="path">OrgTechRepair.csproj</td><td class="desc">Файл проекта MSBuild: целевая платформа .NET, ссылки на пакеты NuGet (EF Core, Identity, Blazor, QuestPDF и др.), включение Razor/CSS.</td></tr>
+<tr><td class="num">2</td><td class="path">Program.cs</td><td class="desc">Точка входа: построение конвейера HTTP, подключение Blazor Server, PostgreSQL/SQLite, Identity, JWT, CORS, регистрация сервисов и контроллеров, инициализация БД и сидирование.</td></tr>
+<tr><td class="num">3</td><td class="path">appsettings.json</td><td class="desc">Основная конфигурация: строки подключения к БД, JWT, путь архива PDF-заявок, логирование, ограничение хостов.</td></tr>
+<tr><td class="num">4</td><td class="path">appsettings.Development.json</td><td class="desc">Переопределения для среды Development (например, каталог заявок, строка подключения при локальной отладке).</td></tr>
+<tr><td class="num">5</td><td class="path">Properties/launchSettings.json</td><td class="desc">Профили запуска Kestrel/IIS Express: URL, переменная среды ASPNETCORE_ENVIRONMENT.</td></tr>
+<tr><td class="num">6</td><td class="path">Data/ApplicationDbContext.cs</td><td class="desc">Контекст Entity Framework: DbSet сущностей (заказы, клиенты, сотрудники, товары, запчасти, продажи, заявки на склад и т.д.), связи и ограничения.</td></tr>
+<tr><td class="num">7</td><td class="path">Data/SeedData.cs</td><td class="desc">Начальное заполнение БД: роли Identity, демо-пользователи, справочники, тестовые заявки и номенклатура для демонстрации.</td></tr>
+<tr><td class="num">8</td><td class="path">Data/PostgreSqlDbBootstrap.cs</td><td class="desc">Вспомогательная логика при старте для PostgreSQL (создание/проверка структуры при необходимости).</td></tr>
+<tr><td class="num">9</td><td class="path">Data/ApplyClientColumnsMigration.cs</td><td class="desc">Программное применение изменений схемы: колонки клиента при отсутствии полноценной миграции EF.</td></tr>
+<tr><td class="num">10</td><td class="path">Data/ApplyDateColumnsMigration.cs</td><td class="desc">Программное добавление/обновление колонок дат в таблицах по необходимости.</td></tr>
+<tr><td class="num">11</td><td class="path">Data/ApplyPartSupplyRequestsTableMigration.cs</td><td class="desc">Создание или обновление таблицы заявок на выдачу запчастей со склада.</td></tr>
+<tr><td class="num">12</td><td class="path">Data/ApplyProductImageColumnMigration.cs</td><td class="desc">Добавление колонки URL изображения товара в таблицу продуктов.</td></tr>
+<tr><td class="num">13</td><td class="path">Models/Client.cs</td><td class="desc">Сущность клиента сервиса: ФИО/организация, контакты, адрес, связь с пользователем Identity.</td></tr>
+<tr><td class="num">14</td><td class="path">Models/Employee.cs</td><td class="desc">Сущность сотрудника: табельный номер, ФИО, должность, даты, реквизиты.</td></tr>
+<tr><td class="num">15</td><td class="path">Models/Order.cs</td><td class="desc">Сущность заявки на ремонт: номер, клиент, модель техники, жалоба, статус, стоимость, исполнитель.</td></tr>
+<tr><td class="num">16</td><td class="path">Models/OrderPart.cs</td><td class="desc">Связь заявки с использованными запчастями (учёт деталей по заказу).</td></tr>
+<tr><td class="num">17</td><td class="path">Models/Part.cs</td><td class="desc">Сущность запчасти на складе сервиса: код, наименование, поставщик, цена, остаток.</td></tr>
+<tr><td class="num">18</td><td class="path">Models/PartSupplyRequest.cs</td><td class="desc">Заявка инженера на выдачу запчасти со склада: статус, связь с заявкой на ремонт, комментарии.</td></tr>
+<tr><td class="num">19</td><td class="path">Models/Position.cs</td><td class="desc">Справочник должностей сотрудников и оклад.</td></tr>
+<tr><td class="num">20</td><td class="path">Models/Product.cs</td><td class="desc">Сущность товара (расходники): код, название, модель, поставщик, цена, количество, URL изображения.</td></tr>
+<tr><td class="num">21</td><td class="path">Models/Sale.cs</td><td class="desc">Сущность продажи (документ): дата, клиент, сумма, позиции.</td></tr>
+<tr><td class="num">22</td><td class="path">Models/SaleItem.cs</td><td class="desc">Строка продажи: товар, количество, цена.</td></tr>
+<tr><td class="num">23</td><td class="path">Models/Supplier.cs</td><td class="desc">Сущность поставщика: наименование, адрес, телефон, ИНН.</td></tr>
+<tr><td class="num">24</td><td class="path">Models/Work.cs</td><td class="desc">Связь выполненных работ с заявкой (вид работ, стоимость в контексте заказа).</td></tr>
+<tr><td class="num">25</td><td class="path">Models/WorkType.cs</td><td class="desc">Справочник видов работ и базовая цена.</td></tr>
+<tr><td class="num">26</td><td class="path">Models/DTOs/ClientDto.cs</td><td class="desc">Объект передачи данных клиента для API и UI.</td></tr>
+<tr><td class="num">27</td><td class="path">Models/DTOs/EmployeeDto.cs</td><td class="desc">DTO сотрудника для API (без лишних навигационных полей).</td></tr>
+<tr><td class="num">28</td><td class="path">Models/DTOs/OrderDto.cs</td><td class="desc">DTO заявки на ремонт для списков и деталей в API.</td></tr>
+<tr><td class="num">29</td><td class="path">Models/DTOs/PartSupplyRequestDtos.cs</td><td class="desc">DTO создания и отображения заявок на выдачу запчастей.</td></tr>
+<tr><td class="num">30</td><td class="path">Models/DTOs/ProductDto.cs</td><td class="desc">DTO товара для REST и форм редактирования.</td></tr>
+<tr><td class="num">31</td><td class="path">Models/DTOs/QuickRequestDto.cs</td><td class="desc">Поля быстрой заявки с главной страницы (имя, телефон, модель, описание проблемы).</td></tr>
+<tr><td class="num">32</td><td class="path">Models/DTOs/SupplierDto.cs</td><td class="desc">DTO поставщика для API.</td></tr>
+<tr><td class="num">33</td><td class="path">Services/ClientProfileProvisioner.cs</td><td class="desc">Создание или поиск карточки клиента и привязка к Identity при регистрации/входе.</td></tr>
+<tr><td class="num">34</td><td class="path">Services/DatabaseBackupService.cs</td><td class="desc">Резервное копирование PostgreSQL через pg_dump, возврат потока для скачивания.</td></tr>
+<tr><td class="num">35</td><td class="path">Services/DevelopmentEmailSender.cs</td><td class="desc">Заглушка отправки e-mail в разработке (логирование вместо реальной отправки).</td></tr>
+<tr><td class="num">36</td><td class="path">Services/IEmailSender.cs</td><td class="desc">Абстракция отправки писем (сброс пароля и уведомления).</td></tr>
+<tr><td class="num">37</td><td class="path">Services/IDatabaseBackupService.cs</td><td class="desc">Интерфейс сервиса резервного копирования БД.</td></tr>
+<tr><td class="num">38</td><td class="path">Services/ILogStore.cs</td><td class="desc">Интерфейс хранилища записей лога для админ-панели.</td></tr>
+<tr><td class="num">39</td><td class="path">Services/InMemoryLogStore.cs</td><td class="desc">Реализация кольцевого буфера логов в памяти для просмотра администратором.</td></tr>
+<tr><td class="num">40</td><td class="path">Services/IOrderPdfService.cs</td><td class="desc">Интерфейс генерации PDF по заявке.</td></tr>
+<tr><td class="num">41</td><td class="path">Services/OrderPdfService.cs</td><td class="desc">Генерация PDF заявки на ремонт (QuestPDF), сохранение в каталог из конфигурации.</td></tr>
+<tr><td class="num">42</td><td class="path">Controllers/AccountController.cs</td><td class="desc">MVC: вход и регистрация клиента по форме POST, cookie SignIn, редиректы.</td></tr>
+<tr><td class="num">43</td><td class="path">Controllers/AdminController.cs</td><td class="desc">API администратора: логи (JSON/CSV), запуск бэкапа и выгрузка дампа (JWT + роль Administrator).</td></tr>
+<tr><td class="num">44</td><td class="path">Controllers/AuthController.cs</td><td class="desc">API аутентификации: JWT login, публичная регистрация клиента, смена пароля.</td></tr>
+<tr><td class="num">45</td><td class="path">Controllers/ClientCabinetController.cs</td><td class="desc">API личного кабинета клиента: свои заявки и данные профиля.</td></tr>
+<tr><td class="num">46</td><td class="path">Controllers/ClientsController.cs</td><td class="desc">REST клиентов: список, получение, создание, обновление, удаление (по политике авторизации).</td></tr>
+<tr><td class="num">47</td><td class="path">Controllers/EmployeesController.cs</td><td class="desc">REST сотрудников: CRUD и связь с должностями.</td></tr>
+<tr><td class="num">48</td><td class="path">Controllers/HealthController.cs</td><td class="desc">Проверка доступности API (health/ping) для мониторинга.</td></tr>
+<tr><td class="num">49</td><td class="path">Controllers/OrdersController.cs</td><td class="desc">REST заявок на ремонт, быстрая анонимная заявка, генерация PDF при сохранении.</td></tr>
+<tr><td class="num">50</td><td class="path">Controllers/PartsController.cs</td><td class="desc">REST запчастей: список, получение по id, создание, обновление, удаление.</td></tr>
+<tr><td class="num">51</td><td class="path">Controllers/PartSupplyRequestsController.cs</td><td class="desc">REST заявок инженера на запчасти: создание, список, одобрение/отклонение кладовщиком.</td></tr>
+<tr><td class="num">52</td><td class="path">Controllers/ProductsController.cs</td><td class="desc">REST товаров: список, CRUD, загрузка изображения карточки товара.</td></tr>
+<tr><td class="num">53</td><td class="path">Controllers/ReportsController.cs</td><td class="desc">API отчётов и агрегированных данных для страницы отчётов.</td></tr>
+<tr><td class="num">54</td><td class="path">Controllers/SalesController.cs</td><td class="desc">REST продаж: список, детали, создание продаж с позициями.</td></tr>
+<tr><td class="num">55</td><td class="path">Controllers/SuppliersController.cs</td><td class="desc">REST поставщиков: CRUD для справочника.</td></tr>
+<tr><td class="num">56</td><td class="path">Components/_Imports.razor</td><td class="desc">Глобальные директивы Razor: пространства имён и using для всех компонентов.</td></tr>
+<tr><td class="num">57</td><td class="path">Components/App.razor</td><td class="desc">Корневой маршрутизатор Blazor: CascadingAuthenticationState, Router, NotFound.</td></tr>
+<tr><td class="num">58</td><td class="path">Components/Routes.razor</td><td class="desc">Определение маршрутов и обёртка AuthorizeRouteView для защищённых страниц.</td></tr>
+<tr><td class="num">59</td><td class="path">Components/RedirectToLogin.razor</td><td class="desc">Компонент редиректа неавторизованного пользователя на страницу входа.</td></tr>
+<tr><td class="num">60</td><td class="path">Components/RevalidatingIdentityAuthenticationStateProvider.cs</td><td class="desc">Периодическая ревалидация пользователя Blazor Server относительно Identity в БД.</td></tr>
+<tr><td class="num">61</td><td class="path">Components/Layout/MainLayout.razor</td><td class="desc">Основной макет страницы: шапка, меню, область контента, ссылка выхода.</td></tr>
+<tr><td class="num">62</td><td class="path">Components/Layout/MainLayout.razor.css</td><td class="desc">Изолированные стили макета (CSS scope для MainLayout).</td></tr>
+<tr><td class="num">63</td><td class="path">Components/Layout/NavMenu.razor</td><td class="desc">Боковое меню навигации с учётом ролей пользователя.</td></tr>
+<tr><td class="num">64</td><td class="path">Components/Layout/NavMenu.razor.css</td><td class="desc">Изолированные стили меню навигации.</td></tr>
+<tr><td class="num">65</td><td class="path">Components/Pages/AccessDenied.razor</td><td class="desc">Страница отказа в доступе при недостаточных правах.</td></tr>
+<tr><td class="num">66</td><td class="path">Components/Pages/Admin.razor</td><td class="desc">Панель администратора: логи, выгрузка CSV, запуск бэкапа БД.</td></tr>
+<tr><td class="num">67</td><td class="path">Components/Pages/ClientCabinet.razor</td><td class="desc">Личный кабинет клиента: список своих заявок.</td></tr>
+<tr><td class="num">68</td><td class="path">Components/Pages/ClientCabinetOrder.razor</td><td class="desc">Просмотр одной заявки клиента в кабинете.</td></tr>
+<tr><td class="num">69</td><td class="path">Components/Pages/ClientEdit.razor</td><td class="desc">Форма создания и редактирования клиента (для персонала).</td></tr>
+<tr><td class="num">70</td><td class="path">Components/Pages/Clients.razor</td><td class="desc">Список клиентов и переход к редактированию.</td></tr>
+<tr><td class="num">71</td><td class="path">Components/Pages/Counter.razor</td><td class="desc">Демонстрационный счётчик (шаблон Blazor).</td></tr>
+<tr><td class="num">72</td><td class="path">Components/Pages/DatabaseTest.razor</td><td class="desc">Служебная страница проверки подключения к БД и счётчиков записей.</td></tr>
+<tr><td class="num">73</td><td class="path">Components/Pages/EmployeeEdit.razor</td><td class="desc">Форма создания и редактирования сотрудника.</td></tr>
+<tr><td class="num">74</td><td class="path">Components/Pages/Employees.razor</td><td class="desc">Список сотрудников и переход к карточке.</td></tr>
+<tr><td class="num">75</td><td class="path">Components/Pages/Error.razor</td><td class="desc">Страница ошибки Blazor с идентификатором запроса для диагностики.</td></tr>
+<tr><td class="num">76</td><td class="path">Components/Pages/ForgotPassword.razor</td><td class="desc">Запрос сброса пароля по e-mail.</td></tr>
+<tr><td class="num">77</td><td class="path">Components/Pages/Home.razor</td><td class="desc">Главная страница: описание сервиса, быстрая заявка на ремонт для гостей.</td></tr>
+<tr><td class="num">78</td><td class="path">Components/Pages/Login.razor</td><td class="desc">Форма входа в систему (логин или e-mail и пароль).</td></tr>
+<tr><td class="num">79</td><td class="path">Components/Pages/OrderEdit.razor</td><td class="desc">Создание и редактирование заявки на ремонт, генерация PDF.</td></tr>
+<tr><td class="num">80</td><td class="path">Components/Pages/Orders.razor</td><td class="desc">Таблица заявок на ремонт для сотрудников.</td></tr>
+<tr><td class="num">81</td><td class="path">Components/Pages/OrderView.razor</td><td class="desc">Просмотр заявки без редактирования (детали заказа).</td></tr>
+<tr><td class="num">82</td><td class="path">Components/Pages/PartEdit.razor</td><td class="desc">Форма создания и редактирования запчасти.</td></tr>
+<tr><td class="num">83</td><td class="path">Components/Pages/Parts.razor</td><td class="desc">Список запчастей на складе сервиса.</td></tr>
+<tr><td class="num">84</td><td class="path">Components/Pages/PartSupplyRequestsEngineer.razor</td><td class="desc">Инженер: подача заявок на выдачу запчастей со склада.</td></tr>
+<tr><td class="num">85</td><td class="path">Components/Pages/ProductEdit.razor</td><td class="desc">Форма создания и редактирования товара, загрузка фото.</td></tr>
+<tr><td class="num">86</td><td class="path">Components/Pages/Products.razor</td><td class="desc">Список товаров (расходники) и переход к редактированию.</td></tr>
+<tr><td class="num">87</td><td class="path">Components/Pages/Register.razor</td><td class="desc">Регистрация клиента через POST на AccountController с antiforgery-токеном.</td></tr>
+<tr><td class="num">88</td><td class="path">Components/Pages/Reports.razor</td><td class="desc">Страница отчётов и сводной статистики.</td></tr>
+<tr><td class="num">89</td><td class="path">Components/Pages/ResetPassword.razor</td><td class="desc">Установка нового пароля по ссылке из письма сброса.</td></tr>
+<tr><td class="num">90</td><td class="path">Components/Pages/Sales.razor</td><td class="desc">Список продаж.</td></tr>
+<tr><td class="num">91</td><td class="path">Components/Pages/SaleView.razor</td><td class="desc">Просмотр документа продажи и позиций.</td></tr>
+<tr><td class="num">92</td><td class="path">Components/Pages/Suppliers.razor</td><td class="desc">Список поставщиков.</td></tr>
+<tr><td class="num">93</td><td class="path">Components/Pages/SupplierEdit.razor</td><td class="desc">Форма создания и редактирования поставщика.</td></tr>
+<tr><td class="num">94</td><td class="path">Components/Pages/WarehousePartSupplyRequests.razor</td><td class="desc">Кладовщик: очередь заявок инженеров на запчасти, одобрение или отклонение.</td></tr>
+<tr><td class="num">95</td><td class="path">Components/Pages/Weather.razor</td><td class="desc">Демонстрационная страница прогноза погоды (шаблон Blazor).</td></tr>
+<tr><td class="num">96</td><td class="path">wwwroot/app.css</td><td class="desc">Глобальные стили приложения поверх Bootstrap.</td></tr>
+<tr><td class="num">97</td><td class="path">wwwroot/bootstrap/bootstrap.min.css</td><td class="desc">Минифицированная таблица стилей Bootstrap для оформления UI.</td></tr>
+<tr><td class="num">98</td><td class="path">wwwroot/bootstrap/bootstrap.min.css.map</td><td class="desc">Source map для отладки минифицированного CSS в браузере.</td></tr>
+<tr><td class="num">99</td><td class="path">wwwroot/structure-diagram.html</td><td class="desc">Статическая SVG-блок-схема структуры проекта (справочный материал).</td></tr>
+<tr><td class="num">100</td><td class="path">wwwroot/table5-classes-description.html</td><td class="desc">Статическая таблица описания ключевых классов (справочный материал).</td></tr>
+<tr><td class="num">101</td><td class="path">../database_full_setup.sql</td><td class="desc">Скрипт полной первоначальной настройки БД (структура и данные, вариант «всё в одном»).</td></tr>
+<tr><td class="num">102</td><td class="path">../database_postgres.sql</td><td class="desc">Скрипт создания схемы под PostgreSQL.</td></tr>
+<tr><td class="num">103</td><td class="path">../database_script.sql</td><td class="desc">Базовый скрипт таблиц (ориентация на исходную СУБД проекта).</td></tr>
+<tr><td class="num">104</td><td class="path">../database_seed_data.sql</td><td class="desc">Начальные данные для заполнения БД (INSERT справочников и демо-записей).</td></tr>
+<tr><td class="num">105</td><td class="path">../database_identity_tables.sql</td><td class="desc">Скрипт таблиц ASP.NET Identity при ручном развёртывании схемы.</td></tr>
+<tr><td class="num">106</td><td class="path">../OrgTechRepair.sln</td><td class="desc">Файл решения Visual Studio: список проектов в составе решения и общие настройки сборки.</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

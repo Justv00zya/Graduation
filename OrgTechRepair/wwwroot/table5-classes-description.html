@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Таблица 5 — Описание классов OrgTechRepair</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; font-size: 12pt; margin: 24px; color: #000; }
+    h1 { font-size: 14pt; text-align: center; font-weight: bold; margin-bottom: 16px; }
+    table { width: 100%; border-collapse: collapse; margin: 0 auto; }
+    th, td { border: 1px solid #000; padding: 8px 10px; vertical-align: top; text-align: left; }
+    th { background: #e8e8e8; font-weight: bold; text-align: center; }
+    col.num { width: 4%; }
+    col.name { width: 28%; }
+    col.purpose { width: 68%; }
+    td.num { text-align: center; }
+    td.name { font-family: Consolas, "Courier New", monospace; font-size: 11pt; }
+    @media print { body { margin: 12mm; } }
+  </style>
+</head>
+<body>
+  <h1>Таблица 5 — Описание классов (модуль веб-приложения OrgTechRepair)</h1>
+  <table>
+    <colgroup>
+      <col class="num" />
+      <col class="name" />
+      <col class="purpose" />
+    </colgroup>
+    <thead>
+      <tr>
+        <th>№</th>
+        <th>Наименование класса</th>
+        <th>Назначение класса</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="num">1</td>
+        <td class="name">Program</td>
+        <td>Точка входа ASP.NET Core: регистрация Blazor Server, Entity Framework Core, Identity (cookie), JWT Bearer для API, CORS, маршрутизация контроллеров и Razor-компонентов, вызов инициализации БД и сидирования.</td>
+      </tr>
+      <tr>
+        <td class="num">2</td>
+        <td class="name">ApplicationDbContext</td>
+        <td>Контекст базы данных EF Core: наборы сущностей (заявки, клиенты, сотрудники, товары, запчасти, продажи, заявки на склад и др.), связи и конфигурация таблиц.</td>
+      </tr>
+      <tr>
+        <td class="num">3</td>
+        <td class="name">SeedData</td>
+        <td>Статический класс начального заполнения: роли (администратор, менеджер, клиент, кладовщик и др.), учётные записи демо-пользователей, справочники, тестовые заявки и данные для отчётов.</td>
+      </tr>
+      <tr>
+        <td class="num">4</td>
+        <td class="name">AccountController</td>
+        <td>MVC-контроллер учётной записи: вход по логину или email и паролю (cookie), серверная регистрация клиента с antiforgery-токеном, назначение роли и вход после успешной регистрации.</td>
+      </tr>
+      <tr>
+        <td class="num">5</td>
+        <td class="name">AuthController</td>
+        <td>API-контроллер аутентификации: выдача JWT при входе, регистрация клиента для мобильного приложения, смена пароля; используется мобильным клиентом и интеграциями.</td>
+      </tr>
+      <tr>
+        <td class="num">6</td>
+        <td class="name">OrdersController</td>
+        <td>REST API заявок на ремонт: список и детали для авторизованных ролей, создание и изменение; анонимная быстрая заявка с главной страницы сайта; при сохранении заявки вызывается генерация PDF.</td>
+      </tr>
+      <tr>
+        <td class="num">7</td>
+        <td class="name">ClientCabinetController</td>
+        <td>API личного кабинета клиента: доступ к своим заявкам и данным профиля в рамках прав пользователя с ролью Client.</td>
+      </tr>
+      <tr>
+        <td class="num">8</td>
+        <td class="name">AdminController</td>
+        <td>API для администратора: просмотр и выгрузка журнала приложения (JSON, CSV), запуск резервного копирования БД и скачивание дампа.</td>
+      </tr>
+      <tr>
+        <td class="num">9</td>
+        <td class="name">PartSupplyRequestsController</td>
+        <td>API заявок сервисного инженера на выдачу запчасти со склада: создание, список для кладовщика, одобрение или отклонение заявки.</td>
+      </tr>
+      <tr>
+        <td class="num">10</td>
+        <td class="name">OrderPdfService</td>
+        <td>Сервис формирования PDF-документа заявки на ремонт (QuestPDF): данные клиента и заявки, сохранение файла в каталог из конфигурации <code>OrdersArchive</code>.</td>
+      </tr>
+      <tr>
+        <td class="num">11</td>
+        <td class="name">ClientProfileProvisioner</td>
+        <td>Сервис создания или поиска карточки клиента в БД и привязки её к пользователю Identity при регистрации и входе (личный кабинет и заявки).</td>
+      </tr>
+      <tr>
+        <td class="num">12</td>
+        <td class="name">DatabaseBackupService</td>
+        <td>Сервис резервного копирования базы PostgreSQL через утилиту <code>pg_dump</code> (путь задаётся в конфигурации).</td>
+      </tr>
+      <tr>
+        <td class="num">13</td>
+        <td class="name">RevalidatingIdentityAuthenticationStateProvider</td>
+        <td>Провайдер состояния аутентификации Blazor Server: периодическая ревалидация пользователя относительно хранилища Identity, чтобы сессия соответствовала актуальным данным в БД.</td>
+      </tr>
+    </tbody>
+  </table>
+</body>
+</html>

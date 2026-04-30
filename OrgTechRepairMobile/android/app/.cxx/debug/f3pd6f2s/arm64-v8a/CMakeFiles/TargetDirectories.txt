@@ -1,0 +1,2 @@
+C:/Users/valpc/AndroidStudioProjects/OrgTechRepairMobile/android/app/.cxx/debug/f3pd6f2s/arm64-v8a/CMakeFiles/edit_cache.dir
+C:/Users/valpc/AndroidStudioProjects/OrgTechRepairMobile/android/app/.cxx/debug/f3pd6f2s/arm64-v8a/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Логическая модель БД — OrgTechRepair</title>
+  <style>
+    body { font-family: "Segoe UI", system-ui, sans-serif; margin: 16px; font-size: 12px; background: #fafafa; color: #111; }
+    h1 { font-size: 16px; margin-top: 0; }
+    h2 { font-size: 14px; margin-top: 24px; border-bottom: 1px solid #999; padding-bottom: 4px; }
+    h3 { font-size: 12px; margin: 16px 0 6px; }
+    .meta { color: #444; max-width: 1100px; margin-bottom: 12px; }
+    .mermaid { background: #fff; border: 1px solid #ccc; padding: 12px; overflow-x: auto; }
+    table { border-collapse: collapse; margin: 8px 0 16px; font-size: 11px; }
+    th, td { border: 1px solid #333; padding: 4px 8px; text-align: left; }
+    th { background: #e8e8e8; }
+    code { font-size: 10px; }
+    .note { font-size: 11px; color: #333; margin-top: 8px; max-width: 1100px; }
+  </style>
+</head>
+<body>
+  <h1>Логическая модель базы данных (OrgTechRepair / ВузяПринт)</h1>
+  <p class="meta">
+    Соответствует сущностям EF Core в <code>OrgTechRepair.Models</code> и таблицам Identity в той же базе.
+    Имена таблиц по соглашению EF — во множественном числе (как <code>DbSet</code>). Диаграмма связей — Mermaid <code>erDiagram</code> (нужен интернет для CDN).
+  </p>
+
+  <h2>1. ER-диаграмма (Crow’s foot, логические связи)</h2>
+  <div class="mermaid">
+erDiagram
+    AspNetUsers {
+        string Id PK
+        string UserName
+        string NormalizedUserName
+        string Email
+        string PasswordHash
+    }
+
+    Positions {
+        int Id PK
+        string Name
+        decimal Salary
+    }
+
+    Employees {
+        int Id PK
+        string TabNumber
+        int PositionId FK
+        string FirstName
+        string LastName
+        string MiddleName
+        datetime DateOfBirth
+        string INN
+        string Address
+        datetime HireDate
+    }
+
+    Clients {
+        int Id PK
+        string UserId FK
+        string FullName
+        string Address
+        string Phone
+        string Email
+    }
+
+    Suppliers {
+        int Id PK
+        string Name
+        string Address
+        string INN
+        string AccountNumber
+        string Phone
+    }
+
+    Products {
+        int Id PK
+        string Code
+        int SupplierId FK
+        string Name
+        string Model
+        decimal Price
+        int Quantity
+        string ImageUrl
+    }
+
+    Parts {
+        int Id PK
+        string Code
+        int SupplierId FK
+        string Name
+        decimal Price
+        int Quantity
+    }
+
+    Orders {
+        int Id PK
+        string OrderNumber
+        int ClientId FK
+        string EquipmentModel
+        string ConditionDescription
+        string ComplaintDescription
+        int EmployeeId FK
+        decimal Cost
+        datetime OrderDate
+        datetime CompletionDate
+        string Status
+    }
+
+    OrderParts {
+        int Id PK
+        int OrderId FK
+        int PartId FK
+        int Quantity
+    }
+
+    Works {
+        int Id PK
+        int OrderId FK
+        int WorkTypeId FK
+        int SequenceNumber
+    }
+
+    WorkTypes {
+        int Id PK
+        string Name
+        decimal Price
+    }
+
+    PartSupplyRequests {
+        int Id PK
+        int PartId FK
+        int Quantity
+        string RequestedByUserId FK
+        int OrderId FK
+        string Comment
+        string Status
+        datetime CreatedAt
+        datetime ProcessedAt
+        string ProcessedByUserId FK
+        string WarehouseComment
+    }
+
+    Sales {
+        int Id PK
+        string SaleNumber
+        int ClientId FK
+        datetime SaleDate
+        decimal TotalAmount
+    }
+
+    SaleItems {
+        int Id PK
+        int SaleId FK
+        int ProductId FK
+        int Quantity
+        decimal UnitPrice
+        decimal TotalPrice
+    }
+
+    Positions ||--o{ Employees
+    Employees |o--o{ Orders
+    Clients ||--o{ Orders
+    Clients |o--o{ Sales
+    Suppliers ||--o{ Products
+    Suppliers ||--o{ Parts
+    Orders ||--o{ OrderParts
+    Parts ||--o{ OrderParts
+    Orders ||--o{ Works
+    WorkTypes ||--o{ Works
+    Sales ||--o{ SaleItems
+    Products ||--o{ SaleItems
+    Parts ||--o{ PartSupplyRequests
+    Orders |o--o{ PartSupplyRequests
+    AspNetUsers ||--o| Clients : UserId
+  </div>
+
+  <h2>2. Таблицы и атрибуты (логический словарь)</h2>
+
+  <h3>Должности — <code>Positions</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK, автоинкремент</td></tr>
+  <tr><td>Name</td><td>string</td><td>название должности</td></tr>
+  <tr><td>Salary</td><td>decimal</td><td>оклад</td></tr></table>
+
+  <h3>Сотрудники — <code>Employees</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>TabNumber</td><td>string</td><td>табельный номер</td></tr>
+  <tr><td>PositionId</td><td>int</td><td>FK → Positions, ON DELETE RESTRICT</td></tr>
+  <tr><td>FirstName, LastName, MiddleName</td><td>string</td><td>ФИО</td></tr>
+  <tr><td>DateOfBirth, HireDate</td><td>date</td><td>колонки типа date</td></tr>
+  <tr><td>INN, Address</td><td>string</td><td>nullable</td></tr></table>
+
+  <h3>Клиенты — <code>Clients</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>UserId</td><td>string</td><td>nullable, логическая связь с AspNetUsers.Id</td></tr>
+  <tr><td>FullName</td><td>string</td><td></td></tr>
+  <tr><td>Address, Phone, Email</td><td>string</td><td>nullable</td></tr></table>
+
+  <h3>Поставщики — <code>Suppliers</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>Name</td><td>string</td><td></td></tr>
+  <tr><td>Address, INN, AccountNumber, Phone</td><td>string</td><td>nullable</td></tr></table>
+
+  <h3>Товары (расходники) — <code>Products</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>Code</td><td>string</td><td>артикул</td></tr>
+  <tr><td>SupplierId</td><td>int</td><td>FK → Suppliers, RESTRICT</td></tr>
+  <tr><td>Name, Model</td><td>string</td><td>Model nullable</td></tr>
+  <tr><td>Price</td><td>decimal</td><td></td></tr>
+  <tr><td>Quantity</td><td>int</td><td>остаток на «витрине» учёта</td></tr>
+  <tr><td>ImageUrl</td><td>string</td><td>nullable, URL изображения</td></tr></table>
+
+  <h3>Запчасти / тонер — <code>Parts</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>Code, Name</td><td>string</td><td></td></tr>
+  <tr><td>SupplierId</td><td>int</td><td>FK → Suppliers, RESTRICT</td></tr>
+  <tr><td>Price</td><td>decimal</td><td></td></tr>
+  <tr><td>Quantity</td><td>int</td><td>остаток на складе сервиса</td></tr></table>
+
+  <h3>Заявки на ремонт — <code>Orders</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>OrderNumber</td><td>string</td><td>номер заявки</td></tr>
+  <tr><td>ClientId</td><td>int</td><td>FK → Clients, RESTRICT</td></tr>
+  <tr><td>EquipmentModel</td><td>string</td><td>модель техники</td></tr>
+  <tr><td>ConditionDescription, ComplaintDescription</td><td>string</td><td>nullable</td></tr>
+  <tr><td>EmployeeId</td><td>int</td><td>nullable, FK → Employees, ON DELETE SET NULL</td></tr>
+  <tr><td>Cost</td><td>decimal</td><td>nullable</td></tr>
+  <tr><td>OrderDate, CompletionDate</td><td>timestamp</td><td>CompletionDate nullable</td></tr>
+  <tr><td>Status</td><td>string</td><td>статус заявки</td></tr></table>
+
+  <h3>Запчасти в заявке — <code>OrderParts</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>OrderId</td><td>int</td><td>FK → Orders, CASCADE</td></tr>
+  <tr><td>PartId</td><td>int</td><td>FK → Parts, RESTRICT</td></tr>
+  <tr><td>Quantity</td><td>int</td><td></td></tr></table>
+
+  <h3>Виды работ — <code>WorkTypes</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>Name</td><td>string</td><td></td></tr>
+  <tr><td>Price</td><td>decimal</td><td>базовая цена вида работ</td></tr></table>
+
+  <h3>Работы по заявке — <code>Works</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>OrderId</td><td>int</td><td>FK → Orders, CASCADE</td></tr>
+  <tr><td>WorkTypeId</td><td>int</td><td>FK → WorkTypes, RESTRICT</td></tr>
+  <tr><td>SequenceNumber</td><td>int</td><td>порядок в заявке</td></tr></table>
+
+  <h3>Заявки на выдачу со склада — <code>PartSupplyRequests</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>PartId</td><td>int</td><td>FK → Parts, RESTRICT</td></tr>
+  <tr><td>Quantity</td><td>int</td><td></td></tr>
+  <tr><td>RequestedByUserId</td><td>string</td><td>FK логически → AspNetUsers.Id</td></tr>
+  <tr><td>OrderId</td><td>int</td><td>nullable, FK → Orders, SET NULL</td></tr>
+  <tr><td>Comment, WarehouseComment</td><td>string</td><td>nullable</td></tr>
+  <tr><td>Status</td><td>string</td><td>Pending / Completed / Rejected</td></tr>
+  <tr><td>CreatedAt</td><td>datetime</td><td></td></tr>
+  <tr><td>ProcessedAt</td><td>datetime</td><td>nullable</td></tr>
+  <tr><td>ProcessedByUserId</td><td>string</td><td>nullable → AspNetUsers</td></tr></table>
+
+  <h3>Продажи — <code>Sales</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>SaleNumber</td><td>string</td><td></td></tr>
+  <tr><td>ClientId</td><td>int</td><td>nullable, FK → Clients, SET NULL</td></tr>
+  <tr><td>SaleDate</td><td>date</td><td>колонка date</td></tr>
+  <tr><td>TotalAmount</td><td>decimal</td><td></td></tr></table>
+
+  <h3>Строки продажи — <code>SaleItems</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>int</td><td>PK</td></tr>
+  <tr><td>SaleId</td><td>int</td><td>FK → Sales, CASCADE</td></tr>
+  <tr><td>ProductId</td><td>int</td><td>FK → Products, RESTRICT</td></tr>
+  <tr><td>Quantity</td><td>int</td><td></td></tr>
+  <tr><td>UnitPrice, TotalPrice</td><td>decimal</td><td></td></tr></table>
+
+  <h3>Учётные записи (фрагмент) — <code>AspNetUsers</code></h3>
+  <table><tr><th>Атрибут</th><th>Тип</th><th>Ограничения</th></tr>
+  <tr><td>Id</td><td>string</td><td>PK (GUID)</td></tr>
+  <tr><td>UserName, Email, PasswordHash …</td><td>string</td><td>стандарт Identity</td></tr></table>
+  <p class="note">Также в БД присутствуют таблицы <code>AspNetRoles</code>, <code>AspNetUserRoles</code>, <code>AspNetUserClaims</code>, <code>AspNetUserLogins</code>, <code>AspNetUserTokens</code>, <code>AspNetRoleClaims</code> — стандарт ASP.NET Core Identity.</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js" crossorigin="anonymous"></script>
+  <script>
+    mermaid.initialize({ startOnLoad: true, theme: "neutral", er: { fontSize: 11 } });
+  </script>
+</body>
+</html>

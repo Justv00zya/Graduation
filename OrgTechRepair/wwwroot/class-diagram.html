@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Диаграмма классов — OrgTechRepair (EF Core)</title>
+  <style>
+    body { margin: 0; padding: 16px; font-family: "Segoe UI", system-ui, sans-serif; background: #f5f5f5; }
+    h1 { font-size: 16px; margin: 0 0 8px; }
+    h2 { font-size: 14px; margin: 20px 0 8px; }
+    .meta { font-size: 12px; color: #444; margin-bottom: 12px; max-width: 1100px; }
+    .mermaid { background: #fff; padding: 12px; border: 1px solid #ccc; overflow-x: auto; min-height: 200px; }
+    .note { margin-top: 12px; font-size: 11px; max-width: 1100px; }
+    .svg-wrap { background: #fff; border: 1px solid #ccc; padding: 8px; overflow: auto; max-width: 100%; }
+    .box { fill: #fff; stroke: #000; stroke-width: 1.2; }
+    .box-hi { fill: #f0f8ff; stroke: #000; stroke-width: 1.5; }
+    .t { fill: #000; font-size: 11px; font-weight: 600; font-family: "Segoe UI", sans-serif; text-anchor: middle; }
+    .t-sm { fill: #333; font-size: 8px; font-family: Consolas, monospace; text-anchor: middle; }
+    .e { fill: none; stroke: #000; stroke-width: 1; marker-end: url(#marr); }
+    .e-dash { fill: none; stroke: #444; stroke-width: 1; stroke-dasharray: 4 3; marker-end: url(#marr-d); }
+  </style>
+</head>
+<body>
+  <h1>Диаграмма классов предметной области (пакет <code>OrgTechRepair.Models</code>)</h1>
+  <p class="meta">
+    Ниже — <strong>векторная SVG-схема</strong> связей (видна сразу, без интернета). Под ней — полная UML-диаграмма с полями классов через
+    <strong>Mermaid</strong> (нужен интернет для загрузки скрипта с CDN; при открытии через запущенный сайт обычно тоже работает).
+  </p>
+
+  <h2>1. Графическая схема связей (SVG)</h2>
+  <div class="svg-wrap">
+    <svg viewBox="0 0 920 480" xmlns="http://www.w3.org/2000/svg" aria-label="Схема связей сущностей">
+      <defs>
+        <marker id="marr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#000"/></marker>
+        <marker id="marr-d" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#444"/></marker>
+      </defs>
+
+      <rect class="box" x="30" y="28" width="100" height="44" rx="2"/><text class="t" x="80" y="48">Position</text><text class="t-sm" x="80" y="62">1 — * Employee</text>
+      <rect class="box" x="160" y="28" width="100" height="44" rx="2"/><text class="t" x="210" y="48">Employee</text>
+      <rect class="box" x="290" y="28" width="100" height="44" rx="2"/><text class="t" x="340" y="48">Client</text>
+      <rect class="box" x="420" y="28" width="110" height="44" rx="2"/><text class="t" x="475" y="48">IdentityUser</text><text class="t-sm" x="475" y="62">логич. связь</text>
+
+      <rect class="box" x="30" y="118" width="100" height="44" rx="2"/><text class="t" x="80" y="138">Supplier</text>
+      <rect class="box" x="160" y="118" width="100" height="44" rx="2"/><text class="t" x="210" y="138">Product</text>
+      <rect class="box" x="290" y="118" width="100" height="44" rx="2"/><text class="t" x="340" y="138">Part</text>
+
+      <rect class="box-hi" x="160" y="210" width="130" height="52" rx="3"/><text class="t" x="225" y="235">Order</text><text class="t-sm" x="225" y="250">заявка на ремонт</text>
+
+      <rect class="box" x="30" y="310" width="95" height="40" rx="2"/><text class="t" x="77" y="333">OrderPart</text>
+      <rect class="box" x="145" y="310" width="85" height="40" rx="2"/><text class="t" x="187" y="333">Work</text>
+      <rect class="box" x="250" y="310" width="95" height="40" rx="2"/><text class="t" x="297" y="333">WorkType</text>
+      <rect class="box" x="365" y="300" width="125" height="56" rx="2"/><text class="t" x="427" y="322">PartSupplyRequest</text><text class="t-sm" x="427" y="340">заявка на склад</text>
+
+      <rect class="box" x="560" y="118" width="100" height="44" rx="2"/><text class="t" x="610" y="138">Sale</text>
+      <rect class="box" x="700" y="118" width="100" height="44" rx="2"/><text class="t" x="750" y="138">SaleItem</text>
+
+      <!-- связи -->
+      <path class="e" d="M130 50 L160 50"/>
+      <path class="e" d="M260 50 L290 50"/>
+      <path class="e-dash" d="M390 50 L420 50"/>
+      <path class="e" d="M80 72 L80 118"/>
+      <path class="e" d="M130 140 L160 140"/>
+      <path class="e" d="M260 140 L290 140"/>
+      <path class="e" d="M210 72 L210 118"/>
+      <path class="e" d="M340 72 L340 118"/>
+      <path class="e" d="M340 162 L250 210"/>
+      <path class="e" d="M225 162 L225 210"/>
+      <path class="e" d="M210 72 L210 100 L225 100 L225 210"/>
+      <path class="e" d="M200 262 L77 310"/>
+      <path class="e" d="M225 262 L187 310"/>
+      <path class="e" d="M250 262 L297 310"/>
+      <path class="e" d="M290 262 L390 300"/>
+      <path class="e" d="M390 162 L410 250 L290 250"/>
+      <path class="e-dash" d="M475 72 L475 200 L290 240"/>
+      <path class="e-dash" d="M427 300 L475 200"/>
+      <path class="e" d="M390 50 L560 118"/>
+      <path class="e" d="M660 140 L700 140"/>
+      <path class="e" d="M610 162 L250 230"/>
+      <path class="e" d="M750 162 L750 250 L290 250"/>
+    </svg>
+  </div>
+
+  <h2>2. UML-диаграмма классов с атрибутами (Mermaid)</h2>
+  <div class="mermaid">
+classDiagram
+  direction TB
+
+  class Position {
+    +int Id
+    +string Name
+    +decimal Salary
+  }
+
+  class Employee {
+    +int Id
+    +string TabNumber
+    +int PositionId
+    +string FirstName
+    +string LastName
+    +string MiddleName
+    +DateTime DateOfBirth
+    +string INN
+    +string Address
+    +DateTime HireDate
+  }
+
+  class Client {
+    +int Id
+    +string UserId
+    +string FullName
+    +string Address
+    +string Phone
+    +string Email
+  }
+
+  class Supplier {
+    +int Id
+    +string Name
+    +string Address
+    +string INN
+    +string AccountNumber
+    +string Phone
+  }
+
+  class Product {
+    +int Id
+    +string Code
+    +int SupplierId
+    +string Name
+    +string Model
+    +decimal Price
+    +int Quantity
+    +string ImageUrl
+  }
+
+  class Part {
+    +int Id
+    +string Code
+    +int SupplierId
+    +string Name
+    +decimal Price
+    +int Quantity
+  }
+
+  class Order {
+    +int Id
+    +string OrderNumber
+    +int ClientId
+    +string EquipmentModel
+    +string ConditionDescription
+    +string ComplaintDescription
+    +int EmployeeId
+    +decimal Cost
+    +DateTime OrderDate
+    +DateTime CompletionDate
+    +string Status
+  }
+
+  class OrderPart {
+    +int Id
+    +int OrderId
+    +int PartId
+    +int Quantity
+  }
+
+  class PartSupplyRequest {
+    +int Id
+    +int PartId
+    +int Quantity
+    +string RequestedByUserId
+    +int OrderId
+    +string Comment
+    +string Status
+    +DateTime CreatedAt
+    +DateTime ProcessedAt
+    +string ProcessedByUserId
+    +string WarehouseComment
+  }
+
+  class WorkType {
+    +int Id
+    +string Name
+    +decimal Price
+  }
+
+  class Work {
+    +int Id
+    +int OrderId
+    +int WorkTypeId
+    +int SequenceNumber
+  }
+
+  class Sale {
+    +int Id
+    +string SaleNumber
+    +int ClientId
+    +DateTime SaleDate
+    +decimal TotalAmount
+  }
+
+  class SaleItem {
+    +int Id
+    +int SaleId
+    +int ProductId
+    +int Quantity
+    +decimal UnitPrice
+    +decimal TotalPrice
+  }
+
+  class IdentityUser {
+    +string Id
+    +string UserName
+    +string Email
+  }
+
+  Position "1" <-- "*" Employee
+  Employee "0..1" <-- "*" Order
+  Client "1" <-- "*" Order
+  Client "0..1" <-- "*" Sale
+  Supplier "1" <-- "*" Product
+  Supplier "1" <-- "*" Part
+  Order "1" *-- "*" OrderPart
+  Part "1" <-- "*" OrderPart
+  Order "1" *-- "*" Work
+  WorkType "1" <-- "*" Work
+  Sale "1" *-- "*" SaleItem
+  Product "1" <-- "*" SaleItem
+  Part "1" <-- "*" PartSupplyRequest
+  Order "0..1" <-- "*" PartSupplyRequest
+  Client ..> IdentityUser
+  PartSupplyRequest ..> IdentityUser
+  </div>
+
+  <p class="note">
+    Если блок Mermaid остаётся текстом: откройте страницу через HTTP (например <code>http://localhost:…/class-diagram.html</code>), разрешите скрипты CDN или обновите браузер.
+    Полная детализация полей — только в блоке Mermaid; SVG даёт обзор связей без скриптов.
+  </p>
+
+  <!-- Классический бандл Mermaid: надёжнее для file:// и простого хостинга, чем ES module -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js" crossorigin="anonymous"></script>
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "base",
+      securityLevel: "loose",
+      themeVariables: {
+        lineColor: "#222",
+        primaryBorderColor: "#000",
+        primaryTextColor: "#111"
+      }
+    });
+  </script>
+</body>
+</html>

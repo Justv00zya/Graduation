@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Рисунок 20 — Схема интерфейса Web-приложения</title>
+  <style>
+    body { margin: 0; padding: 20px; font-family: "Times New Roman", Times, serif; font-size: 11pt; background: #fff; color: #000; }
+    .cap { text-align: center; font-weight: 700; font-size: 12pt; margin-bottom: 4px; }
+    .sub { text-align: center; font-size: 10pt; margin-bottom: 14px; color: #222; }
+    .fig { border: 1px solid #000; padding: 12px; background: #fafafa; overflow-x: auto; }
+    svg { display: block; margin: 0 auto; }
+    .note { margin-top: 14px; font-size: 10pt; max-width: 1100px; }
+  </style>
+</head>
+<body>
+  <p class="cap">Рисунок 20 — Схема интерфейса Web-приложения</p>
+  <p class="sub">Проект <strong>OrgTechRepair</strong> (Blazor Server): экраны по маршрутам <code>@page</code> и логика навигации из <code>NavMenu.razor</code> / <code>Routes.razor</code>. Неавторизованный доступ к защищённым маршрутам перенаправляет на <strong>/Login</strong>.</p>
+
+  <div class="fig">
+    <svg viewBox="0 0 1120 1280" xmlns="http://www.w3.org/2000/svg" aria-label="Схема навигации">
+      <defs>
+        <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#000"/></marker>
+      </defs>
+      <style>
+        .b { fill: #fff; stroke: #000; stroke-width: 1.2; }
+        .bh { fill: #eaeaea; stroke: #000; stroke-width: 1.5; }
+        .t { fill: #000; font-size: 11px; font-weight: 700; font-family: "Segoe UI", sans-serif; }
+        .s { fill: #111; font-size: 9px; font-family: "Segoe UI", sans-serif; }
+        .ln { fill: none; stroke: #000; stroke-width: 1.2; marker-end: url(#a); }
+        .lno { fill: none; stroke: #000; stroke-width: 1; }
+      </style>
+
+      <!-- Корень -->
+      <rect class="bh" x="340" y="8" width="440" height="40" rx="2"/>
+      <text class="t" x="560" y="32" text-anchor="middle">Вход в Web-приложение OrgTechRepair (Blazor Server)</text>
+      <path class="lno" d="M560 48 L560 62"/>
+
+      <!-- Роутер -->
+      <rect class="b" x="380" y="62" width="360" height="36" rx="2"/>
+      <text class="t" x="560" y="84" text-anchor="middle">Маршрутизация и авторизация (Routes / AuthorizeRouteView)</text>
+      <path class="lno" d="M560 98 L560 112"/>
+      <path class="lno" d="M200 112 L920 112"/>
+      <path class="ln" d="M560 112 L200 112 L200 128"/>
+      <path class="ln" d="M560 112 L920 112 L920 128"/>
+
+      <!-- Левая ветвь: публичный доступ -->
+      <rect class="b" x="40" y="128" width="320" height="200" rx="2"/>
+      <text class="t" x="200" y="150" text-anchor="middle">Публичные экраны</text>
+      <text class="s" x="52" y="168">• Главная, быстрая заявка — <tspan font-weight="700">/</tspan></text>
+      <text class="s" x="52" y="184">• Вход — <tspan font-weight="700">/Login</tspan> (форма POST → Account)</text>
+      <text class="s" x="52" y="200">• Регистрация клиента — <tspan font-weight="700">/Register</tspan></text>
+      <text class="s" x="52" y="216">• Забыли пароль — <tspan font-weight="700">/ForgotPassword</tspan></text>
+      <text class="s" x="52" y="232">• Сброс пароля — <tspan font-weight="700">/ResetPassword</tspan></text>
+      <text class="s" x="52" y="256">После успешного входа — переход в основной</text>
+      <text class="s" x="52" y="272">каркас (MainLayout) и пункты меню по ролям.</text>
+      <text class="s" x="52" y="296">Выход — <tspan font-weight="700">GET /Account/Logout</tspan></text>
+
+      <!-- Правая ветвь: общий каркас -->
+      <rect class="b" x="760" y="128" width="320" height="200" rx="2"/>
+      <text class="t" x="920" y="150" text-anchor="middle">Общий каркас авторизованного</text>
+      <text class="s" x="772" y="168">• Главная — <tspan font-weight="700">/</tspan></text>
+      <text class="s" x="772" y="184">• Боковое меню (NavMenu), шапка, выход</text>
+      <text class="s" x="772" y="200">Нет доступа к маршруту — <tspan font-weight="700">/AccessDenied</tspan></text>
+      <text class="s" x="772" y="224">Ошибка конвейера — <tspan font-weight="700">/Error</tspan></text>
+      <text class="s" x="772" y="248">Доступ к экранам ниже определяется</text>
+      <text class="s" x="772" y="262">атрибутом <tspan font-weight="700">[Authorize(Roles=…)]</tspan> на страницах.</text>
+
+      <path class="lno" d="M200 328 L920 328"/>
+      <path class="lno" d="M560 112 L560 128"/>
+
+      <!-- Ряд модулей под общей шиной -->
+      <path class="ln" d="M200 328 L200 340"/>
+      <path class="ln" d="M400 328 L400 340"/>
+      <path class="ln" d="M560 328 L560 340"/>
+      <path class="ln" d="M720 328 L720 340"/>
+      <path class="ln" d="M920 328 L920 340"/>
+
+      <!-- Клиент -->
+      <rect class="b" x="40" y="340" width="200" height="120" rx="2"/>
+      <text class="t" x="140" y="360" text-anchor="middle">Роль Client</text>
+      <text class="s" x="50" y="378">• Личный кабинет</text>
+      <text class="s" x="58" y="392"><tspan font-weight="700">/client-cabinet</tspan></text>
+      <text class="s" x="50" y="412">• Заявка в кабинете</text>
+      <text class="s" x="58" y="426"><tspan font-weight="700">/client-cabinet/order/{id}</tspan></text>
+
+      <!-- Менеджмент -->
+      <rect class="b" x="260" y="340" width="280" height="168" rx="2"/>
+      <text class="t" x="400" y="360" text-anchor="middle">Менеджер, офис, директор</text>
+      <text class="s" x="268" y="376">• Заявки <tspan font-weight="700">/orders</tspan> → созд.</text>
+      <text class="s" x="276" y="390"><tspan font-weight="700">/orders/create</tspan>, просм. <tspan font-weight="700">/orders/{id}</tspan></text>
+      <text class="s" x="276" y="404">редакт. <tspan font-weight="700">/orders/edit/{id}</tspan></text>
+      <text class="s" x="268" y="420">• Товары <tspan font-weight="700">/products</tspan> → /products/create, /edit/{id}</text>
+      <text class="s" x="268" y="436">• Продажи <tspan font-weight="700">/sales</tspan> → <tspan font-weight="700">/sales/{id}</tspan></text>
+      <text class="s" x="268" y="452">• Клиенты <tspan font-weight="700">/clients</tspan> (+ create/edit)</text>
+      <text class="s" x="268" y="468">• Поставщики <tspan font-weight="700">/suppliers</tspan> (+ create/edit)</text>
+      <text class="s" x="268" y="484">• Выдача со склада <tspan font-weight="700">/warehouse-part-supply-requests</tspan></text>
+
+      <!-- Сервис -->
+      <rect class="b" x="560" y="340" width="200" height="140" rx="2"/>
+      <text class="t" x="660" y="360" text-anchor="middle">Сервисный инженер</text>
+      <text class="s" x="568" y="378">• Заявки, запчасти, клиенты</text>
+      <text class="s" x="568" y="396">• Заявка на склад</text>
+      <text class="s" x="576" y="410"><tspan font-weight="700">/part-supply-requests</tspan></text>
+
+      <!-- Инженер / склад -->
+      <rect class="b" x="780" y="340" width="300" height="120" rx="2"/>
+      <text class="t" x="930" y="360" text-anchor="middle">Инженер оргтехники, кладовщик</text>
+      <text class="s" x="788" y="378">• Запчасти <tspan font-weight="700">/parts</tspan> → /parts/create, /edit/{id}</text>
+      <text class="s" x="788" y="396">• Выдача по заявкам — см. выше</text>
+      <text class="s" x="788" y="414"><tspan font-weight="700">/warehouse-part-supply-requests</tspan></text>
+
+      <path class="lno" d="M140 460 L140 528"/>
+      <path class="lno" d="M400 508 L400 528"/>
+      <path class="lno" d="M660 480 L660 528"/>
+      <path class="lno" d="M930 460 L930 528"/>
+      <path class="lno" d="M120 528 L1000 528"/>
+      <path class="lno" d="M240 528 L240 540"/>
+      <path class="lno" d="M500 528 L500 540"/>
+      <path class="lno" d="M820 528 L820 540"/>
+
+      <!-- Бухгалтерия -->
+      <rect class="b" x="120" y="540" width="240" height="88" rx="2"/>
+      <text class="t" x="240" y="562" text-anchor="middle">Бухгалтер, кассир</text>
+      <text class="s" x="130" y="580">• Сотрудники <tspan font-weight="700">/employees</tspan> (+ create/edit)</text>
+      <text class="s" x="130" y="598">• Отчёты <tspan font-weight="700">/reports</tspan></text>
+
+      <!-- Админ -->
+      <rect class="b" x="400" y="540" width="200" height="88" rx="2"/>
+      <text class="t" x="500" y="562" text-anchor="middle">Администратор</text>
+      <text class="s" x="410" y="580">• <tspan font-weight="700">/admin</tspan> — логи, бэкап БД</text>
+
+      <!-- Служебное и демо -->
+      <rect class="b" x="630" y="540" width="380" height="100" rx="2"/>
+      <text class="t" x="820" y="562" text-anchor="middle">Служебные и демонстрационные страницы</text>
+      <text class="s" x="640" y="580">• Проверка БД <tspan font-weight="700">/db-test</tspan></text>
+      <text class="s" x="640" y="596">• Ошибка приложения <tspan font-weight="700">/Error</tspan></text>
+      <text class="s" x="640" y="612">• Демо Blazor: <tspan font-weight="700">/counter</tspan>, <tspan font-weight="700">/weather</tspan></text>
+
+      <!-- Подпись навигации -->
+      <rect class="bh" x="80" y="668" width="960" height="72" rx="2"/>
+      <text class="t" x="560" y="692" text-anchor="middle">Навигация между экранами</text>
+      <text class="s" x="100" y="712">Переходы: пункты бокового меню (NavLink), кнопки «Назад», формы с</text>
+      <text class="s" x="100" y="726"><tspan font-weight="700">NavigateTo</tspan>, редиректы MVC (Account/Login, Logout), при отсутствии прав — <tspan font-weight="700">/AccessDenied</tspan>.</text>
+
+      <!-- Легенда маршрутов одной строкой -->
+      <text class="t" x="560" y="778" text-anchor="middle" font-size="10px">Полный перечень маршрутов @page</text>
+      <foreignObject x="40" y="788" width="1040" height="460">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family:Segoe UI,sans-serif;font-size:8.5px;line-height:1.35;color:#111;">
+          <table style="width:100%;border-collapse:collapse;border:1px solid #000;">
+            <tr style="background:#ddd;font-weight:bold"><td style="border:1px solid #000;padding:3px 6px;">Маршрут</td><td style="border:1px solid #000;padding:3px 6px;">Экран</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/</td><td style="border:1px solid #000;padding:2px 6px;">Главная, быстрая заявка</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/Login, /Register</td><td style="border:1px solid #000;padding:2px 6px;">Вход и регистрация</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/ForgotPassword, /ResetPassword</td><td style="border:1px solid #000;padding:2px 6px;">Восстановление пароля</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/client-cabinet</td><td style="border:1px solid #000;padding:2px 6px;">Личный кабинет клиента</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/client-cabinet/order/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Заявка в кабинете</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/orders, /orders/create, /orders/{id}, /orders/edit/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Заявки на ремонт</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/products, /products/create, /products/edit/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Товары</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/parts, /parts/create, /parts/edit/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Запчасти</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/clients, /clients/create, /clients/edit/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Клиенты</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/suppliers, /suppliers/create, /suppliers/edit/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Поставщики</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/sales, /sales/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Продажи</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/reports</td><td style="border:1px solid #000;padding:2px 6px;">Отчёты</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/employees, /employees/create, /employees/edit/{id}</td><td style="border:1px solid #000;padding:2px 6px;">Сотрудники</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/part-supply-requests</td><td style="border:1px solid #000;padding:2px 6px;">Заявки инженера на склад</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/warehouse-part-supply-requests</td><td style="border:1px solid #000;padding:2px 6px;">Обработка заявок кладовщиком</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/admin</td><td style="border:1px solid #000;padding:2px 6px;">Администрирование</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/db-test, /Error, /AccessDenied</td><td style="border:1px solid #000;padding:2px 6px;">Служебные</td></tr>
+            <tr><td style="border:1px solid #000;padding:2px 6px;">/counter, /weather</td><td style="border:1px solid #000;padding:2px 6px;">Демо-шаблоны Blazor</td></tr>
+          </table>
+        </div>
+      </foreignObject>
+    </svg>
+  </div>
+
+  <p class="note">
+    Файл: <code>assets/figure-20-interface-navigation.html</code>. Для вставки в отчёт: откройте в браузере и экспортируйте в PDF или вставьте SVG в редактор. Копия для сайта: <code>wwwroot/figure-20-interface-navigation.html</code> → <strong>/figure-20-interface-navigation.html</strong>.
+  </p>
+</body>
+</html>

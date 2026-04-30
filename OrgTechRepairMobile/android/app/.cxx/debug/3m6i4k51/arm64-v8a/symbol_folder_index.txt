@@ -1,0 +1,1 @@
+C:\Users\valpc\AndroidStudioProjects\OrgTechRepairMobile\android\app\build\intermediates\cxx\debug\3m6i4k51\obj\arm64-v8a

@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Блок-схема структуры — OrgTechRepair</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #c0c0c0;
+      background-image:
+        linear-gradient(rgba(255,255,255,.45) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.45) 1px, transparent 1px);
+      background-size: 18px 18px;
+      color: #111;
+    }
+    h1 {
+      margin: 0 0 6px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+    .badge {
+      display: inline-block;
+      margin-bottom: 10px;
+      padding: 3px 10px;
+      background: #eaeaea;
+      border: 1px solid #000;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .wrap {
+      max-width: 1120px;
+      margin: 0 auto;
+      background: transparent;
+    }
+    svg {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: none;
+    }
+    .box { fill: #fff; stroke: #000; stroke-width: 1.5; }
+    .box-root { stroke-width: 2.5; }
+    .lbl {
+      fill: #000;
+      font-size: 11px;
+      font-weight: 600;
+      text-anchor: middle;
+      dominant-baseline: middle;
+    }
+    .lbl-sm {
+      fill: #000;
+      font-size: 9.5px;
+      font-weight: 500;
+      text-anchor: middle;
+    }
+    .edge {
+      fill: none;
+      stroke: #000;
+      stroke-width: 1.2;
+      marker-end: url(#arrow);
+    }
+    .edge-noarr {
+      fill: none;
+      stroke: #000;
+      stroke-width: 1.2;
+    }
+    .note {
+      margin-top: 12px;
+      font-size: 11px;
+      max-width: 1100px;
+      padding: 8px 10px;
+      border: 1px solid #333;
+      background: rgba(255,255,255,.85);
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <span class="badge">Часть А</span>
+    <h1>Структурная блок-схема проекта OrgTechRepair (Blazor Server + API)</h1>
+
+    <svg viewBox="0 0 1100 980" xmlns="http://www.w3.org/2000/svg" aria-label="Блок-схема структуры приложения">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto">
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="#000" />
+        </marker>
+      </defs>
+
+      <!-- Корень -->
+      <rect class="box box-root" x="450" y="18" width="200" height="44" rx="2" />
+      <text class="lbl" x="550" y="42">OrgTechRepair</text>
+
+      <!-- Узел: Components -->
+      <rect class="box" x="60" y="95" width="400" height="40" rx="2" />
+      <text class="lbl" x="260" y="118">Components (представления, Blazor)</text>
+
+      <!-- Узел: Сервер -->
+      <rect class="box" x="640" y="95" width="400" height="40" rx="2" />
+      <text class="lbl" x="840" y="118">Серверная часть (C#)</text>
+
+      <!-- От корня: шина и ветви (поверх блоков второго уровня — видны стрелки) -->
+      <path class="edge-noarr" d="M 550 62 L 550 78" />
+      <path class="edge-noarr" d="M 260 78 L 840 78" />
+      <path class="edge" d="M 260 78 L 260 95" />
+      <path class="edge" d="M 840 78 L 840 95" />
+
+      <!-- Левая колонка: дети Components (вертикальная «лесенка» со стрелками) -->
+      <path class="edge-noarr" d="M 260 135 L 260 143" />
+      <g id="left-children">
+        <path class="edge" d="M 260 143 L 260 148" />
+        <rect class="box" x="35" y="148" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="168">Layout</text>
+        <text class="lbl-sm" x="260" y="184">MainLayout.razor · NavMenu.razor · App.razor · Routes.razor</text>
+
+        <path class="edge" d="M 260 196 L 260 206" />
+        <rect class="box" x="35" y="206" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="226">Страницы — авторизация и общее</text>
+        <text class="lbl-sm" x="260" y="242">Home · Login · Register · ForgotPassword · ResetPassword · AccessDenied · Error</text>
+
+        <path class="edge" d="M 260 254 L 260 264" />
+        <rect class="box" x="35" y="264" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="284">Страницы — личный кабинет (Client)</text>
+        <text class="lbl-sm" x="260" y="300">ClientCabinet.razor · ClientCabinetOrder.razor</text>
+
+        <path class="edge" d="M 260 312 L 260 322" />
+        <rect class="box" x="35" y="322" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="342">Страницы — заявки и клиенты</text>
+        <text class="lbl-sm" x="260" y="358">Orders · OrderEdit · OrderView · Clients · ClientEdit</text>
+
+        <path class="edge" d="M 260 370 L 260 380" />
+        <rect class="box" x="35" y="380" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="400">Страницы — персонал и справочники</text>
+        <text class="lbl-sm" x="260" y="416">Employees · EmployeeEdit · Suppliers · SupplierEdit</text>
+
+        <path class="edge" d="M 260 428 L 260 438" />
+        <rect class="box" x="35" y="438" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="458">Страницы — товары, запчасти, продажи, отчёты</text>
+        <text class="lbl-sm" x="260" y="474">Products · Parts · Sales · SaleView · Reports (+ ProductEdit, PartEdit)</text>
+
+        <path class="edge" d="M 260 486 L 260 496" />
+        <rect class="box" x="35" y="496" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="516">Страницы — заявки на детали (инженер / кладовщик)</text>
+        <text class="lbl-sm" x="260" y="532">PartSupplyRequestsEngineer · WarehousePartSupplyRequests</text>
+
+        <path class="edge" d="M 260 544 L 260 554" />
+        <rect class="box" x="35" y="554" width="450" height="48" rx="2" />
+        <text class="lbl" x="260" y="574">Страницы — админ и служебное</text>
+        <text class="lbl-sm" x="260" y="590">Admin · DatabaseTest · Weather · Counter</text>
+      </g>
+
+      <!-- Правая колонка: дети сервера -->
+      <path class="edge-noarr" d="M 840 135 L 840 142" />
+      <path class="edge" d="M 840 142 L 840 148" />
+      <rect class="box" x="615" y="148" width="450" height="52" rx="2" />
+      <text class="lbl" x="840" y="170">Controllers</text>
+      <text class="lbl-sm" x="840" y="188">Account · Auth · Admin · ClientCabinet · Clients · Employees · Orders ·</text>
+      <text class="lbl-sm" x="840" y="198">Products · Parts · Suppliers · Sales · Reports · Health · PartSupplyRequests</text>
+
+      <path class="edge" d="M 840 200 L 840 210" />
+      <rect class="box" x="615" y="210" width="450" height="44" rx="2" />
+      <text class="lbl" x="840" y="230">Services</text>
+      <text class="lbl-sm" x="840" y="246">OrderPdfService · ClientProfileProvisioner · DatabaseBackup · Email · LogStore</text>
+
+      <path class="edge" d="M 840 254 L 840 264" />
+      <rect class="box" x="615" y="264" width="450" height="44" rx="2" />
+      <text class="lbl" x="840" y="284">Models и Models/DTOs</text>
+      <text class="lbl-sm" x="840" y="300">Order, Client, Employee, Product, Part, Supplier, Sale, PartSupplyRequest …</text>
+
+      <path class="edge" d="M 840 308 L 840 318" />
+      <rect class="box" x="615" y="318" width="450" height="44" rx="2" />
+      <text class="lbl" x="840" y="338">Data</text>
+      <text class="lbl-sm" x="840" y="354">ApplicationDbContext · SeedData · PostgreSqlDbBootstrap · Apply*Migration</text>
+
+      <path class="edge" d="M 840 362 L 840 372" />
+      <rect class="box" x="615" y="372" width="450" height="44" rx="2" />
+      <text class="lbl" x="840" y="392">Точка входа и конфигурация</text>
+      <text class="lbl-sm" x="840" y="408">Program.cs · appsettings*.json · wwwroot (CSS, статика)</text>
+    </svg>
+
+    <p class="note">
+      Откройте в браузере как файл или по адресу приложения: <strong>/structure-diagram.html</strong>.
+      Стрелки показывают иерархию «состав — часть»; ортогональные линии соответствуют привычной блок-схеме структуры проекта.
+    </p>
+  </div>
+</body>
+</html>

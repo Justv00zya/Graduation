@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <title>3.2. Отладка программы (OrgTechRepair)</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; font-size: 14pt; line-height: 1.45; margin: 2cm; color: #000; }
+    h1 { font-size: 16pt; text-align: center; margin: 24px 0 16px; }
+    h2 { font-size: 15pt; margin: 20px 0 10px; }
+    p { text-align: justify; margin: 0 0 10px; text-indent: 1.25cm; }
+    p.no-indent { text-indent: 0; }
+    ul { margin: 8px 0 12px 0; }
+    li { margin-bottom: 6px; }
+    .small { font-size: 12pt; }
+  </style>
+</head>
+<body>
+
+  <h1>3. Технологическая часть (продолжение)</h1>
+
+  <h2>3.2. Отладка программы</h2>
+
+  <p>Отладка информационной системы «ВузяПринт» (веб-приложение OrgTechRepair на платформе <strong>ASP.NET Core</strong>, клиентская часть — <strong>Blazor Server</strong>, СУБД — <strong>PostgreSQL</strong>) выполнялась в среде <strong>Microsoft Visual Studio</strong> / <strong>JetBrains Rider</strong> с использованием встроенного отладчика для управляемого кода C#. Устанавливались точки останова в контроллерах API, в сервисах, в методах жизненного цикла Razor-компонентов и в обработчиках событий интерфейса; выполнялся пошаговый проход (<em>Step Over</em>, <em>Step Into</em>), просмотр значений локальных переменных, полей сущностей и результатов асинхронных вызовов к базе данных через Entity Framework Core.</p>
+
+  <p>Для проверки обмена данными между браузером и сервером использовались средства <strong>инструментов разработчика</strong> веб-обозревателя (вкладки «Сеть», «Консоль»): анализировались HTTP-запросы к конечным точкам <code>/api/…</code>, коды ответов, заголовок <code>Authorization</code> с JSON Web Token при вызовах из мобильного клиента, а также ответы Blazor Server по WebSocket при работе интерактивных страниц. При отладке сценариев входа и регистрации дополнительно проверялись перенаправления форм на контроллер <code>AccountController</code> и выдача cookie-аутентификации.</p>
+
+  <p>Аутентификация пользователей в веб-интерфейсе реализована на базе <strong>ASP.NET Core Identity</strong> (логин или e-mail и пароль); для API мобильного приложения используется схема <strong>JWT Bearer</strong>. При отладке проверялась корректность назначения ролей, доступ к защищённым маршрутам по атрибуту <code>[Authorize(Roles = …)]</code> и сценарий отказа в доступе с переходом на страницу <code>/AccessDenied</code>. Специфика <strong>Blazor Server</strong> (долгоживущая сигнальная сессия с сервером) учитывалась при анализе состояния аутентификации и при повторном входе пользователя.</p>
+
+  <p>В приложении используется стандартный механизм журналирования <strong><code>ILogger</code></strong>: уровни <em>Information</em>, <em>Warning</em> и <em>Error</em> позволяют отслеживать ошибки бизнес-логики, сбои при обращении к PostgreSQL и исключения при генерации PDF-заявок. Для администратора предусмотрен просмотр накопленных записей лога через интерфейс раздела «Администрирование» и выгрузка в CSV; при разработке также применялся вывод в окно отладки среды.</p>
+
+  <p class="no-indent small" style="margin-top:20px">Файл: <code>assets/section-3-2-debugging.html</code>. Копия на сайте: <code>wwwroot/section-3-2-debugging.html</code>.</p>
+
+</body>
+</html>

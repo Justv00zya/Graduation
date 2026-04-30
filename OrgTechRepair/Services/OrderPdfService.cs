@@ -18,12 +18,17 @@ public class OrderPdfService : IOrderPdfService
         _logger = logger;
     }
 
-    /// <summary>Папка для PDF заявок: из конфигурации или «Рабочий стол/Заявки на ремонт».</summary>
+    /// <summary>
+    /// Папка для PDF заявок: <c>OrdersArchive:FolderPath</c> (желательно абсолютный путь или %USERPROFILE%),
+    /// иначе «Рабочий стол» учётной записи процесса + «Заявки на ремонт».
+    /// Под IIS без явного пути файлы часто оказываются в профиле пула, например
+    /// <c>...\systemprofile\Desktop\Заявки на ремонт</c>, а не на рабочем столе разработчика.
+    /// </summary>
     public static string ResolveArchiveFolder(IConfiguration configuration)
     {
         var configured = configuration["OrdersArchive:FolderPath"]?.Trim();
-        if (!string.IsNullOrEmpty(configured))
-            return configured;
+        if (!string.IsNullOrWhiteSpace(configured))
+            return Environment.ExpandEnvironmentVariables(configured);
 
         var desktop = Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         if (string.IsNullOrWhiteSpace(desktop))

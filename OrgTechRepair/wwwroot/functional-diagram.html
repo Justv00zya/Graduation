@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Функциональная схема — OrgTechRepair (ВузяПринт)</title>
+  <style>
+    body { margin: 0; padding: 12px; font-family: "Segoe UI", system-ui, sans-serif; background: #c4c4c4;
+      background-image: linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
+      background-size: 18px 18px; }
+    h1 { text-align: center; font-size: 14px; margin: 0 0 8px; }
+    .cap { text-align: center; font-size: 11px; color: #222; margin-bottom: 8px; }
+    svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+    .note { max-width: 1180px; margin: 10px auto 0; font-size: 11px; padding: 8px 10px; border: 1px solid #333; background: rgba(255,255,255,.9); }
+  </style>
+</head>
+<body>
+  <h1>Функциональная схема веб-приложения</h1>
+  <p class="cap">Учёт заявок на ремонт оргтехники, склад запчастей и расходников, продажи и отчёты (проект OrgTechRepair / «ВузяПринт»)</p>
+
+  <svg viewBox="0 0 1180 820" xmlns="http://www.w3.org/2000/svg" aria-label="Функциональная схема">
+    <defs>
+      <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M0 0 L10 5 L0 10z" fill="#000"/>
+      </marker>
+      <marker id="arr2" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="7" markerHeight="7" orient="auto">
+        <path d="M10 0 L0 5 L10 10z" fill="#000"/>
+      </marker>
+    </defs>
+
+    <!-- Корень -->
+    <rect x="290" y="12" width="600" height="52" fill="#fff" stroke="#000" stroke-width="2" rx="3"/>
+    <text x="590" y="34" text-anchor="middle" font-size="12" font-weight="700">Веб-приложение: ремонт оргтехники, склад, продажи</text>
+    <text x="590" y="52" text-anchor="middle" font-size="10">онлайн-заявки клиентов, обработка сервисом, отчётность</text>
+
+    <path d="M590 64 L590 82" fill="none" stroke="#000" stroke-width="1.5" marker-end="url(#arr)"/>
+
+    <!-- Авторизация -->
+    <rect x="470" y="82" width="240" height="36" fill="#fff" stroke="#000" stroke-width="1.5" rx="2"/>
+    <text x="590" y="104" text-anchor="middle" font-size="11" font-weight="700">Авторизация (вход в систему)</text>
+
+    <path d="M590 118 L590 138" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#arr)"/>
+    <path d="M120 138 L1060 138" fill="none" stroke="#000" stroke-width="1.2"/>
+
+    <!-- Колонки: шток вниз к ролям -->
+    <path d="M120 138 L120 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M290 138 L290 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M460 138 L460 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M630 138 L630 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M800 138 L800 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M970 138 L970 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M1060 138 L1060 152" fill="none" stroke="#000" marker-end="url(#arr)"/>
+
+    <!-- Роль: гость -->
+    <rect x="40" y="152" width="160" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="120" y="170" text-anchor="middle" font-size="10" font-weight="700">Неавторизованный</text>
+    <rect x="40" y="186" width="160" height="220" fill="#fff" stroke="#000" rx="2"/>
+    <text x="120" y="206" text-anchor="middle" font-size="9">Главная страница</text>
+    <text x="120" y="224" text-anchor="middle" font-size="9">Быстрая заявка на ремонт</text>
+    <text x="120" y="242" text-anchor="middle" font-size="9">Вход (логин / email)</text>
+    <text x="120" y="260" text-anchor="middle" font-size="9">Регистрация клиента</text>
+    <text x="120" y="278" text-anchor="middle" font-size="9">Забыли пароль → сброс</text>
+
+    <!-- Клиент -->
+    <rect x="210" y="152" width="160" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="290" y="170" text-anchor="middle" font-size="10" font-weight="700">Клиент</text>
+    <rect x="210" y="186" width="160" height="220" fill="#fff" stroke="#000" rx="2"/>
+    <text x="290" y="206" text-anchor="middle" font-size="9">Главная</text>
+    <text x="290" y="224" text-anchor="middle" font-size="9">Личный кабинет</text>
+    <text x="290" y="242" text-anchor="middle" font-size="9">Список своих заявок</text>
+    <text x="290" y="260" text-anchor="middle" font-size="9">Просмотр заявки</text>
+
+    <!-- Офис: менеджер, офис-менеджер, директор -->
+    <rect x="380" y="152" width="160" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="460" y="168" text-anchor="middle" font-size="9" font-weight="700">Менеджер / офис-менеджер</text>
+    <text x="460" y="178" text-anchor="middle" font-size="8">директор</text>
+    <rect x="380" y="186" width="160" height="260" fill="#fff" stroke="#000" rx="2"/>
+    <text x="460" y="206" text-anchor="middle" font-size="9">Заявки на ремонт</text>
+    <text x="460" y="224" text-anchor="middle" font-size="9">Товары (каталог)</text>
+    <text x="460" y="242" text-anchor="middle" font-size="9">Продажи</text>
+    <text x="460" y="260" text-anchor="middle" font-size="9">Клиенты</text>
+    <text x="460" y="278" text-anchor="middle" font-size="9">Поставщики</text>
+    <text x="460" y="296" text-anchor="middle" font-size="9">Выдача со склада по заявкам</text>
+
+    <!-- Сервисный инженер -->
+    <rect x="550" y="152" width="160" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="630" y="170" text-anchor="middle" font-size="10" font-weight="700">Сервисный инженер</text>
+    <rect x="550" y="186" width="160" height="220" fill="#fff" stroke="#000" rx="2"/>
+    <text x="630" y="206" text-anchor="middle" font-size="9">Заявки на ремонт</text>
+    <text x="630" y="224" text-anchor="middle" font-size="9">Запчасти и тонер</text>
+    <text x="630" y="242" text-anchor="middle" font-size="9">Клиенты (учёт)</text>
+    <text x="630" y="260" text-anchor="middle" font-size="9">Заявка на склад на детали</text>
+
+    <!-- Инженер + кладовщик -->
+    <rect x="720" y="152" width="160" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="800" y="168" text-anchor="middle" font-size="9" font-weight="700">Инженер оргтехники</text>
+    <text x="800" y="178" text-anchor="middle" font-size="9" font-weight="700">Кладовщик</text>
+    <rect x="720" y="186" width="160" height="260" fill="#fff" stroke="#000" rx="2"/>
+    <text x="800" y="206" text-anchor="middle" font-size="9">Запчасти и тонер на складе</text>
+    <text x="800" y="224" text-anchor="middle" font-size="9">Заявка инженера на выдачу</text>
+    <text x="800" y="242" text-anchor="middle" font-size="9">Обработка заявок кладовщиком</text>
+    <text x="800" y="260" text-anchor="middle" font-size="9">(инженер — подача;</text>
+    <text x="800" y="276" text-anchor="middle" font-size="9">кладовщик — выдача)</text>
+
+    <!-- Бухгалтер кассир -->
+    <rect x="890" y="152" width="140" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="960" y="168" text-anchor="middle" font-size="9" font-weight="700">Бухгалтер</text>
+    <text x="960" y="178" text-anchor="middle" font-size="9" font-weight="700">Кассир</text>
+    <rect x="890" y="186" width="140" height="200" fill="#fff" stroke="#000" rx="2"/>
+    <text x="960" y="206" text-anchor="middle" font-size="9">Сотрудники</text>
+    <text x="960" y="224" text-anchor="middle" font-size="9">Отчёты</text>
+
+    <!-- Администратор -->
+    <rect x="1040" y="152" width="120" height="28" fill="#f5f5f5" stroke="#000" rx="2"/>
+    <text x="1100" y="170" text-anchor="middle" font-size="9" font-weight="700">Администратор</text>
+    <rect x="1040" y="186" width="120" height="200" fill="#fff" stroke="#000" rx="2"/>
+    <text x="1100" y="206" text-anchor="middle" font-size="8.5">Журнал приложения</text>
+    <text x="1100" y="224" text-anchor="middle" font-size="8.5">Резервное копирование БД</text>
+    <text x="1100" y="242" text-anchor="middle" font-size="8.5">Выгрузка логов (CSV)</text>
+    <text x="1100" y="268" text-anchor="middle" font-size="7.5">+ функции ролей ниже по политике</text>
+
+    <!-- Выход — по центру внизу -->
+    <rect x="490" y="480" width="200" height="40" fill="#fff" stroke="#000" stroke-width="2" rx="3"/>
+    <text x="590" y="504" text-anchor="middle" font-size="11" font-weight="700">Выход из аккаунта</text>
+
+    <!-- Стрелки к выходу от авторизованных колонок (не от гостя) -->
+    <path d="M290 406 L290 440 L590 440 L590 480" fill="none" stroke="#000" stroke-width="1" marker-end="url(#arr)"/>
+    <path d="M460 446 L460 450 L590 450 L590 480" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M630 406 L630 435 L590 435 L590 480" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M800 446 L800 455 L590 455 L590 480" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M960 386 L960 430 L590 430 L590 480" fill="none" stroke="#000" marker-end="url(#arr)"/>
+    <path d="M1100 386 L1100 425 L590 425 L590 480" fill="none" stroke="#000" marker-end="url(#arr)"/>
+
+    <!-- Двусторонняя связь выход ↔ роли (условно второй маркер у начала) -->
+    <text x="590" y="535" text-anchor="middle" font-size="8.5" fill="#333">После выхода — снова сценарий гостя (вход / регистрация)</text>
+
+    <!-- Подпись администратора: полный доступ -->
+    <text x="590" y="560" text-anchor="middle" font-size="9" font-weight="600">Администратор и директор по навигации объединяют доступ кладовщика и менеджмента там, где это задано в меню.</text>
+  </svg>
+
+  <p class="note">
+    Схема отражает пункты меню и сценарии из <code>NavMenu.razor</code> и разграничение по ролям Identity.
+    Открыть как файл или с сайта: <strong>/functional-diagram.html</strong> (если файл скопирован в <code>wwwroot</code> проекта сайта).
+  </p>
+</body>
+</html>

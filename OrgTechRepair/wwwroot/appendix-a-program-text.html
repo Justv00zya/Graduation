@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Приложение А. Текст программы — OrgTechRepair / «ВузяПринт»</title>
+  <style>
+    body { font-family: "Times New Roman", Times, serif; font-size: 11pt; line-height: 1.35; margin: 18px 20px; color: #000; }
+    h1 { font-size: 14pt; text-align: center; font-weight: bold; margin: 12px 0 14px; }
+    h2 { font-size: 13pt; margin: 18px 0 8px; font-weight: bold; }
+    h3 { font-size: 12pt; margin: 14px 0 6px; font-weight: bold; }
+    p { text-align: justify; margin: 0 0 10px; text-indent: 1.25cm; }
+    p.no-indent, .toc p { text-indent: 0; }
+    .toc { margin: 10px 0 16px; font-size: 10.5pt; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; margin: 10px 0 16px; }
+    th, td { border: 1px solid #000; padding: 4px 5px; vertical-align: top; word-wrap: break-word; font-size: 9pt; }
+    th { background: #e8e8e8; text-align: center; }
+    td.num { width: 3%; text-align: center; }
+    td.name { width: 22%; font-family: Consolas, monospace; font-size: 8pt; }
+    td.desc { width: 45%; }
+    td.sz { width: 8%; text-align: center; }
+    td.ln { width: 7%; text-align: center; }
+    pre.code { font-family: Consolas, monospace; font-size: 8.5pt; background: #f6f6f6; border: 1px solid #999; padding: 10px; overflow-x: auto; text-align: left; line-height: 1.25; white-space: pre-wrap; }
+    .caption { font-size: 10pt; font-weight: bold; margin: 12px 0 6px; text-align: center; }
+    @media print { body { margin: 10mm; } thead { display: table-header-group; } tr { page-break-inside: avoid; } }
+  </style>
+</head>
+<body>
+
+  <h1>Приложение А. Текст программы</h1>
+
+  <p class="no-indent"><strong>АННОТАЦИЯ.</strong> В данном программном документе приведён текст программы для веб-приложения <strong>«ВузяПринт»</strong> (реализация <strong>OrgTechRepair</strong> на платформе ASP.NET Core) и мобильного клиента <strong>OrgTechRepairMobile</strong> (Flutter). В разделе «Текст программы» указаны наименование и область применения, перечень модулей в виде таблиц с описанием, приблизительным размером и числом строк, а также фрагменты исходного кода. Полный актуальный код содержится в репозитории проекта.</p>
+
+  <div class="toc">
+    <p class="no-indent"><strong>СОДЕРЖАНИЕ</strong></p>
+    <p class="no-indent">1. Текст программы</p>
+    <p class="no-indent" style="margin-left:1cm">1.1. Наименование программы</p>
+    <p class="no-indent" style="margin-left:1cm">1.2. Область применения программы</p>
+    <p class="no-indent" style="margin-left:1cm">1.3. Модули</p>
+    <p class="no-indent" style="margin-left:1cm">1.4. Код программы (фрагменты)</p>
+  </div>
+
+  <h2>1. Текст программы</h2>
+
+  <h3>1.1. Наименование программы</h3>
+  <p class="no-indent">Наименование — <strong>OrgTechRepair</strong> (информационная система «ВузяПринт»). Мобильный клиент — <strong>OrgTechRepairMobile</strong>.</p>
+
+  <h3>1.2. Область применения программы</h3>
+  <p class="no-indent">Веб-сервис и API предназначены для учёта заявок на ремонт оргтехники, ведения справочников клиентов, сотрудников, поставщиков, товаров и запчастей, оформления продаж, заявок на выдачу комплектующих со склада, формирования PDF-заявок и администрирования (логи, резервное копирование БД). Мобильное приложение обеспечивает просмотр и создание заявок сотрудниками сервиса с использованием тех же данных через REST API и JWT-аутентификацию.</p>
+
+  <h3>1.3. Модули</h3>
+  <p class="caption">Таблица А.1 — модули веб-приложения OrgTechRepair (исходные файлы без каталогов bin/obj)</p>
+  <table>
+    <thead><tr><th>№</th><th>Название модуля (файл)</th><th>Описание модуля</th><th>Размер</th><th>Строк</th></tr></thead>
+    <tbody>
+    <tr><td class="num">1</td><td class="name">appsettings.Development.json</td><td class="desc">Конфигурация приложения (БД, JWT, пути PDF, логирование).</td><td class="sz">380 Б</td><td class="ln">14</td></tr>
+    <tr><td class="num">2</td><td class="name">appsettings.json</td><td class="desc">Конфигурация приложения (БД, JWT, пути PDF, логирование).</td><td class="sz">1 КБ</td><td class="ln">24</td></tr>
+    <tr><td class="num">3</td><td class="name">Components\_Imports.razor</td><td class="desc">Глобальные директивы Razor.</td><td class="sz">398 Б</td><td class="ln">10</td></tr>
+    <tr><td class="num">4</td><td class="name">Components\App.razor</td><td class="desc">Корневой маршрутизатор Blazor.</td><td class="sz">1 КБ</td><td class="ln">20</td></tr>
+    <tr><td class="num">5</td><td class="name">Components\Layout\MainLayout.razor</td><td class="desc">Основной макет страницы.</td><td class="sz">1 КБ</td><td class="ln">27</td></tr>
+    <tr><td class="num">6</td><td class="name">Components\Layout\MainLayout.razor.css</td><td class="desc">Основной макет страницы.</td><td class="sz">2 КБ</td><td class="ln">92</td></tr>
+    <tr><td class="num">7</td><td class="name">Components\Layout\NavMenu.razor</td><td class="desc">Боковое меню навигации по ролям.</td><td class="sz">7 КБ</td><td class="ln">133</td></tr>
+    <tr><td class="num">8</td><td class="name">Components\Layout\NavMenu.razor.css</td><td class="desc">Боковое меню навигации по ролям.</td><td class="sz">4 КБ</td><td class="ln">100</td></tr>
+    <tr><td class="num">9</td><td class="name">Components\Pages\AccessDenied.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">1 КБ</td><td class="ln">16</td></tr>
+    <tr><td class="num">10</td><td class="name">Components\Pages\Admin.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">15 КБ</td><td class="ln">317</td></tr>
+    <tr><td class="num">11</td><td class="name">Components\Pages\ClientCabinet.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">6 КБ</td><td class="ln">144</td></tr>
+    <tr><td class="num">12</td><td class="name">Components\Pages\ClientCabinetOrder.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">5 КБ</td><td class="ln">104</td></tr>
+    <tr><td class="num">13</td><td class="name">Components\Pages\ClientEdit.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">2 КБ</td><td class="ln">67</td></tr>
+    <tr><td class="num">14</td><td class="name">Components\Pages\Clients.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">3 КБ</td><td class="ln">84</td></tr>
+    <tr><td class="num">15</td><td class="name">Components\Pages\Counter.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">363 Б</td><td class="ln">13</td></tr>
+    <tr><td class="num">16</td><td class="name">Components\Pages\DatabaseTest.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">5 КБ</td><td class="ln">134</td></tr>
+    <tr><td class="num">17</td><td class="name">Components\Pages\EmployeeEdit.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">4 КБ</td><td class="ln">99</td></tr>
+    <tr><td class="num">18</td><td class="name">Components\Pages\Employees.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">3 КБ</td><td class="ln">86</td></tr>
+    <tr><td class="num">19</td><td class="name">Components\Pages\Error.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">1 КБ</td><td class="ln">29</td></tr>
+    <tr><td class="num">20</td><td class="name">Components\Pages\ForgotPassword.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">7 КБ</td><td class="ln">149</td></tr>
+    <tr><td class="num">21</td><td class="name">Components\Pages\Home.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">16 КБ</td><td class="ln">317</td></tr>
+    <tr><td class="num">22</td><td class="name">Components\Pages\Login.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">4 КБ</td><td class="ln">82</td></tr>
+    <tr><td class="num">23</td><td class="name">Components\Pages\OrderEdit.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">11 КБ</td><td class="ln">257</td></tr>
+    <tr><td class="num">24</td><td class="name">Components\Pages\Orders.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">4 КБ</td><td class="ln">100</td></tr>
+    <tr><td class="num">25</td><td class="name">Components\Pages\OrderView.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">5 КБ</td><td class="ln">124</td></tr>
+    <tr><td class="num">26</td><td class="name">Components\Pages\PartEdit.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">4 КБ</td><td class="ln">85</td></tr>
+    <tr><td class="num">27</td><td class="name">Components\Pages\Parts.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">3 КБ</td><td class="ln">86</td></tr>
+    <tr><td class="num">28</td><td class="name">Components\Pages\PartSupplyRequestsEngineer.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">8 КБ</td><td class="ln">219</td></tr>
+    <tr><td class="num">29</td><td class="name">Components\Pages\ProductEdit.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">8 КБ</td><td class="ln">168</td></tr>
+    <tr><td class="num">30</td><td class="name">Components\Pages\Products.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">5 КБ</td><td class="ln">107</td></tr>
+    <tr><td class="num">31</td><td class="name">Components\Pages\Register.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">4 КБ</td><td class="ln">79</td></tr>
+    <tr><td class="num">32</td><td class="name">Components\Pages\Reports.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">7 КБ</td><td class="ln">161</td></tr>
+    <tr><td class="num">33</td><td class="name">Components\Pages\ResetPassword.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">8 КБ</td><td class="ln">161</td></tr>
+    <tr><td class="num">34</td><td class="name">Components\Pages\Sales.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">3 КБ</td><td class="ln">82</td></tr>
+    <tr><td class="num">35</td><td class="name">Components\Pages\SaleView.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">4 КБ</td><td class="ln">82</td></tr>
+    <tr><td class="num">36</td><td class="name">Components\Pages\SupplierEdit.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">3 КБ</td><td class="ln">75</td></tr>
+    <tr><td class="num">37</td><td class="name">Components\Pages\Suppliers.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">3 КБ</td><td class="ln">79</td></tr>
+    <tr><td class="num">38</td><td class="name">Components\Pages\WarehousePartSupplyRequests.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">10 КБ</td><td class="ln">247</td></tr>
+    <tr><td class="num">39</td><td class="name">Components\Pages\Weather.razor</td><td class="desc">Страница пользовательского интерфейса Blazor Server.</td><td class="sz">2 КБ</td><td class="ln">56</td></tr>
+    <tr><td class="num">40</td><td class="name">Components\RedirectToLogin.razor</td><td class="desc">Редирект на страницу входа.</td><td class="sz">163 Б</td><td class="ln">7</td></tr>
+    <tr><td class="num">41</td><td class="name">Components\RevalidatingIdentityAuthenticationStateProvider.cs</td><td class="desc">Провайдер состояния аутентификации Blazor Server.</td><td class="sz">2 КБ</td><td class="ln">61</td></tr>
+    <tr><td class="num">42</td><td class="name">Components\Routes.razor</td><td class="desc">Маршруты и защита AuthorizeRouteView.</td><td class="sz">1 КБ</td><td class="ln">24</td></tr>
+    <tr><td class="num">43</td><td class="name">Controllers\AccountController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">8 КБ</td><td class="ln">158</td></tr>
+    <tr><td class="num">44</td><td class="name">Controllers\AdminController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">3 КБ</td><td class="ln">75</td></tr>
+    <tr><td class="num">45</td><td class="name">Controllers\AuthController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">11 КБ</td><td class="ln">244</td></tr>
+    <tr><td class="num">46</td><td class="name">Controllers\ClientCabinetController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">7 КБ</td><td class="ln">146</td></tr>
+    <tr><td class="num">47</td><td class="name">Controllers\ClientsController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">4 КБ</td><td class="ln">108</td></tr>
+    <tr><td class="num">48</td><td class="name">Controllers\EmployeesController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">3 КБ</td><td class="ln">76</td></tr>
+    <tr><td class="num">49</td><td class="name">Controllers\HealthController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">470 Б</td><td class="ln">15</td></tr>
+    <tr><td class="num">50</td><td class="name">Controllers\OrdersController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">11 КБ</td><td class="ln">263</td></tr>
+    <tr><td class="num">51</td><td class="name">Controllers\PartsController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">2 КБ</td><td class="ln">67</td></tr>
+    <tr><td class="num">52</td><td class="name">Controllers\PartSupplyRequestsController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">10 КБ</td><td class="ln">228</td></tr>
+    <tr><td class="num">53</td><td class="name">Controllers\ProductsController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">8 КБ</td><td class="ln">198</td></tr>
+    <tr><td class="num">54</td><td class="name">Controllers\ReportsController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">2 КБ</td><td class="ln">66</td></tr>
+    <tr><td class="num">55</td><td class="name">Controllers\SalesController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">3 КБ</td><td class="ln">77</td></tr>
+    <tr><td class="num">56</td><td class="name">Controllers\SuppliersController.cs</td><td class="desc">Веб-контроллер REST/MVC.</td><td class="sz">4 КБ</td><td class="ln">107</td></tr>
+    <tr><td class="num">57</td><td class="name">Data\ApplicationDbContext.cs</td><td class="desc">Контекст Entity Framework Core: наборы сущностей и связи.</td><td class="sz">5 КБ</td><td class="ln">107</td></tr>
+    <tr><td class="num">58</td><td class="name">Data\ApplyClientColumnsMigration.cs</td><td class="desc">Программное применение изменений схемы БД.</td><td class="sz">2 КБ</td><td class="ln">37</td></tr>
+    <tr><td class="num">59</td><td class="name">Data\ApplyDateColumnsMigration.cs</td><td class="desc">Программное применение изменений схемы БД.</td><td class="sz">1 КБ</td><td class="ln">26</td></tr>
+    <tr><td class="num">60</td><td class="name">Data\ApplyPartSupplyRequestsTableMigration.cs</td><td class="desc">Программное применение изменений схемы БД.</td><td class="sz">3 КБ</td><td class="ln">52</td></tr>
+    <tr><td class="num">61</td><td class="name">Data\ApplyProductImageColumnMigration.cs</td><td class="desc">Программное применение изменений схемы БД.</td><td class="sz">1 КБ</td><td class="ln">25</td></tr>
+    <tr><td class="num">62</td><td class="name">Data\PostgreSqlDbBootstrap.cs</td><td class="desc">Проверка/создание базы PostgreSQL при старте.</td><td class="sz">1 КБ</td><td class="ln">29</td></tr>
+    <tr><td class="num">63</td><td class="name">Data\SeedData.cs</td><td class="desc">Начальное заполнение БД (роли, демо-пользователи, справочники).</td><td class="sz">22 КБ</td><td class="ln">420</td></tr>
+    <tr><td class="num">64</td><td class="name">Models\Client.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">1 КБ</td><td class="ln">13</td></tr>
+    <tr><td class="num">65</td><td class="name">Models\DTOs\ClientDto.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">1 КБ</td><td class="ln">20</td></tr>
+    <tr><td class="num">66</td><td class="name">Models\DTOs\EmployeeDto.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">1 КБ</td><td class="ln">15</td></tr>
+    <tr><td class="num">67</td><td class="name">Models\DTOs\OrderDto.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">2 КБ</td><td class="ln">41</td></tr>
+    <tr><td class="num">68</td><td class="name">Models\DTOs\PartSupplyRequestDtos.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">328 Б</td><td class="ln">12</td></tr>
+    <tr><td class="num">69</td><td class="name">Models\DTOs\ProductDto.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">1 КБ</td><td class="ln">31</td></tr>
+    <tr><td class="num">70</td><td class="name">Models\DTOs\QuickRequestDto.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">301 Б</td><td class="ln">8</td></tr>
+    <tr><td class="num">71</td><td class="name">Models\DTOs\SupplierDto.cs</td><td class="desc">Объект передачи данных для API и форм.</td><td class="sz">1 КБ</td><td class="ln">26</td></tr>
+    <tr><td class="num">72</td><td class="name">Models\Employee.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">1 КБ</td><td class="ln">15</td></tr>
+    <tr><td class="num">73</td><td class="name">Models\Order.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">1 КБ</td><td class="ln">19</td></tr>
+    <tr><td class="num">74</td><td class="name">Models\OrderPart.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">277 Б</td><td class="ln">10</td></tr>
+    <tr><td class="num">75</td><td class="name">Models\Part.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">438 Б</td><td class="ln">12</td></tr>
+    <tr><td class="num">76</td><td class="name">Models\PartSupplyRequest.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">1 КБ</td><td class="ln">21</td></tr>
+    <tr><td class="num">77</td><td class="name">Models\Position.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">265 Б</td><td class="ln">8</td></tr>
+    <tr><td class="num">78</td><td class="name">Models\Product.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">1 КБ</td><td class="ln">15</td></tr>
+    <tr><td class="num">79</td><td class="name">Models\Sale.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">394 Б</td><td class="ln">11</td></tr>
+    <tr><td class="num">80</td><td class="name">Models\SaleItem.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">369 Б</td><td class="ln">12</td></tr>
+    <tr><td class="num">81</td><td class="name">Models\Supplier.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">455 Б</td><td class="ln">12</td></tr>
+    <tr><td class="num">82</td><td class="name">Models\Work.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">290 Б</td><td class="ln">10</td></tr>
+    <tr><td class="num">83</td><td class="name">Models\WorkType.cs</td><td class="desc">Сущность предметной области или справочник.</td><td class="sz">252 Б</td><td class="ln">8</td></tr>
+    <tr><td class="num">84</td><td class="name">OrgTechRepair.csproj</td><td class="desc">Файл проекта MSBuild и ссылки на пакеты NuGet.</td><td class="sz">1 КБ</td><td class="ln">0</td></tr>
+    <tr><td class="num">85</td><td class="name">Program.cs</td><td class="desc">Точка входа: конвейер HTTP, Blazor Server, PostgreSQL/SQLite, Identity, JWT, CORS, регистрация сервисов.</td><td class="sz">11 КБ</td><td class="ln">246</td></tr>
+    <tr><td class="num">86</td><td class="name">Properties\launchSettings.json</td><td class="desc">Параметры запуска и среды разработки.</td><td class="sz">1 КБ</td><td class="ln">38</td></tr>
+    <tr><td class="num">87</td><td class="name">Services\ClientProfileProvisioner.cs</td><td class="desc">Реализация сервиса (PDF, логи, бэкап, e-mail).</td><td class="sz">1 КБ</td><td class="ln">31</td></tr>
+    <tr><td class="num">88</td><td class="name">Services\DatabaseBackupService.cs</td><td class="desc">Реализация сервиса (PDF, логи, бэкап, e-mail).</td><td class="sz">9 КБ</td><td class="ln">217</td></tr>
+    <tr><td class="num">89</td><td class="name">Services\DevelopmentEmailSender.cs</td><td class="desc">Реализация сервиса (PDF, логи, бэкап, e-mail).</td><td class="sz">2 КБ</td><td class="ln">36</td></tr>
+    <tr><td class="num">90</td><td class="name">Services\IDatabaseBackupService.cs</td><td class="desc">Интерфейс сервиса приложения.</td><td class="sz">1 КБ</td><td class="ln">16</td></tr>
+    <tr><td class="num">91</td><td class="name">Services\IEmailSender.cs</td><td class="desc">Интерфейс сервиса приложения.</td><td class="sz">1 КБ</td><td class="ln">21</td></tr>
+    <tr><td class="num">92</td><td class="name">Services\ILogStore.cs</td><td class="desc">Интерфейс сервиса приложения.</td><td class="sz">1 КБ</td><td class="ln">18</td></tr>
+    <tr><td class="num">93</td><td class="name">Services\InMemoryLogStore.cs</td><td class="desc">Интерфейс сервиса приложения.</td><td class="sz">3 КБ</td><td class="ln">70</td></tr>
+    <tr><td class="num">94</td><td class="name">Services\IOrderPdfService.cs</td><td class="desc">Интерфейс сервиса приложения.</td><td class="sz">170 Б</td><td class="ln">6</td></tr>
+    <tr><td class="num">95</td><td class="name">Services\OrderPdfService.cs</td><td class="desc">Реализация сервиса (PDF, логи, бэкап, e-mail).</td><td class="sz">5 КБ</td><td class="ln">109</td></tr>
+    <tr><td class="num">96</td><td class="name">wwwroot\app.css</td><td class="desc">Статические ресурсы или HTML-вложения отчёта.</td><td class="sz">4 КБ</td><td class="ln">71</td></tr>
+    <tr><td class="num">97</td><td class="name">wwwroot\bootstrap\bootstrap.min.css</td><td class="desc">Статические ресурсы или HTML-вложения отчёта.</td><td class="sz">159 КБ</td><td class="ln">7</td></tr>
+    </tbody>
+  </table>
+  <p class="caption">Таблица А.2 — модули мобильного клиента OrgTechRepairMobile (каталог lib/)</p>
+  <table>
+    <thead><tr><th>№</th><th>Название модуля (файл)</th><th>Описание модуля</th><th>Размер</th><th>Строк</th></tr></thead>
+    <tbody>
+    <tr><td class="num">1</td><td class="name">core\api_client.dart</td><td class="desc">HTTP-клиент и вызовы REST API, JWT.</td><td class="sz">13 КБ</td><td class="ln">315</td></tr>
+    <tr><td class="num">2</td><td class="name">core\app_config.dart</td><td class="desc">Модуль на языке Dart.</td><td class="sz">398 Б</td><td class="ln">4</td></tr>
+    <tr><td class="num">3</td><td class="name">core\app_theme.dart</td><td class="desc">Модуль на языке Dart.</td><td class="sz">5 КБ</td><td class="ln">107</td></tr>
+    <tr><td class="num">4</td><td class="name">core\auth_provider.dart</td><td class="desc">Виджеты входа и навигации.</td><td class="sz">3 КБ</td><td class="ln">73</td></tr>
+    <tr><td class="num">5</td><td class="name">core\auth_storage.dart</td><td class="desc">Виджеты входа и навигации.</td><td class="sz">1 КБ</td><td class="ln">24</td></tr>
+    <tr><td class="num">6</td><td class="name">core\server_url_storage.dart</td><td class="desc">Модуль на языке Dart.</td><td class="sz">3 КБ</td><td class="ln">83</td></tr>
+    <tr><td class="num">7</td><td class="name">features\admin\admin_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">1 КБ</td><td class="ln">23</td></tr>
+    <tr><td class="num">8</td><td class="name">features\auth\forgot_password_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">5 КБ</td><td class="ln">134</td></tr>
+    <tr><td class="num">9</td><td class="name">features\auth\login_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">13 КБ</td><td class="ln">265</td></tr>
+    <tr><td class="num">10</td><td class="name">features\auth\register_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">7 КБ</td><td class="ln">154</td></tr>
+    <tr><td class="num">11</td><td class="name">features\auth\reset_password_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">6 КБ</td><td class="ln">156</td></tr>
+    <tr><td class="num">12</td><td class="name">features\client_cabinet\client_cabinet_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">5 КБ</td><td class="ln">140</td></tr>
+    <tr><td class="num">13</td><td class="name">features\client_cabinet\client_order_view_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">4 КБ</td><td class="ln">109</td></tr>
+    <tr><td class="num">14</td><td class="name">features\clients\client_edit_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">3 КБ</td><td class="ln">78</td></tr>
+    <tr><td class="num">15</td><td class="name">features\clients\clients_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">3 КБ</td><td class="ln">79</td></tr>
+    <tr><td class="num">16</td><td class="name">features\employees\employees_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">3 КБ</td><td class="ln">72</td></tr>
+    <tr><td class="num">17</td><td class="name">features\home\home_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">20 КБ</td><td class="ln">434</td></tr>
+    <tr><td class="num">18</td><td class="name">features\orders\order_edit_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">7 КБ</td><td class="ln">163</td></tr>
+    <tr><td class="num">19</td><td class="name">features\orders\order_view_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">8 КБ</td><td class="ln">190</td></tr>
+    <tr><td class="num">20</td><td class="name">features\orders\orders_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">3 КБ</td><td class="ln">87</td></tr>
+    <tr><td class="num">21</td><td class="name">features\parts\part_supply_request_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">10 КБ</td><td class="ln">227</td></tr>
+    <tr><td class="num">22</td><td class="name">features\parts\parts_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">4 КБ</td><td class="ln">89</td></tr>
+    <tr><td class="num">23</td><td class="name">features\parts\warehouse_part_supply_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">7 КБ</td><td class="ln">171</td></tr>
+    <tr><td class="num">24</td><td class="name">features\products\product_edit_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">10 КБ</td><td class="ln">246</td></tr>
+    <tr><td class="num">25</td><td class="name">features\products\products_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">5 КБ</td><td class="ln">103</td></tr>
+    <tr><td class="num">26</td><td class="name">features\reports\reports_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">14 КБ</td><td class="ln">369</td></tr>
+    <tr><td class="num">27</td><td class="name">features\sales\sale_view_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">4 КБ</td><td class="ln">90</td></tr>
+    <tr><td class="num">28</td><td class="name">features\sales\sales_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">3 КБ</td><td class="ln">75</td></tr>
+    <tr><td class="num">29</td><td class="name">features\settings\server_connection_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">5 КБ</td><td class="ln">154</td></tr>
+    <tr><td class="num">30</td><td class="name">features\suppliers\supplier_edit_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">4 КБ</td><td class="ln">92</td></tr>
+    <tr><td class="num">31</td><td class="name">features\suppliers\suppliers_list_screen.dart</td><td class="desc">Экран пользовательского интерфейса.</td><td class="sz">3 КБ</td><td class="ln">79</td></tr>
+    <tr><td class="num">32</td><td class="name">main.dart</td><td class="desc">Точка входа Flutter-приложения.</td><td class="sz">14 КБ</td><td class="ln">333</td></tr>
+    <tr><td class="num">33</td><td class="name">widgets\auth_ui.dart</td><td class="desc">Виджеты входа и навигации.</td><td class="sz">5 КБ</td><td class="ln">159</td></tr>
+    <tr><td class="num">34</td><td class="name">widgets\product_card_image.dart</td><td class="desc">Модуль на языке Dart.</td><td class="sz">2 КБ</td><td class="ln">54</td></tr>
+    <tr><td class="num">35</td><td class="name">pubspec.yaml</td><td class="desc">Зависимости Flutter/Dart и ресурсы (assets).</td><td class="sz">1 КБ</td><td class="ln">21</td></tr>
+    </tbody>
+  </table>
+  <h3>1.4. Код программы (фрагменты)</h3>
+  <p class="no-indent">Ниже приведены характерные фрагменты серверной части. Полный текст всех файлов приведён в электронном виде в каталоге решения и не дублируется в отчёте полностью в целях соблюдения объёма документа.</p>
+  <p class="no-indent" style="margin-top:10px"><strong>Фрагмент 1.</strong> Файл <code>Program.cs</code> (начало: создание приложения, БД, Identity, порты):</p>
+  <pre class="code">using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using Npgsql;
+using OrgTechRepair.Components;
+using OrgTechRepair.Data;
+using System.Text;
+
+var builder = WebApplication.CreateBuilder(args);
+
+var portFromEnv = Environment.GetEnvironmentVariable(&quot;PORT&quot;);
+var effectivePort = int.TryParse(portFromEnv, out var parsedPort) ? parsedPort : 5121;
+// На Render порт приходит через переменную PORT. Локально используем 5121.
+builder.WebHost.UseUrls($&quot;http://0.0.0.0:{effectivePort}&quot;);
+builder.Logging.AddConsole();
+
+// Add services to the container.
+builder.Services.AddRazorComponents()
+    .AddInteractiveServerComponents();
+
+// Add API Controllers
+builder.Services.AddControllers();
+builder.Services.Configure&lt;FormOptions&gt;(o =&gt; { o.MultipartBodyLengthLimit = 10 * 1024 * 1024; });
+
+// Antiforgery protection is handled by middleware (app.UseAntiforgery())
+
+// Add Entity Framework (PostgreSQL with automatic SQLite fallback)
+var postgresConnectionString = builder.Configuration.GetConnectionString(&quot;DefaultConnection&quot;)
+                              ?? &quot;Host=localhost;Port=5432;Database=orgtechrepairdb;Username=postgres;Password=postgres&quot;;
+var sqliteFallbackConnectionString = builder.Configuration.GetConnectionString(&quot;SqliteFallback&quot;)
+                                   ?? &quot;Data Source=orgtechrepair.db&quot;;
+
+// Если базы с именем из строки подключения ещё нет — создаём (подключение к служебной БД postgres).
+try
+{
+    PostgreSqlDbBootstrap.EnsureDatabaseExists(postgresConnectionString);
+}
+catch (Exception ex)
+{
+    Console.WriteLine($&quot;[DB] Автосоздание базы PostgreSQL пропущено: {ex.Message}&quot;);
+}
+
+var usePostgres = true;
+try
+{
+    using var testConnection = new NpgsqlConnection(postgresConnectionString);
+    testConnection.Open();
+    var pgInfo = new NpgsqlConnectionStringBuilder(postgresConnectionString);
+    Console.WriteLine($&quot;[DB] PostgreSQL: Host={pgInfo.Host}; Database={pgInfo.Database}; User={pgInfo.Username}&quot;);
+}
+catch (Exception ex)
+{
+    usePostgres = false;
+    Console.WriteLine($&quot;[DB] PostgreSQL недоступен, используем SQLite fallback. Причина: {ex.Message}&quot;);
+}
+
+if (usePostgres)
+{
+    builder.Services.AddDbContext&lt;ApplicationDbContext&gt;(options =&gt;
+        options.UseNpgsql(postgresConnectionString));
+
+    builder.Services.AddDbContextFactory&lt;ApplicationDbContext&gt;(options =&gt;
+        options.UseNpgsql(postgresConnectionString),
+        ServiceLifetime.Scoped);
+}
+else
+{
+    builder.Services.AddDbContext&lt;ApplicationDbContext&gt;(options =&gt;
+        options.UseSqlite(sqliteFallbackConnectionString));
+
+    builder.Services.AddDbContextFactory&lt;ApplicationDbContext&gt;(options =&gt;
+        options.UseSqlite(sqliteFallbackConnectionString),
+        ServiceLifetime.Scoped);
+}
+
+// Add Identity
+builder.Services.AddIdentity&lt;IdentityUser, IdentityRole&gt;(options =&gt;
+{
+    // Максимально упрощаем политику паролей для учебного проекта:
+    // допускаются простые пароли длиной от 6 символов (например, 111111 или qwerty1)
+    options.Password.RequireDigit = false;
+    options.Password.RequireLowercase = false;
+    options.Password.RequireUppercase = false;
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 6;
+
+    // Разрешаем в логине русские буквы и пробелы (по умолчанию Identity разрешает только латиницу/цифры)
+    options.User.AllowedUserNameCharacters =
+        &quot;abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ &quot; +
+        &quot;абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ&quot;;
+})</pre>
+  <p class="no-indent" style="margin-top:16px;font-size:9.5pt">Структура документа соответствует типовому приложению к курсовому проекту («Текст программы»). Содержание сформировано по продукту OrgTechRepair / OrgTechRepairMobile. Файл: <code>assets/appendix-a-program-text.html</code>, копия: <code>wwwroot/appendix-a-program-text.html</code>.</p>
+</body>
+</html>
