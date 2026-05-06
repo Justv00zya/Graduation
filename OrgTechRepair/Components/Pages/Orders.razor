@@ -30,11 +30,11 @@
         </div>
         <div class="col-12 col-md-3">
             <label class="form-label mb-1">Дата с</label>
-            <input type="date" class="form-control" @bind="dateFromText" />
+            <InputDate TValue="DateTime?" @bind-Value="dateFrom" class="form-control" />
         </div>
         <div class="col-12 col-md-3">
             <label class="form-label mb-1">Дата по</label>
-            <input type="date" class="form-control" @bind="dateToText" />
+            <InputDate TValue="DateTime?" @bind-Value="dateTo" class="form-control" />
         </div>
         <div class="col-12 col-md-2 d-flex align-items-end">
             <button class="btn btn-outline-secondary w-100" @onclick="ResetFilters">Сбросить</button>
@@ -114,18 +114,6 @@
         .Where(o => !dateFrom.HasValue || o.OrderDate.Date >= dateFrom.Value.Date)
         .Where(o => !dateTo.HasValue || o.OrderDate.Date <= dateTo.Value.Date);
 
-    private string? dateFromText
-    {
-        get => dateFrom?.ToString("yyyy-MM-dd");
-        set => dateFrom = TryParseDate(value);
-    }
-
-    private string? dateToText
-    {
-        get => dateTo?.ToString("yyyy-MM-dd");
-        set => dateTo = TryParseDate(value);
-    }
-
     protected override async Task OnInitializedAsync()
     {
         await LoadOrders();
@@ -165,13 +153,6 @@
     {
         dateTo = DateTime.Today;
         dateFrom = dateTo.Value.AddDays(-29);
-    }
-
-    private static DateTime? TryParseDate(string? raw)
-    {
-        if (string.IsNullOrWhiteSpace(raw))
-            return null;
-        return DateTime.TryParse(raw, out var parsed) ? parsed : null;
     }
 
     private void CreateNew()
