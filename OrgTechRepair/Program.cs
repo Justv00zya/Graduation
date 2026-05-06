@@ -33,6 +33,9 @@ var postgresConnectionString = builder.Configuration.GetConnectionString("Defaul
                               ?? "Host=localhost;Port=5432;Database=orgtechrepairdb;Username=postgres;Password=postgres";
 var sqliteFallbackConnectionString = builder.Configuration.GetConnectionString("SqliteFallback")
                                    ?? "Data Source=orgtechrepair.db";
+var allowSqliteFallback =
+    builder.Environment.IsDevelopment() ||
+    builder.Configuration.GetValue<bool>("Database:AllowSqliteFallback");
 
 // Если базы с именем из строки подключения ещё нет — создаём (подключение к служебной БД postgres).
 try
@@ -54,8 +57,19 @@ try
 }
 catch (Exception ex)
 {
-    usePostgres = false;
-    Console.WriteLine($"[DB] PostgreSQL недоступен, используем SQLite fallback. Причина: {ex.Message}");
+    if (allowSqliteFallback)
+    {
+        usePostgres = false;
+        Console.WriteLine($"[DB] PostgreSQL недоступен, используем SQLite fallback. Причина: {ex.Message}");
+    }
+    else
+    {
+        Console.WriteLine($"[DB] PostgreSQL недоступен, fallback в SQLite отключен. Причина: {ex.Message}");
+        throw new InvalidOperationException(
+            "PostgreSQL недоступен, а SQLite fallback отключен. " +
+            "Проверьте строку подключения DefaultConnection и доступ к PostgreSQL. " +
+            "Это защищает пользователей от работы с временной/пустой fallback-БД.");
+    }
 }
 
 if (usePostgres)
