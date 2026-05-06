@@ -108,6 +108,6 @@
         if (_order == null)
             _forbidden = true;
         else
-            _statusColor = _order.Status switch { "Принят" => "primary", "В работе" => "warning", "Выполнен" => "success", "Отменен" => "danger", _ => "secondary" };
+            _statusColor = _order.Status switch { "В ожидании" => "primary", "В работе" => "warning", "Выполнен" => "success", "Отменен" => "danger", _ => "secondary" };
     }
 }

@@ -14,7 +14,7 @@ public class Order
     public decimal? Cost { get; set; }
     public DateTime OrderDate { get; set; }
     public DateTime? CompletionDate { get; set; }
-    public string Status { get; set; } = "Принят"; // Принят, В работе, Выполнен, Отменен
+    public string Status { get; set; } = "В ожидании"; // В ожидании, В работе, Выполнен, Отменен
     public ICollection<OrderPart> OrderParts { get; set; } = new List<OrderPart>();
     public ICollection<Work> Works { get; set; } = new List<Work>();
 }

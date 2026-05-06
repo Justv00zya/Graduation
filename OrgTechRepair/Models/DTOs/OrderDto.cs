@@ -27,7 +27,7 @@ public class CreateOrderDto
     public int? EmployeeId { get; set; }
     public decimal? Cost { get; set; }
     public DateTime OrderDate { get; set; }
-    public string Status { get; set; } = "Принят";
+    public string Status { get; set; } = "В ожидании";
 }
 
 public class UpdateOrderDto

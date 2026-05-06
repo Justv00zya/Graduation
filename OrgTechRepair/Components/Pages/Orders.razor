@@ -17,6 +17,36 @@
             <button class="btn btn-primary" @onclick="CreateNew">Создать заявку</button>
         </AuthorizeView>
     </div>
+    <div class="row g-2 mb-3">
+        <div class="col-12 col-md-4">
+            <label class="form-label mb-1">Статус</label>
+            <select class="form-select" @bind="statusFilter">
+                <option value="Все">Все</option>
+                @foreach (var status in availableStatuses)
+                {
+                    <option value="@status">@status</option>
+                }
+            </select>
+        </div>
+        <div class="col-12 col-md-3">
+            <label class="form-label mb-1">Дата с</label>
+            <input type="date" class="form-control" @bind="dateFromText" />
+        </div>
+        <div class="col-12 col-md-3">
+            <label class="form-label mb-1">Дата по</label>
+            <input type="date" class="form-control" @bind="dateToText" />
+        </div>
+        <div class="col-12 col-md-2 d-flex align-items-end">
+            <button class="btn btn-outline-secondary w-100" @onclick="ResetFilters">Сбросить</button>
+        </div>
+        <div class="col-12">
+            <div class="d-flex flex-wrap gap-2">
+                <button class="btn btn-sm btn-outline-primary" @onclick="SetPresetToday">Сегодня</button>
+                <button class="btn btn-sm btn-outline-primary" @onclick="SetPresetLast7Days">7 дней</button>
+                <button class="btn btn-sm btn-outline-primary" @onclick="SetPresetLast30Days">30 дней</button>
+            </div>
+        </div>
+    </div>
 
     @if (orders == null)
     {
@@ -38,7 +68,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var order in orders)
+                    @foreach (var order in FilteredOrders)
                     {
                         <tr>
                             <td>@order.OrderNumber</td>
@@ -65,6 +95,36 @@
 
 @code {
     private List<Order>? orders;
+    private string statusFilter = "Все";
+    private DateTime? dateFrom;
+    private DateTime? dateTo;
+
+    private List<string> availableStatuses =>
+        orders?
+            .Select(o => o.Status)
+            .Where(s => !string.IsNullOrWhiteSpace(s))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .OrderBy(s => s)
+            .ToList()
+        ?? new();
+
+    private IEnumerable<Order> FilteredOrders =>
+        (orders ?? Enumerable.Empty<Order>())
+        .Where(o => statusFilter == "Все" || string.Equals(o.Status, statusFilter, StringComparison.OrdinalIgnoreCase))
+        .Where(o => !dateFrom.HasValue || o.OrderDate.Date >= dateFrom.Value.Date)
+        .Where(o => !dateTo.HasValue || o.OrderDate.Date <= dateTo.Value.Date);
+
+    private string? dateFromText
+    {
+        get => dateFrom?.ToString("yyyy-MM-dd");
+        set => dateFrom = TryParseDate(value);
+    }
+
+    private string? dateToText
+    {
+        get => dateTo?.ToString("yyyy-MM-dd");
+        set => dateTo = TryParseDate(value);
+    }
 
     protected override async Task OnInitializedAsync()
     {
@@ -79,6 +139,39 @@
             .Include(o => o.Employee)
             .OrderByDescending(o => o.OrderDate)
             .ToListAsync();
+    }
+
+    private void ResetFilters()
+    {
+        statusFilter = "Все";
+        dateFrom = null;
+        dateTo = null;
+    }
+
+    private void SetPresetToday()
+    {
+        var today = DateTime.Today;
+        dateFrom = today;
+        dateTo = today;
+    }
+
+    private void SetPresetLast7Days()
+    {
+        dateTo = DateTime.Today;
+        dateFrom = dateTo.Value.AddDays(-6);
+    }
+
+    private void SetPresetLast30Days()
+    {
+        dateTo = DateTime.Today;
+        dateFrom = dateTo.Value.AddDays(-29);
+    }
+
+    private static DateTime? TryParseDate(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return null;
+        return DateTime.TryParse(raw, out var parsed) ? parsed : null;
     }
 
     private void CreateNew()
@@ -100,7 +193,7 @@
     {
         return status switch
         {
-            "Принят" => "primary",
+            "В ожидании" => "primary",
             "В работе" => "warning",
             "Выполнен" => "success",
             "Отменен" => "danger",

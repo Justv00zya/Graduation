@@ -95,7 +95,7 @@ public class OrdersController : ControllerBase
             EquipmentModel = equipmentModel,
             ComplaintDescription = complaint,
             OrderDate = DateTime.Now,
-            Status = "Принят"
+            Status = "В ожидании"
         };
         context.Orders.Add(order);
         await context.SaveChangesAsync();

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Диаграмма прецедентов — базовые функции ролей OrgTechRepair</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 14px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #d8d8d8;
+      color: #111;
+    }
+    h1 {
+      margin: 0 0 8px;
+      text-align: center;
+      font-size: 18px;
+      font-weight: 700;
+    }
+    .cap {
+      margin: 0 0 10px;
+      text-align: center;
+      font-size: 12px;
+    }
+    svg {
+      display: block;
+      margin: 0 auto;
+      max-width: 100%;
+      height: auto;
+      background: #fff;
+      border: 1px solid #888;
+    }
+  </style>
+</head>
+<body>
+  <h1>Диаграмма прецедентов</h1>
+  <p class="cap">ИС «ВузяПринт» (OrgTechRepair) — базовые функции по ролям</p>
+
+  <svg viewBox="0 0 1300 860" xmlns="http://www.w3.org/2000/svg" aria-label="UML use case diagram">
+    <defs>
+      <style>
+        .actor-line { stroke: #111; stroke-width: 2; fill: none; }
+        .link { stroke: #222; stroke-width: 1.6; fill: none; }
+        .uc { fill: #f3f8d2; stroke: #b20040; stroke-width: 2; }
+        .lbl { font-size: 13px; fill: #111; }
+        .title { font-size: 14px; font-weight: 700; }
+      </style>
+    </defs>
+
+    <!-- System boundary -->
+    <rect x="260" y="70" width="780" height="730" rx="6" fill="#fcfcfc" stroke="#333" stroke-width="1.5"/>
+    <text x="650" y="95" text-anchor="middle" class="title">Система OrgTechRepair</text>
+
+    <!-- Use cases -->
+    <ellipse class="uc" cx="470" cy="160" rx="140" ry="36"/>
+    <text class="lbl" x="470" y="156" text-anchor="middle">Просмотреть прайс-лист</text>
+    <text class="lbl" x="470" y="173" text-anchor="middle">(/price-list)</text>
+
+    <ellipse class="uc" cx="470" cy="255" rx="140" ry="36"/>
+    <text class="lbl" x="470" y="251" text-anchor="middle">Создать быструю</text>
+    <text class="lbl" x="470" y="268" text-anchor="middle">заявку на ремонт</text>
+
+    <ellipse class="uc" cx="470" cy="350" rx="140" ry="36"/>
+    <text class="lbl" x="470" y="346" text-anchor="middle">Регистрация / вход</text>
+    <text class="lbl" x="470" y="363" text-anchor="middle">в систему</text>
+
+    <ellipse class="uc" cx="470" cy="445" rx="140" ry="36"/>
+    <text class="lbl" x="470" y="441" text-anchor="middle">Личный кабинет</text>
+    <text class="lbl" x="470" y="458" text-anchor="middle">клиента</text>
+
+    <ellipse class="uc" cx="470" cy="540" rx="140" ry="36"/>
+    <text class="lbl" x="470" y="536" text-anchor="middle">Просмотр статуса</text>
+    <text class="lbl" x="470" y="553" text-anchor="middle">своих заявок</text>
+
+    <ellipse class="uc" cx="820" cy="170" rx="165" ry="38"/>
+    <text class="lbl" x="820" y="166" text-anchor="middle">Обработка заявок на ремонт</text>
+    <text class="lbl" x="820" y="183" text-anchor="middle">(/orders)</text>
+
+    <ellipse class="uc" cx="820" cy="275" rx="165" ry="38"/>
+    <text class="lbl" x="820" y="271" text-anchor="middle">Редактирование прайс-листа</text>
+    <text class="lbl" x="820" y="288" text-anchor="middle">(/price-list/create, /edit)</text>
+
+    <ellipse class="uc" cx="820" cy="380" rx="165" ry="38"/>
+    <text class="lbl" x="820" y="376" text-anchor="middle">Работа с клиентами</text>
+    <text class="lbl" x="820" y="393" text-anchor="middle">и поставщиками</text>
+
+    <ellipse class="uc" cx="820" cy="485" rx="165" ry="38"/>
+    <text class="lbl" x="820" y="481" text-anchor="middle">Ремонтные работы</text>
+    <text class="lbl" x="820" y="498" text-anchor="middle">+ заявка на склад</text>
+
+    <ellipse class="uc" cx="820" cy="590" rx="165" ry="38"/>
+    <text class="lbl" x="820" y="586" text-anchor="middle">Выдача со склада</text>
+    <text class="lbl" x="820" y="603" text-anchor="middle">и учёт запчастей</text>
+
+    <ellipse class="uc" cx="820" cy="695" rx="165" ry="38"/>
+    <text class="lbl" x="820" y="691" text-anchor="middle">Продажи и отчётность</text>
+    <text class="lbl" x="820" y="708" text-anchor="middle">(/sales, /reports)</text>
+
+    <ellipse class="uc" cx="650" cy="760" rx="185" ry="34"/>
+    <text class="lbl" x="650" y="756" text-anchor="middle">Администрирование (пользователи, роли, логи, бэкап)</text>
+
+    <!-- Actors left -->
+    <!-- Guest -->
+    <circle cx="90" cy="160" r="16" class="actor-line"/>
+    <path d="M90 176 L90 228 M60 198 L120 198 M90 228 L66 258 M90 228 L114 258" class="actor-line"/>
+    <text class="lbl" x="90" y="284" text-anchor="middle">Гость</text>
+
+    <!-- Client -->
+    <circle cx="90" cy="420" r="16" class="actor-line"/>
+    <path d="M90 436 L90 488 M60 458 L120 458 M90 488 L66 518 M90 488 L114 518" class="actor-line"/>
+    <text class="lbl" x="90" y="544" text-anchor="middle">Клиент</text>
+
+    <!-- Actors right -->
+    <!-- Manager -->
+    <circle cx="1160" cy="130" r="16" class="actor-line"/>
+    <path d="M1160 146 L1160 198 M1130 168 L1190 168 M1160 198 L1136 228 M1160 198 L1184 228" class="actor-line"/>
+    <text class="lbl" x="1160" y="254" text-anchor="middle">Менеджер</text>
+
+    <!-- OfficeManager -->
+    <circle cx="1160" cy="250" r="16" class="actor-line"/>
+    <path d="M1160 266 L1160 318 M1130 288 L1190 288 M1160 318 L1136 348 M1160 318 L1184 348" class="actor-line"/>
+    <text class="lbl" x="1160" y="374" text-anchor="middle">Офис-менеджер</text>
+
+    <!-- ServiceEngineer -->
+    <circle cx="1160" cy="370" r="16" class="actor-line"/>
+    <path d="M1160 386 L1160 438 M1130 408 L1190 408 M1160 438 L1136 468 M1160 438 L1184 468" class="actor-line"/>
+    <text class="lbl" x="1160" y="494" text-anchor="middle">Сервис-инженер</text>
+
+    <!-- WarehouseKeeper -->
+    <circle cx="1160" cy="490" r="16" class="actor-line"/>
+    <path d="M1160 506 L1160 558 M1130 528 L1190 528 M1160 558 L1136 588 M1160 558 L1184 588" class="actor-line"/>
+    <text class="lbl" x="1160" y="614" text-anchor="middle">Кладовщик</text>
+
+    <!-- Accountant/Cashier -->
+    <circle cx="1160" cy="610" r="16" class="actor-line"/>
+    <path d="M1160 626 L1160 678 M1130 648 L1190 648 M1160 678 L1136 708 M1160 678 L1184 708" class="actor-line"/>
+    <text class="lbl" x="1160" y="734" text-anchor="middle">Бухгалтер / кассир</text>
+
+    <!-- Director -->
+    <circle cx="104" cy="650" r="16" class="actor-line"/>
+    <path d="M104 666 L104 718 M74 688 L134 688 M104 718 L80 748 M104 718 L128 748" class="actor-line"/>
+    <text class="lbl" x="104" y="774" text-anchor="middle">Директор</text>
+
+    <!-- Admin -->
+    <circle cx="1160" cy="740" r="16" class="actor-line"/>
+    <path d="M1160 756 L1160 808 M1130 778 L1190 778 M1160 808 L1136 838 M1160 808 L1184 838" class="actor-line"/>
+    <text class="lbl" x="1160" y="856" text-anchor="middle">Администратор</text>
+
+    <!-- Links -->
+    <!-- Guest -->
+    <line class="link" x1="122" y1="198" x2="330" y2="160"/>
+    <line class="link" x1="122" y1="198" x2="330" y2="255"/>
+    <line class="link" x1="122" y1="198" x2="330" y2="350"/>
+
+    <!-- Client -->
+    <line class="link" x1="122" y1="458" x2="330" y2="445"/>
+    <line class="link" x1="122" y1="458" x2="330" y2="540"/>
+    <line class="link" x1="122" y1="458" x2="330" y2="160"/>
+
+    <!-- Manager -->
+    <line class="link" x1="1128" y1="168" x2="985" y2="170"/>
+    <line class="link" x1="1128" y1="168" x2="985" y2="275"/>
+    <line class="link" x1="1128" y1="168" x2="985" y2="380"/>
+
+    <!-- Office manager -->
+    <line class="link" x1="1128" y1="288" x2="985" y2="170"/>
+    <line class="link" x1="1128" y1="288" x2="985" y2="275"/>
+    <line class="link" x1="1128" y1="288" x2="985" y2="380"/>
+
+    <!-- Service engineer -->
+    <line class="link" x1="1128" y1="408" x2="985" y2="170"/>
+    <line class="link" x1="1128" y1="408" x2="985" y2="485"/>
+    <line class="link" x1="1128" y1="408" x2="985" y2="590"/>
+
+    <!-- Warehouse -->
+    <line class="link" x1="1128" y1="528" x2="985" y2="590"/>
+
+    <!-- Accountant/cashier -->
+    <line class="link" x1="1128" y1="648" x2="985" y2="695"/>
+
+    <!-- Director -->
+    <line class="link" x1="136" y1="688" x2="655" y2="695"/>
+    <line class="link" x1="136" y1="688" x2="465" y2="760"/>
+    <line class="link" x1="136" y1="688" x2="655" y2="170"/>
+
+    <!-- Admin -->
+    <line class="link" x1="1128" y1="778" x2="835" y2="760"/>
+    <line class="link" x1="1128" y1="778" x2="985" y2="275"/>
+  </svg>
+</body>
+</html>

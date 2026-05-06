@@ -93,7 +93,7 @@
                 <div class="mb-3">
                     <label class="form-label">Статус</label>
                     <InputSelect @bind-Value="order.Status" class="form-select">
-                        <option value="Принят">Принят</option>
+                        <option value="В ожидании">В ожидании</option>
                         <option value="В работе">В работе</option>
                         <option value="Выполнен">Выполнен</option>
                         <option value="Отменен">Отменен</option>
@@ -122,7 +122,7 @@
 @code {
     [Parameter] public int OrderId { get; set; }
 
-    private Order order = new() { OrderDate = DateTime.Now, Status = "Принят" };
+    private Order order = new() { OrderDate = DateTime.Now, Status = "В ожидании" };
     private List<Client> clients = new();
     
     private string selectedModel = string.Empty;
