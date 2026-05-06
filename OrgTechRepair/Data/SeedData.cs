@@ -241,30 +241,52 @@ public static class SeedData
             }
         }
 
-        // Прайс-лист сервисных работ (как в витрине прайс-листа)
+        // Прайс-лист сервисных работ: синхронизирован с "Описание проблемы" в быстрой заявке
         {
             var supplier = await context.Suppliers.OrderBy(s => s.Id).FirstOrDefaultAsync();
             if (supplier != null)
             {
-                var servicePriceList = new[]
+                var servicePriceList = new (string Code, string Name, decimal Price)[]
                 {
-                    new Product { Code = "SRV-001", SupplierId = supplier.Id, Name = "Грязная печать", Model = "Услуга", Price = 550, Quantity = 999 },
-                    new Product { Code = "SRV-002", SupplierId = supplier.Id, Name = "Не забирает листы", Model = "Услуга", Price = 700, Quantity = 999 },
-                    new Product { Code = "SRV-003", SupplierId = supplier.Id, Name = "Застревает бумага", Model = "Услуга", Price = 650, Quantity = 999 },
-                    new Product { Code = "SRV-004", SupplierId = supplier.Id, Name = "Жует бумагу на входе", Model = "Услуга", Price = 650, Quantity = 999 },
-                    new Product { Code = "SRV-005", SupplierId = supplier.Id, Name = "Не включается", Model = "Услуга", Price = 950, Quantity = 999 },
-                    new Product { Code = "SRV-006", SupplierId = supplier.Id, Name = "Забирает по несколько листов", Model = "Услуга", Price = 700, Quantity = 999 },
-                    new Product { Code = "SRV-007", SupplierId = supplier.Id, Name = "Ошибка «замятие бумаги»", Model = "Услуга", Price = 800, Quantity = 999 },
-                    new Product { Code = "SRV-008", SupplierId = supplier.Id, Name = "Посторонние звуки", Model = "Услуга", Price = 650, Quantity = 999 },
-                    new Product { Code = "SRV-009", SupplierId = supplier.Id, Name = "Жует бумагу на выходе", Model = "Услуга", Price = 750, Quantity = 999 },
-                    new Product { Code = "SRV-010", SupplierId = supplier.Id, Name = "Не \"видит\" бумагу", Model = "Услуга", Price = 1000, Quantity = 999 }
+                    ("SRV-001", "Застряла бумага", 650),
+                    ("SRV-002", "Не печатает", 700),
+                    ("SRV-003", "Ошибка картриджа", 800),
+                    ("SRV-004", "Низкое качество печати", 550),
+                    ("SRV-005", "Принтер не определяется компьютером", 900),
+                    ("SRV-006", "Замятие бумаги", 800),
+                    ("SRV-007", "Ошибка сканера", 850),
+                    ("SRV-008", "Проблемы с подключением по Wi‑Fi", 950),
+                    ("SRV-009", "Заканчивается тонер/чернила", 600),
+                    ("SRV-010", "Принтер издает странные звуки", 750),
+                    ("SRV-011", "Не работает автоподача бумаги", 900),
+                    ("SRV-012", "Ошибка при двусторонней печати", 850),
+                    ("SRV-013", "Проблемы с драйвером", 700),
+                    ("SRV-014", "Принтер не включается", 950)
                 };
 
                 foreach (var item in servicePriceList)
                 {
-                    var exists = await context.Products.AnyAsync(p => p.Code == item.Code);
-                    if (!exists)
-                        context.Products.Add(item);
+                    var existing = await context.Products.FirstOrDefaultAsync(p => p.Code == item.Code);
+                    if (existing == null)
+                    {
+                        context.Products.Add(new Product
+                        {
+                            Code = item.Code,
+                            SupplierId = supplier.Id,
+                            Name = item.Name,
+                            Model = "Услуга",
+                            Price = item.Price,
+                            Quantity = 999
+                        });
+                    }
+                    else
+                    {
+                        existing.SupplierId = supplier.Id;
+                        existing.Name = item.Name;
+                        existing.Model = "Услуга";
+                        existing.Price = item.Price;
+                        existing.Quantity = 999;
+                    }
                 }
 
                 await context.SaveChangesAsync();
