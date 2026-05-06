@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IDEF0 A0 — контекстная диаграмма «To Be» (OrgTechRepair)</title>
+  <style>
+    body {
+      margin: 0; padding: 16px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #c4c4c4;
+      background-image:
+        linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
+      background-size: 18px 18px;
+      color: #111;
+    }
+    h1 { text-align: center; font-size: 15px; margin: 0 0 6px; }
+    .cap { text-align: center; font-size: 11px; margin: 0 0 4px; max-width: 920px; margin-left: auto; margin-right: auto; }
+    .sub { text-align: center; font-size: 10px; color: #333; margin: 0 0 12px; }
+    svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+    .legend {
+      max-width: 920px; margin: 14px auto 0;
+      font-size: 10px; padding: 10px 12px;
+      border: 1px solid #333; background: rgba(255,255,255,.92);
+      line-height: 1.45;
+    }
+    .legend strong { font-size: 11px; }
+    .legend ul { margin: 6px 0 0; padding-left: 18px; }
+    @media print { body { background: #fff; } .legend { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <h1>Контекстная диаграмма IDEF0 (A0). Целевая модель «To Be»</h1>
+  <p class="cap">Процесс <strong>ремонта и обслуживания оргтехники</strong> с использованием информационной системы <strong>«ВузяПринт»</strong> (OrgTechRepair): веб-интерфейс Blazor Server, REST API, мобильное приложение Flutter, СУБД PostgreSQL.</p>
+  <p class="sub">Буквы I / C / O / M на стрелках — входы, управления, выходы, механизмы (ICOM). По сравнению с ручной «As Is» добавлены электронный документооборот заявок, единое хранилище данных и мобильный доступ для персонала.</p>
+
+  <!-- viewBox tuned for IDEF0-style context -->
+  <svg viewBox="0 0 980 640" xmlns="http://www.w3.org/2000/svg" aria-label="IDEF0 A0 To Be">
+    <defs>
+      <marker id="a-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M0 0 L10 5 L0 10z" fill="#000"/>
+      </marker>
+      <marker id="a-out" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+        <path d="M10 0 L0 5 L10 10z" fill="#000"/>
+      </marker>
+    </defs>
+
+    <!-- Title block -->
+    <text x="490" y="28" text-anchor="middle" font-size="11" fill="#333">Контекстная диаграмма (верхний уровень)</text>
+
+    <!-- CONTROL arrows (top -> box top) -->
+    <text x="200" y="58" font-size="10" font-weight="700" fill="#1a5276">Управление (C)</text>
+    <path d="M300 70 L300 118" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="300" y="64" text-anchor="middle" font-size="9">Законодательство РФ</text>
+
+    <path d="M460 70 L460 118" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="460" y="64" text-anchor="middle" font-size="9">Прайс-лист и прайс в ИС</text>
+
+    <path d="M600 64 L600 118" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="600" y="48" text-anchor="middle" font-size="9">Регламент сервиса, роли,</text>
+    <text x="600" y="60" text-anchor="middle" font-size="9">политика доступа</text>
+
+    <!-- INPUT arrows (left -> box) -->
+    <text x="42" y="200" font-size="10" font-weight="700" fill="#1a5276">Входы (I)</text>
+    <path d="M120 130 L120 280 L222 280" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="8" y="132" font-size="9">Электронная заявка</text>
+    <text x="8" y="144" font-size="9">(веб / мобильное приложение)</text>
+
+    <path d="M120 170 L120 250 L222 250" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="8" y="178" font-size="9">Данные сотрудника,</text>
+    <text x="8" y="190" font-size="9">клиента, исполнителя</text>
+    <text x="8" y="202" font-size="9">(из ИС и карточек)</text>
+
+    <path d="M120 330 L120 320 L222 320" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="8" y="318" font-size="9">Номенклатура услуг,</text>
+    <text x="8" y="330" font-size="9">запчастей, цены (ИС)</text>
+
+    <path d="M120 420 L120 360 L222 360" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="8" y="388" font-size="9">Оборудование</text>
+    <text x="8" y="400" font-size="9">(физический объект)</text>
+
+    <!-- Central process (IDEF0 box + side tab A0) -->
+    <rect x="222" y="118" width="476" height="160" rx="16" fill="#fff" stroke="#000" stroke-width="2"/>
+    <path d="M698 118 L728 118 L728 198 L698 198 Z" fill="#e8e8e8" stroke="#000" stroke-width="2"/>
+    <text x="713" y="162" text-anchor="middle" font-size="13" font-weight="700" transform="rotate(-90 713 158)">A0</text>
+
+    <text x="470" y="188" text-anchor="middle" font-size="13" font-weight="700">Ремонт и обслуживание</text>
+    <text x="470" y="208" text-anchor="middle" font-size="13" font-weight="700">оргтехники</text>
+    <text x="470" y="238" text-anchor="middle" font-size="10" fill="#333">(в ИС «ВузяПринт» / OrgTechRepair)</text>
+
+    <!-- OUTPUT arrows (box -> right) -->
+    <text x="800" y="200" font-size="10" font-weight="700" fill="#1a5276">Выходы (O)</text>
+    <path d="M698 150 L800 150 L800 88" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-out)"/>
+    <text x="805" y="82" font-size="9">Учётные данные в ИС:</text>
+    <text x="805" y="94" font-size="9">стоимость, сроки, гарантия,</text>
+    <text x="805" y="106" font-size="9">статусы заявок</text>
+
+    <path d="M698 188 L840 188 L840 180" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-out)"/>
+    <text x="845" y="182" font-size="9">PDF-заявка / документ</text>
+    <text x="845" y="194" font-size="9">в архиве</text>
+
+    <path d="M698 220 L875 220 L875 200" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-out)"/>
+    <text x="880" y="192" font-size="9">Движение запчастей,</text>
+    <text x="880" y="204" font-size="9">продажи, отчёты</text>
+
+    <path d="M698 252 L920 252 L920 280" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-out)"/>
+    <text x="925" y="276" font-size="9">Информация для клиента</text>
+    <text x="925" y="288" font-size="9">(личный кабинет, статус)</text>
+
+    <!-- MECHANISM arrows (bottom -> box bottom) - entering from below upward -->
+    <text x="380" y="610" font-size="10" font-weight="700" fill="#1a5276">Механизмы (M)</text>
+
+    <path d="M320 528 L320 278" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="320" y="548" text-anchor="middle" font-size="9">Персонал сервиса</text>
+    <text x="320" y="560" text-anchor="middle" font-size="9">(инженер, кладовщик,</text>
+    <text x="320" y="572" text-anchor="middle" font-size="9">менеджер, админ)</text>
+
+    <path d="M490 548 L490 278" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="490" y="582" text-anchor="middle" font-size="9">ИС OrgTechRepair:</text>
+    <text x="490" y="594" text-anchor="middle" font-size="9">веб, API, мобильный клиент,</text>
+    <text x="490" y="606" text-anchor="middle" font-size="9">PostgreSQL</text>
+
+    <path d="M660 528 L660 278" fill="none" stroke="#000" stroke-width="1.4" marker-end="url(#a-in)"/>
+    <text x="660" y="548" text-anchor="middle" font-size="9">Клиент</text>
+    <text x="660" y="560" text-anchor="middle" font-size="9">(заявка, согласование,</text>
+    <text x="660" y="572" text-anchor="middle" font-size="9">приём результата)</text>
+
+    <!-- ICOM legend mini -->
+    <rect x="40" y="560" width="200" height="68" fill="#fff" stroke="#888" stroke-dasharray="4 3" rx="2"/>
+    <text x="50" y="578" font-size="9" font-weight="700">ICOM (кратко)</text>
+    <text x="50" y="592" font-size="8.5">I — что перерабатывается · C — правила и нормы</text>
+    <text x="50" y="604" font-size="8.5">O — результат · M — кто/чем выполняется</text>
+    <text x="50" y="618" font-size="8.5">Стрелки на схеме условные по размещению подписей.</text>
+  </svg>
+
+  <div class="legend">
+    <strong>Обоснование модели «To Be» по отношению к «As Is» на вашей картинке</strong>
+    <ul>
+      <li><strong>Входы:</strong> вместо разрозненных «бумажных» данных о заявке — <em>электронная заявка</em> с сайта и мобильного приложения; справочники услуг, цен и номенклатуры завязаны на ИС; оборудование по-прежнему остаётся материальным входом.</li>
+      <li><strong>Управление:</strong> законодательство РФ и прайс сохранены; добавлены <em>прайс и справочники в системе</em>, а также <em>регламент, роли и политика доступа</em> (менеджер, инженер, кладовщик и т.д.).</li>
+      <li><strong>Выходы:</strong> итоговая стоимость, сроки, гарантия и факт работ отражаются в <em>данных ИС</em>; дополнительно — <em>PDF-документы</em>, учёт запчастей/продаж и прозрачный статус для клиента в личном кабинете.</li>
+      <li><strong>Механизмы:</strong> помимо инженера и клиента явно показана <em>информационная система</em> как инструмент процесса; персонал расширен ролями, соответствующими OrgTechRepair.</li>
+    </ul>
+  </div>
+</body>
+</html>

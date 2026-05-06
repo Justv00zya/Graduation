@@ -1,3 +1,5 @@
+@page "/price-list/create"
+@page "/price-list/edit/{ProductId:int}"
 @page "/products/create"
 @page "/products/edit/{ProductId:int}"
 @using Microsoft.AspNetCore.Components.Forms
@@ -123,13 +125,13 @@
         {
             context.Products.Add(product);
             await context.SaveChangesAsync();
-            Navigation.NavigateTo($"/products/edit/{product.Id}");
+            Navigation.NavigateTo($"/price-list/edit/{product.Id}");
             return;
         }
 
         context.Products.Update(product);
         await context.SaveChangesAsync();
-        Navigation.NavigateTo("/products");
+        Navigation.NavigateTo("/price-list");
     }
 
     private async Task OnImageSelected(InputFileChangeEventArgs e)
@@ -192,6 +194,6 @@
 
     private void Cancel()
     {
-        Navigation.NavigateTo("/products");
+        Navigation.NavigateTo("/price-list");
     }
 }

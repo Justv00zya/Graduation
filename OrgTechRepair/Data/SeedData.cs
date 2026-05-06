@@ -241,6 +241,36 @@ public static class SeedData
             }
         }
 
+        // Прайс-лист сервисных работ (как в витрине прайс-листа)
+        {
+            var supplier = await context.Suppliers.OrderBy(s => s.Id).FirstOrDefaultAsync();
+            if (supplier != null)
+            {
+                var servicePriceList = new[]
+                {
+                    new Product { Code = "SRV-001", SupplierId = supplier.Id, Name = "Грязная печать", Model = "Услуга", Price = 550, Quantity = 999 },
+                    new Product { Code = "SRV-002", SupplierId = supplier.Id, Name = "Не забирает листы", Model = "Услуга", Price = 700, Quantity = 999 },
+                    new Product { Code = "SRV-003", SupplierId = supplier.Id, Name = "Застревает бумага", Model = "Услуга", Price = 650, Quantity = 999 },
+                    new Product { Code = "SRV-004", SupplierId = supplier.Id, Name = "Жует бумагу на входе", Model = "Услуга", Price = 650, Quantity = 999 },
+                    new Product { Code = "SRV-005", SupplierId = supplier.Id, Name = "Не включается", Model = "Услуга", Price = 950, Quantity = 999 },
+                    new Product { Code = "SRV-006", SupplierId = supplier.Id, Name = "Забирает по несколько листов", Model = "Услуга", Price = 700, Quantity = 999 },
+                    new Product { Code = "SRV-007", SupplierId = supplier.Id, Name = "Ошибка «замятие бумаги»", Model = "Услуга", Price = 800, Quantity = 999 },
+                    new Product { Code = "SRV-008", SupplierId = supplier.Id, Name = "Посторонние звуки", Model = "Услуга", Price = 650, Quantity = 999 },
+                    new Product { Code = "SRV-009", SupplierId = supplier.Id, Name = "Жует бумагу на выходе", Model = "Услуга", Price = 750, Quantity = 999 },
+                    new Product { Code = "SRV-010", SupplierId = supplier.Id, Name = "Не \"видит\" бумагу", Model = "Услуга", Price = 1000, Quantity = 999 }
+                };
+
+                foreach (var item in servicePriceList)
+                {
+                    var exists = await context.Products.AnyAsync(p => p.Code == item.Code);
+                    if (!exists)
+                        context.Products.Add(item);
+                }
+
+                await context.SaveChangesAsync();
+            }
+        }
+
         // Запчасти и тонер для вкладки сервиса
         if (!context.Parts.Any())
         {

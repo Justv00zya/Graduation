@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IDEF0 — декомпозиция A0 (A-0) To Be, OrgTechRepair</title>
+  <style>
+    body {
+      margin: 0; padding: 16px;
+      font-family: "Segoe UI", system-ui, sans-serif;
+      background: #c4c4c4;
+      background-image:
+        linear-gradient(rgba(255,255,255,.4) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,.4) 1px, transparent 1px);
+      background-size: 18px 18px;
+      color: #111;
+    }
+    h1 { text-align: center; font-size: 15px; margin: 0 0 6px; }
+    .cap { text-align: center; font-size: 11px; margin: 0 0 4px; max-width: 1000px; margin-left: auto; margin-right: auto; }
+    .sub { text-align: center; font-size: 10px; color: #333; margin: 0 0 10px; }
+    svg { display: block; margin: 0 auto; max-width: 100%; height: auto; }
+    .legend {
+      max-width: 1000px; margin: 12px auto 0;
+      font-size: 10px; padding: 10px 12px;
+      border: 1px solid #333; background: rgba(255,255,255,.92);
+      line-height: 1.45;
+    }
+    .legend strong { font-size: 11px; }
+    table.desc { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 9.5pt; }
+    table.desc th, table.desc td { border: 1px solid #666; padding: 5px 8px; text-align: left; vertical-align: top; }
+    table.desc th { background: #e8e8e8; }
+    @media print { body { background: #fff; } .legend { break-inside: avoid; } }
+  </style>
+</head>
+<body>
+  <h1>Декомпозиция контекстной диаграммы A0 (уровень A-0)</h1>
+  <p class="cap">Родительский процесс: <strong>A0 — Ремонт и обслуживание оргтехники</strong> (ИС «ВузяПринт» / OrgTechRepair). Ниже — детализация на подфункции <strong>A1…A5</strong>. Нумерация соответствует связи «родитель — потомок» в IDEF0.</p>
+  <p class="sub">Внутренние потоки между блоками — данные и объекты, передаваемые по цепочке; внешние входы слева и выходы справа согласованы с контекстной модели «To Be».</p>
+
+  <svg viewBox="0 0 1020 560" xmlns="http://www.w3.org/2000/svg" aria-label="IDEF0 декомпозиция A0">
+    <defs>
+      <marker id="m-in" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M0 0 L10 5 L0 10z" fill="#000"/>
+      </marker>
+      <marker id="m-out" viewBox="0 0 10 10" refX="2" refY="5" markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M10 0 L0 5 L10 10z" fill="#000"/>
+      </marker>
+    </defs>
+
+    <text x="510" y="26" text-anchor="middle" font-size="11" fill="#333">Диаграмма A-0 — детализация узла A0</text>
+
+    <!-- Управление (общее сверху) -->
+    <text x="80" y="58" font-size="10" font-weight="700" fill="#1a5276">С</text>
+    <path d="M200 48 L200 108" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="200" y="42" text-anchor="middle" font-size="8.5">Законодательство РФ</text>
+    <path d="M400 48 L400 108" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="400" y="42" text-anchor="middle" font-size="8.5">Прайс, виды работ и цены в ИС</text>
+    <path d="M600 40 L600 108" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="600" y="28" text-anchor="middle" font-size="8.5">Регламент, роли,</text>
+    <text x="600" y="38" text-anchor="middle" font-size="8.5">политика доступа</text>
+    <path d="M800 48 L800 108" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="800" y="42" text-anchor="middle" font-size="8.5">Гарантийные условия</text>
+
+    <!-- Внешние входы слева к A1 -->
+    <text x="24" y="248" font-size="10" font-weight="700" fill="#1a5276">I</text>
+    <path d="M56 168 L56 248 L98 248" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="4" y="158" font-size="8">Электронная заявка</text>
+    <path d="M56 288 L56 268 L98 268" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="4" y="298" font-size="8">Данные клиента / персонала</text>
+    <path d="M56 352 L56 288 L98 288" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="4" y="362" font-size="8">Номенклатура (ИС)</text>
+
+    <!-- Оборудование к A2 (вход для диагностики) -->
+    <path d="M56 400 L56 298 L248 298" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-in)"/>
+    <text x="4" y="412" font-size="8">Оборудование → А2</text>
+
+    <!-- Boxes A1..A5: y=108, h=120, w=128, gap=12 -->
+    <!-- A1 -->
+    <rect x="98" y="188" width="128" height="120" rx="12" fill="#fff" stroke="#000" stroke-width="2"/>
+    <path d="M226 188 L248 188 L248 248 L226 248 Z" fill="#e8e8e8" stroke="#000" stroke-width="2"/>
+    <text x="237" y="222" text-anchor="middle" font-size="11" font-weight="700" transform="rotate(-90 237 218)">A1</text>
+    <text x="162" y="232" text-anchor="middle" font-size="9" font-weight="700">Регистрация</text>
+    <text x="162" y="246" text-anchor="middle" font-size="9" font-weight="700">и приём заявки</text>
+    <text x="162" y="268" text-anchor="middle" font-size="7.5" fill="#444">в ИС, номер заказа</text>
+
+    <!-- A2 -->
+    <rect x="248" y="188" width="128" height="120" rx="12" fill="#fff" stroke="#000" stroke-width="2"/>
+    <path d="M376 188 L398 188 L398 248 L376 248 Z" fill="#e8e8e8" stroke="#000" stroke-width="2"/>
+    <text x="387" y="222" text-anchor="middle" font-size="11" font-weight="700" transform="rotate(-90 387 218)">A2</text>
+    <text x="312" y="228" text-anchor="middle" font-size="9" font-weight="700">Диагностика</text>
+    <text x="312" y="242" text-anchor="middle" font-size="9" font-weight="700">и план ремонта</text>
+    <text x="312" y="268" text-anchor="middle" font-size="7.5" fill="#444">объём, срок, ЗИП</text>
+
+    <!-- A3 -->
+    <rect x="398" y="188" width="128" height="120" rx="12" fill="#fff" stroke="#000" stroke-width="2"/>
+    <path d="M526 188 L548 188 L548 248 L526 248 Z" fill="#e8e8e8" stroke="#000" stroke-width="2"/>
+    <text x="537" y="222" text-anchor="middle" font-size="11" font-weight="700" transform="rotate(-90 537 218)">A3</text>
+    <text x="462" y="228" text-anchor="middle" font-size="9" font-weight="700">Снабжение</text>
+    <text x="462" y="242" text-anchor="middle" font-size="9" font-weight="700">запчастями</text>
+    <text x="462" y="268" text-anchor="middle" font-size="7.5" fill="#444">заявки на склад, выдача</text>
+
+    <!-- A4 -->
+    <rect x="548" y="188" width="128" height="120" rx="12" fill="#fff" stroke="#000" stroke-width="2"/>
+    <path d="M676 188 L698 188 L698 248 L676 248 Z" fill="#e8e8e8" stroke="#000" stroke-width="2"/>
+    <text x="687" y="222" text-anchor="middle" font-size="11" font-weight="700" transform="rotate(-90 687 218)">A4</text>
+    <text x="612" y="228" text-anchor="middle" font-size="9" font-weight="700">Выполнение</text>
+    <text x="612" y="242" text-anchor="middle" font-size="9" font-weight="700">ремонта</text>
+    <text x="612" y="268" text-anchor="middle" font-size="7.5" fill="#444">работы, контроль сроков</text>
+
+    <!-- A5 -->
+    <rect x="698" y="188" width="128" height="120" rx="12" fill="#fff" stroke="#000" stroke-width="2"/>
+    <path d="M826 188 L848 188 L848 248 L826 248 Z" fill="#e8e8e8" stroke="#000" stroke-width="2"/>
+    <text x="837" y="222" text-anchor="middle" font-size="11" font-weight="700" transform="rotate(-90 837 218)">A5</text>
+    <text x="762" y="224" text-anchor="middle" font-size="9" font-weight="700">Завершение и</text>
+    <text x="762" y="238" text-anchor="middle" font-size="9" font-weight="700">документооборот</text>
+    <text x="762" y="268" text-anchor="middle" font-size="7.5" fill="#444">стоимость, PDF, гарантия</text>
+
+    <!-- Flows between boxes -->
+    <path d="M226 254 L248 254" fill="none" stroke="#000" stroke-width="1.3" marker-end="url(#m-in)"/>
+    <text x="236" y="248" text-anchor="middle" font-size="7">заявка в ИС</text>
+
+    <path d="M376 258 L398 258" fill="none" stroke="#000" stroke-width="1.3" marker-end="url(#m-in)"/>
+    <text x="382" y="252" text-anchor="middle" font-size="7">план, потребность ЗИП</text>
+
+    <path d="M526 262 L548 262" fill="none" stroke="#000" stroke-width="1.3" marker-end="url(#m-in)"/>
+    <text x="532" y="256" text-anchor="middle" font-size="7">выдача со склада</text>
+
+    <path d="M676 258 L698 258" fill="none" stroke="#000" stroke-width="1.3" marker-end="url(#m-in)"/>
+    <text x="682" y="252" text-anchor="middle" font-size="7">ЗИП, наряд</text>
+
+    <path d="M826 250 L868 250" fill="none" stroke="#000" stroke-width="1.3" marker-end="url(#m-in)"/>
+    <text x="846" y="244" text-anchor="middle" font-size="7">факт работ</text>
+
+    <!-- Выходы справа от A5 -->
+    <text x="940" y="248" font-size="10" font-weight="700" fill="#1a5276">O</text>
+    <path d="M868 220 L960 220 L960 128" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-out)"/>
+    <text x="965" y="118" font-size="8">Данные в ИС: стоимость,</text>
+    <text x="965" y="128" font-size="8">сроки, гарантия, статус</text>
+
+    <path d="M868 238 L990 238 L990 200" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-out)"/>
+    <text x="995" y="190" font-size="8">PDF, архив заявок</text>
+
+    <path d="M868 268 L980 268 L980 280" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-out)"/>
+    <text x="985" y="292" font-size="8">Учёт запчастей, продажи</text>
+
+    <path d="M868 288 L940 288 L940 340" fill="none" stroke="#000" stroke-width="1.2" marker-end="url(#m-out)"/>
+    <text x="912" y="352" text-anchor="middle" font-size="8">Инфо клиенту</text>
+
+    <!-- Механизмы снизу -->
+    <text x="510" y="510" text-anchor="middle" font-size="10" font-weight="700" fill="#1a5276">Механизмы (M)</text>
+    <path d="M162 468 L162 308" fill="none" stroke="#000" stroke-width="1" marker-end="url(#m-in)" stroke-dasharray="4 2"/>
+    <text x="162" y="486" text-anchor="middle" font-size="7.5">Менеджер,</text>
+    <text x="162" y="496" text-anchor="middle" font-size="7.5">клиент</text>
+
+    <path d="M312 468 L312 308" fill="none" stroke="#000" stroke-width="1" marker-end="url(#m-in)" stroke-dasharray="4 2"/>
+    <text x="312" y="486" text-anchor="middle" font-size="7.5">Сервис-</text>
+    <text x="312" y="496" text-anchor="middle" font-size="7.5">инженер</text>
+
+    <path d="M462 468 L462 308" fill="none" stroke="#000" stroke-width="1" marker-end="url(#m-in)" stroke-dasharray="4 2"/>
+    <text x="462" y="486" text-anchor="middle" font-size="7.5">Кладовщик,</text>
+    <text x="462" y="496" text-anchor="middle" font-size="7.5">ИС склада</text>
+
+    <path d="M612 468 L612 308" fill="none" stroke="#000" stroke-width="1" marker-end="url(#m-in)" stroke-dasharray="4 2"/>
+    <text x="612" y="486" text-anchor="middle" font-size="7.5">Инженер,</text>
+    <text x="612" y="496" text-anchor="middle" font-size="7.5">инструмент</text>
+
+    <path d="M762 468 L762 308" fill="none" stroke="#000" stroke-width="1" marker-end="url(#m-in)" stroke-dasharray="4 2"/>
+    <text x="762" y="482" text-anchor="middle" font-size="7.5">Офис / ИС,</text>
+    <text x="762" y="492" text-anchor="middle" font-size="7.5">QuestPDF</text>
+
+    <!-- Общая подпись ИС -->
+    <rect x="320" y="520" width="380" height="32" rx="4" fill="rgba(255,255,255,.85)" stroke="#555" stroke-dasharray="3 2"/>
+    <text x="510" y="536" text-anchor="middle" font-size="8">На всех этапах: ИС OrgTechRepair (веб, API, мобильное приложение, PostgreSQL) — регистрация событий, роли и журналирование</text>
+  </svg>
+
+  <div class="legend">
+    <strong>Связь с контекстной диаграммой A0</strong>
+    <p style="margin:6px 0 0;font-size:10px;">Внешние <strong>входы</strong> подаются в <strong>A1</strong> и частично в <strong>A2</strong> (оборудование для диагностики). Внешние <strong>выходы</strong> формируются в <strong>A5</strong> и отражают объединённые результаты цепочки A1–A5. <strong>Управления</strong> действуют на все или отдельные этапы (на схеме показаны сводно сверху). <strong>Механизмы</strong> распределены по ролям; ИС указана как общая платформа в нижней шапке.</p>
+    <table class="desc">
+      <thead>
+        <tr><th>Узел</th><th>Наименование</th><th>Содержание (кратко)</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>A1</strong></td><td>Регистрация и приём заявки</td><td>Приём обращения с сайта/мобильного приложения или офиса; создание записи заказа в БД; первичный статус.</td></tr>
+        <tr><td><strong>A2</strong></td><td>Диагностика и план ремонта</td><td>Осмотр техники; определение дефекта; согласование объёма и сроков; формирование потребности в запчастях и трудозатрат.</td></tr>
+        <tr><td><strong>A3</strong></td><td>Снабжение запчастями</td><td>Заявки на выдачу со склада (в т.ч. через модуль заявок инженера); резервирование/списание; альтернатива — закупка у поставщика вне контура ИС.</td></tr>
+        <tr><td><strong>A4</strong></td><td>Выполнение ремонта</td><td>Ремонтные работы, контроль качества и соблюдение сроков; отражение выполнения в карточке заказа.</td></tr>
+        <tr><td><strong>A5</strong></td><td>Завершение и документооборот</td><td>Итоговая стоимость; формирование PDF-заявки/отчёта; условия гарантии; закрытие заказа; данные для клиента в личном кабинете.</td></tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

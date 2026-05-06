@@ -47,6 +47,7 @@ public class ProductsController : ControllerBase
 
     // GET: api/products
     [HttpGet]
+    [AllowAnonymous]
     public async Task<ActionResult<IEnumerable<ProductDto>>> GetProducts()
     {
         using var context = await _contextFactory.CreateDbContextAsync();
@@ -71,6 +72,7 @@ public class ProductsController : ControllerBase
 
     // GET: api/products/5
     [HttpGet("{id:int}")]
+    [AllowAnonymous]
     public async Task<ActionResult<ProductDto>> GetProduct(int id)
     {
         using var context = await _contextFactory.CreateDbContextAsync();
