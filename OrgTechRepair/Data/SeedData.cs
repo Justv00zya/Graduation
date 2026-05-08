@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using OrgTechRepair.Models;
 
@@ -219,42 +220,46 @@ public static class SeedData
                 await userManager.AddToRoleAsync(u, "Director");
         }
 
-        // Для тестовых учеток закрепляем общий e-mail; обычных пользователей не трогаем.
-        const string sharedTwoFactorEmail = "valpcon2@gmail.com";
-        var seededUsernames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        // Для тестовых учеток можно закрепить общий e-mail через конфиг; обычных пользователей не трогаем.
+        var configuration = serviceProvider.GetService<IConfiguration>();
+        var sharedTwoFactorEmail = configuration?["SeedData:SharedTwoFactorEmail"];
+        if (!string.IsNullOrWhiteSpace(sharedTwoFactorEmail))
         {
-            "admin",
-            "demo_manager",
-            "demo_client",
-            "demo_service",
-            "demo_office",
-            "demo_cashier",
-            "demo_warehouse",
-            "demo_director"
-        };
-        var seededUsers = await userManager.Users
-            .Where(u => seededUsernames.Contains(u.UserName ?? string.Empty))
-            .ToListAsync();
-        foreach (var user in seededUsers)
-        {
-            var needsUpdate = user.Email != sharedTwoFactorEmail || !user.EmailConfirmed;
-            if (!needsUpdate) continue;
-
-            user.Email = sharedTwoFactorEmail;
-            user.NormalizedEmail = userManager.NormalizeEmail(sharedTwoFactorEmail);
-            user.EmailConfirmed = true;
-
-            var updateResult = await userManager.UpdateAsync(user);
-            if (!updateResult.Succeeded)
+            var seededUsernames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
-                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
-                var logger = loggerFactory?.CreateLogger("SeedData");
-                foreach (var error in updateResult.Errors)
+                "admin",
+                "demo_manager",
+                "demo_client",
+                "demo_service",
+                "demo_office",
+                "demo_cashier",
+                "demo_warehouse",
+                "demo_director"
+            };
+            var seededUsers = await userManager.Users
+                .Where(u => seededUsernames.Contains(u.UserName ?? string.Empty))
+                .ToListAsync();
+            foreach (var user in seededUsers)
+            {
+                var needsUpdate = user.Email != sharedTwoFactorEmail || !user.EmailConfirmed;
+                if (!needsUpdate) continue;
+
+                user.Email = sharedTwoFactorEmail;
+                user.NormalizedEmail = userManager.NormalizeEmail(sharedTwoFactorEmail);
+                user.EmailConfirmed = true;
+
+                var updateResult = await userManager.UpdateAsync(user);
+                if (!updateResult.Succeeded)
                 {
-                    logger?.LogWarning(
-                        "Не удалось обновить email тестового пользователя {UserName}: {Error}",
-                        user.UserName,
-                        error.Description);
+                    var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+                    var logger = loggerFactory?.CreateLogger("SeedData");
+                    foreach (var error in updateResult.Errors)
+                    {
+                        logger?.LogWarning(
+                            "Не удалось обновить email тестового пользователя {UserName}: {Error}",
+                            user.UserName,
+                            error.Description);
+                    }
                 }
             }
         }
