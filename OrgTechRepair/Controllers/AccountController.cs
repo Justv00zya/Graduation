@@ -117,7 +117,7 @@ public class AccountController : Controller
                 TimeSpan.FromMinutes(5));
 
             if (_emailSender != null)
-                await _emailSender.SendTwoFactorCodeAsync(user.Email, code);
+                QueueTwoFactorEmail(user.Email, code, user.UserName);
             else
                 _logger.LogWarning("WEB 2FA код для {UserName}: {Code}", user.UserName, code);
 
@@ -300,6 +300,25 @@ public class AccountController : Controller
 
         _cache.Remove($"captcha:{captchaId}");
         return string.Equals(expected.Trim(), captchaAnswer.Trim(), StringComparison.Ordinal);
+    }
+
+    private void QueueTwoFactorEmail(string email, string code, string? userName)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var sent = await _emailSender!.SendTwoFactorCodeAsync(email, code);
+                if (!sent)
+                {
+                    _logger.LogWarning("Не удалось отправить WEB 2FA код пользователю {UserName}", userName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка фоновой отправки WEB 2FA кода пользователю {UserName}", userName);
+            }
+        });
     }
 
     private sealed class PendingWebTwoFactor

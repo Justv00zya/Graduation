@@ -154,7 +154,7 @@ public class AuthController : ControllerBase
 
             if (_emailSender != null)
             {
-                await _emailSender.SendTwoFactorCodeAsync(user.Email, code);
+                QueueTwoFactorEmail(user.Email, code, user.UserName);
             }
             else
             {
@@ -552,6 +552,25 @@ public class AuthController : ControllerBase
 
         _cache.Remove($"captcha:{captchaId}");
         return string.Equals(expected.Trim(), captchaAnswer.Trim(), StringComparison.Ordinal);
+    }
+
+    private void QueueTwoFactorEmail(string email, string code, string? userName)
+    {
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                var sent = await _emailSender!.SendTwoFactorCodeAsync(email, code);
+                if (!sent)
+                {
+                    _logger.LogWarning("Не удалось отправить 2FA код пользователю {UserName}", userName);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Ошибка фоновой отправки 2FA кода пользователю {UserName}", userName);
+            }
+        });
     }
 
     private sealed class PendingTwoFactorLogin
