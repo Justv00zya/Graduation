@@ -20,4 +20,9 @@ public interface IEmailSender
     /// <param name="confirmationLink">Ссылка для подтверждения email</param>
     /// <returns>True если отправка успешна, иначе false</returns>
     Task<bool> SendEmailConfirmationAsync(string email, string confirmationLink);
+
+    /// <summary>
+    /// Отправляет код двухфакторной аутентификации.
+    /// </summary>
+    Task<bool> SendTwoFactorCodeAsync(string email, string code);
 }

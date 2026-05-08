@@ -38,4 +38,14 @@ public class DevelopmentEmailSender : IEmailSender
         // В продакшене здесь должна быть реальная отправка email
         return Task.FromResult(true);
     }
+
+    public Task<bool> SendTwoFactorCodeAsync(string email, string code)
+    {
+        _logger.LogInformation("=== EMAIL (Development Mode) ===");
+        _logger.LogInformation("To: {Email}", email);
+        _logger.LogInformation("Subject: Код подтверждения входа");
+        _logger.LogInformation("Body: Ваш код подтверждения: {Code}", code);
+        _logger.LogInformation("================================");
+        return Task.FromResult(true);
+    }
 }

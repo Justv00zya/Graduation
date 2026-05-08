@@ -67,7 +67,7 @@ public class AccountController : Controller
             user.UserName!,
             password,
             rememberMe,
-            lockoutOnFailure: false);
+            lockoutOnFailure: true);
 
         if (result.Succeeded)
         {

@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -9,6 +10,7 @@ using Npgsql;
 using OrgTechRepair.Components;
 using OrgTechRepair.Data;
 using System.Text;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +27,7 @@ builder.Services.AddRazorComponents()
 // Add API Controllers
 builder.Services.AddControllers();
 builder.Services.Configure<FormOptions>(o => { o.MultipartBodyLengthLimit = 10 * 1024 * 1024; });
+builder.Services.AddMemoryCache();
 
 // Antiforgery protection is handled by middleware (app.UseAntiforgery())
 
@@ -36,6 +39,17 @@ var sqliteFallbackConnectionString = builder.Configuration.GetConnectionString("
 var allowSqliteFallback =
     builder.Environment.IsDevelopment() ||
     builder.Configuration.GetValue<bool>("Database:AllowSqliteFallback");
+var maxDbPoolSize = Math.Max(20, builder.Configuration.GetValue<int?>("Database:MaxPoolSize") ?? 120);
+var dbCommandTimeoutSec = Math.Clamp(builder.Configuration.GetValue<int?>("Database:CommandTimeoutSeconds") ?? 12, 5, 60);
+var postgresBuilder = new NpgsqlConnectionStringBuilder(postgresConnectionString)
+{
+    MaxPoolSize = maxDbPoolSize,
+    MinPoolSize = 5,
+    Timeout = 8,
+    CommandTimeout = dbCommandTimeoutSec,
+    KeepAlive = 30
+};
+postgresConnectionString = postgresBuilder.ConnectionString;
 
 // Если базы с именем из строки подключения ещё нет — создаём (подключение к служебной БД postgres).
 try
@@ -75,10 +89,14 @@ catch (Exception ex)
 if (usePostgres)
 {
     builder.Services.AddDbContext<ApplicationDbContext>(options =>
-        options.UseNpgsql(postgresConnectionString));
+        options.UseNpgsql(postgresConnectionString, npgsql =>
+            npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(8), null)
+                .CommandTimeout(dbCommandTimeoutSec)));
 
     builder.Services.AddDbContextFactory<ApplicationDbContext>(options =>
-        options.UseNpgsql(postgresConnectionString),
+        options.UseNpgsql(postgresConnectionString, npgsql =>
+            npgsql.EnableRetryOnFailure(5, TimeSpan.FromSeconds(8), null)
+                .CommandTimeout(dbCommandTimeoutSec)),
         ServiceLifetime.Scoped);
 }
 else
@@ -106,9 +124,44 @@ builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
     options.User.AllowedUserNameCharacters =
         "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+ " +
         "абвгдеёжзийклмнопрстуфхцчшщьыъэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЬЫЪЭЮЯ";
+    options.Lockout.AllowedForNewUsers = true;
+    options.Lockout.MaxFailedAccessAttempts = 5;
+    options.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(10);
 })
 .AddEntityFrameworkStores<ApplicationDbContext>()
 .AddDefaultTokenProviders();
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+    options.OnRejected = static (context, _) =>
+    {
+        context.HttpContext.Response.Headers["Retry-After"] = "30";
+        return ValueTask.CompletedTask;
+    };
+
+    options.AddPolicy("api", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 180,
+                Window = TimeSpan.FromSeconds(30),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+
+    options.AddPolicy("auth", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 20,
+                Window = TimeSpan.FromMinutes(1),
+                QueueLimit = 0,
+                AutoReplenishment = true
+            }));
+});
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
@@ -123,6 +176,7 @@ builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuth
 // Add Email Sender (для разработки - выводит в логи, в продакшене замените на реальную реализацию)
 builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.DevelopmentEmailSender>();
 builder.Services.AddScoped<OrgTechRepair.Services.IOrderPdfService, OrgTechRepair.Services.OrderPdfService>();
+builder.Services.AddHttpClient<OrgTechRepair.Services.ICaptchaVerifier, OrgTechRepair.Services.TurnstileCaptchaVerifier>();
 
 // Хранилище логов для просмотра и экспорта в CSV (только для администратора)
 var logStore = new OrgTechRepair.Services.InMemoryLogStore(5000);
@@ -233,12 +287,13 @@ if (!app.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvi
 
 app.UseStaticFiles();
 app.UseAntiforgery();
+app.UseRateLimiter();
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 // Map API Controllers
-app.MapControllers();
+app.MapControllers().RequireRateLimiting("api");
 
 // Map Blazor Components
 app.MapRazorComponents<App>()
