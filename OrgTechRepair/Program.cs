@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
@@ -9,6 +10,7 @@ using Microsoft.OpenApi.Models;
 using Npgsql;
 using OrgTechRepair.Components;
 using OrgTechRepair.Data;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.RateLimiting;
 
@@ -23,6 +25,29 @@ builder.Logging.AddConsole();
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+var dataProtectionBuilder = builder.Services
+    .AddDataProtection()
+    .SetApplicationName("OrgTechRepair");
+var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
+if (string.IsNullOrWhiteSpace(dataProtectionKeysPath) && !builder.Environment.IsDevelopment())
+{
+    dataProtectionKeysPath = "/var/data/orgtechrepair-dpkeys";
+}
+if (!string.IsNullOrWhiteSpace(dataProtectionKeysPath))
+{
+    Directory.CreateDirectory(dataProtectionKeysPath);
+    dataProtectionBuilder.PersistKeysToFileSystem(new DirectoryInfo(dataProtectionKeysPath));
+}
+var dataProtectionPfxPath = builder.Configuration["DataProtection:CertificatePath"];
+var dataProtectionPfxPassword = builder.Configuration["DataProtection:CertificatePassword"];
+if (!string.IsNullOrWhiteSpace(dataProtectionPfxPath) && File.Exists(dataProtectionPfxPath))
+{
+    var cert = string.IsNullOrWhiteSpace(dataProtectionPfxPassword)
+        ? new X509Certificate2(dataProtectionPfxPath)
+        : new X509Certificate2(dataProtectionPfxPath, dataProtectionPfxPassword);
+    dataProtectionBuilder.ProtectKeysWithCertificate(cert);
+}
 
 // Add API Controllers
 builder.Services.AddControllers();

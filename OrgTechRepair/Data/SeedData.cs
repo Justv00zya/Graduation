@@ -206,6 +206,19 @@ public static class SeedData
                 await userManager.AddToRoleAsync(u, "WarehouseKeeper");
         }
 
+        if (await userManager.FindByNameAsync("demo_director") == null)
+        {
+            var u = new IdentityUser
+            {
+                UserName = "demo_director",
+                Email = "demo_director@example.com",
+                EmailConfirmed = true
+            };
+            var r = await userManager.CreateAsync(u, "111111");
+            if (r.Succeeded)
+                await userManager.AddToRoleAsync(u, "Director");
+        }
+
         // Поставщики для товаров
         if (!context.Suppliers.Any())
         {
@@ -435,7 +448,10 @@ public static class SeedData
         if (!context.Sales.Any() && context.Clients.Any() && context.Products.Any())
         {
             var client = await context.Clients.FirstOrDefaultAsync();
-            var products = await context.Products.Take(5).ToListAsync();
+            var products = await context.Products
+                .OrderBy(p => p.Id)
+                .Take(5)
+                .ToListAsync();
             if (client != null && products.Count >= 2)
             {
                 var sale1 = new Sale
@@ -476,7 +492,11 @@ public static class SeedData
                 context.Sales.Add(sale2);
                 await context.SaveChangesAsync();
 
-                var prod2 = await context.Products.Skip(2).Take(2).ToListAsync();
+                var prod2 = await context.Products
+                    .OrderBy(p => p.Id)
+                    .Skip(2)
+                    .Take(2)
+                    .ToListAsync();
                 decimal total2 = 0;
                 foreach (var p in prod2)
                 {
