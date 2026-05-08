@@ -49,7 +49,7 @@
 
                         <div class="mb-3">
                             <label class="form-label">Логин или почта</label>
-                            <input type="text" name="loginOrEmail" class="form-control" autocomplete="username" required />
+                            <input id="loginOrEmail" type="text" name="loginOrEmail" class="form-control" autocomplete="username" required />
                         </div>
 
                         <div class="mb-3">
@@ -103,6 +103,13 @@
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 <script>
+    window.focusLoginInput = function () {
+        var input = document.getElementById("loginOrEmail");
+        if (input) {
+            input.focus();
+        }
+    };
+
     window.onTurnstileSuccess = function (_token) {
         // Token is posted via cf-turnstile-response hidden input.
     };
@@ -111,18 +118,23 @@
         if (window.turnstile) {
             window.turnstile.reset();
         }
+        window.focusLoginInput();
     };
 
     window.onTurnstileError = function () {
         if (window.turnstile) {
             window.turnstile.reset();
         }
+        window.focusLoginInput();
     };
 
     window.addEventListener("load", function () {
         var hasLoginError = new URLSearchParams(window.location.search).has("error");
         if (hasLoginError && window.turnstile) {
             window.turnstile.reset();
+        }
+        if (hasLoginError) {
+            window.focusLoginInput();
         }
     });
 </script>
