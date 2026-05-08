@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json.Serialization;
 
 namespace OrgTechRepair.Services;
 
@@ -48,14 +49,39 @@ public sealed class TurnstileCaptchaVerifier : ICaptchaVerifier
         using var content = new FormUrlEncodedContent(form);
         using var response = await _httpClient.PostAsync(verifyUrl, content, cancellationToken);
         if (!response.IsSuccessStatusCode)
+        {
+            _logger.LogWarning("Turnstile verify HTTP status: {StatusCode}", (int)response.StatusCode);
             return false;
+        }
 
         var payload = await response.Content.ReadFromJsonAsync<TurnstileVerifyResponse>(cancellationToken: cancellationToken);
-        return payload?.Success == true;
+        if (payload?.Success == true)
+            return true;
+
+        _logger.LogWarning(
+            "Turnstile rejected token. Errors={Errors}; Hostname={Hostname}; Action={Action}; CData={CData}",
+            payload?.ErrorCodes == null ? "<none>" : string.Join(", ", payload.ErrorCodes),
+            payload?.Hostname ?? "<none>",
+            payload?.Action ?? "<none>",
+            payload?.CData ?? "<none>");
+        return false;
     }
 
     private sealed class TurnstileVerifyResponse
     {
+        [JsonPropertyName("success")]
         public bool Success { get; set; }
+
+        [JsonPropertyName("error-codes")]
+        public List<string>? ErrorCodes { get; set; }
+
+        [JsonPropertyName("hostname")]
+        public string? Hostname { get; set; }
+
+        [JsonPropertyName("action")]
+        public string? Action { get; set; }
+
+        [JsonPropertyName("cdata")]
+        public string? CData { get; set; }
     }
 }
