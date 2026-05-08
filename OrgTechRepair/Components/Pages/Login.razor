@@ -6,87 +6,111 @@
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IAntiforgery Antiforgery
 @inject IMemoryCache MemoryCache
+@inject IConfiguration Configuration
 
 <PageTitle>Вход в систему</PageTitle>
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header">
-                    <h3 class="text-center">Вход в систему</h3>
-                </div>
-                <div class="card-body">
-                    @if (isTwoFactorStep)
-                    {
-                        <form method="post" action="/Account/VerifyTwoFactorWeb">
-                            <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
-                            <input type="hidden" name="returnUrl" value="@returnUrl" />
-                            <input type="hidden" name="challengeId" value="@challengeId" />
-                            
-                            <div class="alert alert-info">
-                                На ваш email отправлен код подтверждения. Введите его ниже.
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="form-label">Код 2FA</label>
-                                <input type="text" name="code" class="form-control" maxlength="6" required />
-                            </div>
-                            
-                            <button type="submit" class="btn btn-primary w-100">Подтвердить вход</button>
-                        </form>
-                    }
-                    else
-                    {
+<div class="login-template-wrap">
+    <div class="login-template-inner">
+        <h1 class="login-title">Вход</h1>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="login-alert">@errorMessage</div>
+        }
+
+        <div class="login-card">
+            <div class="login-card-body">
+                @if (isTwoFactorStep)
+                {
+                    <form method="post" action="/Account/VerifyTwoFactorWeb">
+                        <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <input type="hidden" name="challengeId" value="@challengeId" />
+
+                        <h2 class="twofa-title">Двухфакторная аутентификация (2FA)</h2>
+                        <div class="twofa-info">Код подтверждения отправлен на ваш e-mail.</div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Код подтверждения</label>
+                            <input type="text" name="code" class="form-control login-input" maxlength="6" required />
+                        </div>
+
+                        <button type="submit" class="login-submit">Подтвердить вход</button>
+                    </form>
+                }
+                else
+                {
                     <form method="post" action="/Account/Login">
                         <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                         <input type="hidden" name="captchaId" value="@captchaId" />
-                        
+                        <input type="hidden" id="captchaToken" name="captchaToken" />
+
                         <div class="mb-3">
-                            <label class="form-label">Логин или Email</label>
-                            <input type="text" name="loginOrEmail" class="form-control" autocomplete="username" required />
+                            <label class="form-label">Логин или почта</label>
+                            <input type="text" name="loginOrEmail" class="form-control login-input" autocomplete="username" required />
                         </div>
-                        
+
                         <div class="mb-3">
                             <label class="form-label">Пароль</label>
-                            <input type="password" name="password" class="form-control" autocomplete="current-password" required />
+                            <input type="password" name="password" class="form-control login-input" autocomplete="current-password" required />
                         </div>
-                        
+
                         <div class="mb-3">
                             <input type="checkbox" name="rememberMe" value="true" class="form-check-input" id="rememberMe" />
                             <label class="form-check-label" for="rememberMe">Запомнить меня</label>
                         </div>
 
-                        @if (!string.IsNullOrWhiteSpace(captchaQuestion))
+                        @if (useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey))
+                        {
+                            <div class="captcha-box">
+                                <div class="cf-turnstile"
+                                     data-sitekey="@captchaSiteKey"
+                                     data-callback="onTurnstileSuccess"
+                                     data-expired-callback="onTurnstileExpired"
+                                     data-error-callback="onTurnstileError"></div>
+                            </div>
+                        }
+                        else if (!string.IsNullOrWhiteSpace(captchaQuestion))
                         {
                             <div class="mb-3">
                                 <label class="form-label">Капча: @captchaQuestion</label>
-                                <input type="text" name="captchaAnswer" class="form-control" autocomplete="off" required />
+                                <input type="text" name="captchaAnswer" class="form-control login-input" autocomplete="off" required />
                             </div>
                         }
-                        
-                        <button type="submit" class="btn btn-primary w-100">Войти</button>
+
+                        <button type="submit" class="login-submit">Войти</button>
                     </form>
-                    }
-                    
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger mt-3">@errorMessage</div>
-                    }
-                    
-                    <div class="text-center mt-3">
-                        <a href="/ForgotPassword" class="btn btn-link">Забыли пароль?</a>
-                    </div>
-                    
-                    <div class="text-center mt-2">
-                        <p>Нет аккаунта? <a href="/Register">Зарегистрироваться</a></p>
-                    </div>
+                }
+
+                <div class="text-center mt-3">
+                    <a href="/ForgotPassword" class="btn btn-link">Забыли пароль?</a>
+                </div>
+
+                <div class="text-center mt-2">
+                    <p>Нет аккаунта? <a href="/Register">Зарегистрироваться</a></p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+  window.onTurnstileSuccess = function(token) {
+    const input = document.getElementById('captchaToken');
+    if (input) input.value = token;
+  };
+  window.onTurnstileExpired = function() {
+    const input = document.getElementById('captchaToken');
+    if (input) input.value = '';
+  };
+  window.onTurnstileError = function() {
+    const input = document.getElementById('captchaToken');
+    if (input) input.value = '';
+  };
+</script>
 
 @code {
     private string? errorMessage;
@@ -95,6 +119,8 @@
     private string? challengeId;
     private string? captchaId;
     private string? captchaQuestion;
+    private bool useExternalCaptcha;
+    private string? captchaSiteKey;
 
     protected override void OnInitialized()
     {
@@ -113,13 +139,19 @@
         isTwoFactorStep = query.ContainsKey("twoFactor") && query["twoFactor"].ToString() == "1";
         challengeId = query.ContainsKey("challengeId") ? query["challengeId"].ToString() : null;
 
+        useExternalCaptcha = (Configuration["Security:Captcha:UseExternal"]?.ToLowerInvariant() == "true");
+        captchaSiteKey = Configuration["Security:Captcha:SiteKey"];
+
         if (!isTwoFactorStep)
         {
-            var left = Random.Shared.Next(1, 10);
-            var right = Random.Shared.Next(1, 10);
-            captchaId = Guid.NewGuid().ToString("N");
-            captchaQuestion = $"{left} + {right} = ?";
-            MemoryCache.Set($"captcha:{captchaId}", (left + right).ToString(), TimeSpan.FromMinutes(3));
+            if (!(useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey)))
+            {
+                var left = Random.Shared.Next(1, 10);
+                var right = Random.Shared.Next(1, 10);
+                captchaId = Guid.NewGuid().ToString("N");
+                captchaQuestion = $"{left} + {right} = ?";
+                MemoryCache.Set($"captcha:{captchaId}", (left + right).ToString(), TimeSpan.FromMinutes(3));
+            }
         }
     }
 
@@ -134,3 +166,91 @@
         return string.Empty;
     }
 }
+
+<style>
+    .login-template-wrap {
+        min-height: calc(100vh - 110px);
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding: 22px;
+    }
+    .login-template-inner {
+        width: min(700px, 100%);
+    }
+    .login-title {
+        font-size: 52px;
+        line-height: 1.05;
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #151c42;
+    }
+    .login-alert {
+        border: 1px solid #f2b6b1;
+        color: #b63e2a;
+        background: #f8eceb;
+        border-radius: 14px;
+        padding: 16px 20px;
+        margin-bottom: 18px;
+        font-size: 36px;
+    }
+    .login-card {
+        background: #e8eef8;
+        border-radius: 20px;
+        padding: 12px;
+        box-shadow: 0 8px 26px rgba(37, 56, 113, 0.08);
+    }
+    .login-card-body {
+        padding: 18px;
+    }
+    .login-input {
+        border-radius: 16px;
+        height: 58px;
+        border: 1px solid #d2d9e8;
+        font-size: 30px;
+        background-color: #f7f9fc;
+        color: #171a29;
+    }
+    .captcha-box {
+        margin: 14px 0 16px;
+        display: flex;
+        justify-content: flex-start;
+    }
+    .login-submit {
+        width: 100%;
+        height: 58px;
+        border: 0;
+        border-radius: 18px;
+        color: #fff;
+        font-weight: 600;
+        font-size: 30px;
+        background: linear-gradient(90deg, #6976f2 0%, #875cf8 100%);
+    }
+    .twofa-title {
+        font-size: 42px;
+        color: #151c42;
+        margin-bottom: 12px;
+        font-weight: 700;
+    }
+    .twofa-info {
+        border: 1px solid #b8e2cc;
+        background: #e7f8ef;
+        border-radius: 12px;
+        color: #226a45;
+        padding: 12px 14px;
+        margin-bottom: 14px;
+        font-size: 24px;
+    }
+    .form-label, .form-check-label {
+        color: #1f2440;
+        font-size: 32px;
+        font-weight: 600;
+    }
+    .btn-link {
+        font-size: 34px;
+    }
+    p {
+        font-size: 28px;
+        color: #2a2f4e;
+    }
+</style>

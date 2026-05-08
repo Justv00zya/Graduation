@@ -22,6 +22,9 @@ public class AccountController : Controller
     private readonly IEmailSender? _emailSender;
     private readonly bool _captchaEnabled;
     private readonly bool _twoFactorEnabled;
+    private readonly bool _externalCaptchaEnabled;
+    private readonly bool _allowLocalCaptchaFallback;
+    private readonly ICaptchaVerifier _captchaVerifier;
 
     public AccountController(
         UserManager<IdentityUser> userManager,
@@ -31,6 +34,7 @@ public class AccountController : Controller
         IDbContextFactory<ApplicationDbContext> dbContextFactory,
         IMemoryCache cache,
         IConfiguration configuration,
+        ICaptchaVerifier captchaVerifier,
         IEmailSender? emailSender = null)
     {
         _userManager = userManager;
@@ -42,6 +46,9 @@ public class AccountController : Controller
         _emailSender = emailSender;
         _captchaEnabled = configuration.GetValue<bool?>("Security:Captcha:Enabled") ?? true;
         _twoFactorEnabled = configuration.GetValue<bool?>("Security:TwoFactor:Enabled") ?? true;
+        _externalCaptchaEnabled = configuration.GetValue<bool?>("Security:Captcha:UseExternal") ?? true;
+        _allowLocalCaptchaFallback = configuration.GetValue<bool?>("Security:Captcha:AllowLocalFallback") ?? true;
+        _captchaVerifier = captchaVerifier;
     }
 
     [HttpPost("Login")]
@@ -51,6 +58,7 @@ public class AccountController : Controller
         bool rememberMe,
         string? captchaId,
         string? captchaAnswer,
+        string? captchaToken,
         string? returnUrl = null)
     {
         try
@@ -70,7 +78,7 @@ public class AccountController : Controller
             return Redirect($"/Login?error={Uri.EscapeDataString("Укажите логин/email и пароль")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
         
-        if (_captchaEnabled && !IsCaptchaValid(captchaId, captchaAnswer))
+        if (_captchaEnabled && !await IsCaptchaValidAsync(captchaId, captchaAnswer, captchaToken, HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.RequestAborted))
         {
             return Redirect($"/Login?error={Uri.EscapeDataString("Неверная капча")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
@@ -268,8 +276,20 @@ public class AccountController : Controller
         return Redirect("/Login");
     }
 
-    private bool IsCaptchaValid(string? captchaId, string? captchaAnswer)
+    private async Task<bool> IsCaptchaValidAsync(
+        string? captchaId,
+        string? captchaAnswer,
+        string? captchaToken,
+        string? remoteIp,
+        CancellationToken cancellationToken)
     {
+        if (_externalCaptchaEnabled && !string.IsNullOrWhiteSpace(captchaToken))
+        {
+            var externalOk = await _captchaVerifier.VerifyAsync(captchaToken, remoteIp, cancellationToken);
+            if (externalOk) return true;
+            if (!_allowLocalCaptchaFallback) return false;
+        }
+
         if (string.IsNullOrWhiteSpace(captchaId) || string.IsNullOrWhiteSpace(captchaAnswer))
             return false;
 

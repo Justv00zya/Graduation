@@ -1,0 +1,230 @@
+@page "/TwoFactorSetup"
+@using System.Net
+@using System.Security.Claims
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Identity
+@attribute [Authorize]
+@inject UserManager<IdentityUser> UserManager
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IConfiguration Configuration
+
+<PageTitle>Двухфакторная аутентификация</PageTitle>
+
+<div class="twofa-wrap">
+    <h1 class="twofa-main-title">Двухфакторная аутентификация (2FA)</h1>
+
+    @if (!string.IsNullOrWhiteSpace(statusMessage))
+    {
+        <div class="twofa-status">@statusMessage</div>
+    }
+
+    @if (string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="twofa-sub">@((isEnabled ? "2FA включена" : "2FA отключена"))</div>
+
+        @if (!string.IsNullOrWhiteSpace(qrImageUrl))
+        {
+            <img class="twofa-qr" src="@qrImageUrl" alt="QR для 2FA" />
+        }
+
+        <form method="post" @onsubmit="EnableTwoFactorAsync">
+            <div class="twofa-card">
+                <label class="twofa-label" for="code">Код из приложения</label>
+                <input id="code" class="twofa-input" @bind="code" maxlength="6" />
+                <button class="twofa-btn" type="submit">Подтвердить и включить 2FA</button>
+            </div>
+        </form>
+
+        @if (recoveryCodes.Count > 0)
+        {
+            <div class="twofa-codes">
+                <div class="twofa-codes-title">Резервные коды (сохраните отдельно):</div>
+                @foreach (var rc in recoveryCodes)
+                {
+                    <div class="twofa-code-item">@rc</div>
+                }
+            </div>
+        }
+    }
+    else
+    {
+        <div class="twofa-error">@errorMessage</div>
+    }
+</div>
+
+@code {
+    private string? errorMessage;
+    private string? statusMessage;
+    private bool isEnabled;
+    private string code = string.Empty;
+    private string? qrImageUrl;
+    private List<string> recoveryCodes = new();
+    private IdentityUser? currentUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+        var userId = auth.User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            errorMessage = "Пользователь не авторизован.";
+            return;
+        }
+
+        currentUser = await UserManager.FindByIdAsync(userId);
+        if (currentUser == null)
+        {
+            errorMessage = "Пользователь не найден.";
+            return;
+        }
+
+        isEnabled = await UserManager.GetTwoFactorEnabledAsync(currentUser);
+        var key = await UserManager.GetAuthenticatorKeyAsync(currentUser);
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            await UserManager.ResetAuthenticatorKeyAsync(currentUser);
+            key = await UserManager.GetAuthenticatorKeyAsync(currentUser);
+        }
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            errorMessage = "Не удалось сгенерировать ключ аутентификатора.";
+            return;
+        }
+
+        var issuer = Uri.EscapeDataString(Configuration["Jwt:Issuer"] ?? "OrgTechRepair");
+        var label = Uri.EscapeDataString(currentUser.Email ?? currentUser.UserName ?? "user");
+        var otpauth = $"otpauth://totp/{issuer}:{label}?secret={key}&issuer={issuer}&digits=6";
+        qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=" + WebUtility.UrlEncode(otpauth);
+    }
+
+    private async Task EnableTwoFactorAsync()
+    {
+        if (currentUser == null)
+        {
+            errorMessage = "Сессия устарела. Обновите страницу.";
+            return;
+        }
+
+        var normalized = (code ?? string.Empty).Replace(" ", string.Empty).Replace("-", string.Empty);
+        var ok = await UserManager.VerifyTwoFactorTokenAsync(
+            currentUser,
+            UserManager.Options.Tokens.AuthenticatorTokenProvider,
+            normalized);
+
+        if (!ok)
+        {
+            statusMessage = null;
+            errorMessage = "Неверный код из приложения.";
+            return;
+        }
+
+        await UserManager.SetTwoFactorEnabledAsync(currentUser, true);
+        recoveryCodes = (await UserManager.GenerateNewTwoFactorRecoveryCodesAsync(currentUser, 10))?.ToList() ?? new List<string>();
+        isEnabled = true;
+        errorMessage = null;
+        statusMessage = "Сканируйте QR и подтвердите кодом из приложения.";
+    }
+}
+
+<style>
+    .twofa-wrap {
+        padding: 18px 24px 28px;
+    }
+    .twofa-main-title {
+        font-size: 48px;
+        margin: 0 0 12px;
+        color: #151c42;
+        font-weight: 700;
+    }
+    .twofa-status {
+        border: 1px solid #b8e2cc;
+        background: #e7f8ef;
+        border-radius: 12px;
+        color: #226a45;
+        padding: 12px 14px;
+        margin-bottom: 10px;
+        font-size: 28px;
+    }
+    .twofa-sub {
+        color: #2b3151;
+        font-size: 24px;
+        margin-bottom: 10px;
+    }
+    .twofa-qr {
+        width: 220px;
+        height: 220px;
+        background: #fff;
+        border-radius: 10px;
+        padding: 8px;
+        display: block;
+        margin-bottom: 14px;
+    }
+    .twofa-card {
+        background: #e8eef8;
+        border-radius: 16px;
+        padding: 18px;
+        max-width: 980px;
+    }
+    .twofa-label {
+        display: block;
+        font-size: 28px;
+        margin-bottom: 8px;
+        color: #1f2440;
+        font-weight: 600;
+    }
+    .twofa-input {
+        width: 100%;
+        border-radius: 14px;
+        border: 1px solid #d2d9e8;
+        height: 56px;
+        font-size: 28px;
+        padding: 0 12px;
+        margin-bottom: 12px;
+        background: #f7f9fc;
+        color: #171a29;
+    }
+    .twofa-btn {
+        width: 100%;
+        border: 0;
+        border-radius: 14px;
+        height: 54px;
+        color: #fff;
+        font-size: 26px;
+        font-weight: 600;
+        background: linear-gradient(90deg, #6976f2 0%, #875cf8 100%);
+    }
+    .twofa-error {
+        border: 1px solid #f2b6b1;
+        color: #b63e2a;
+        background: #f8eceb;
+        border-radius: 12px;
+        padding: 12px 14px;
+        font-size: 26px;
+    }
+    .twofa-codes {
+        margin-top: 14px;
+        max-width: 700px;
+        background: #eef3ff;
+        border: 1px solid #d2d9e8;
+        border-radius: 12px;
+        padding: 10px 14px;
+    }
+    .twofa-codes-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1f2440;
+        margin-bottom: 8px;
+    }
+    .twofa-code-item {
+        font-family: Consolas, monospace;
+        font-size: 20px;
+        color: #16214a;
+    }
+</style>
