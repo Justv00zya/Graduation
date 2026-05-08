@@ -44,6 +44,8 @@ public sealed class SmtpEmailSender : IEmailSender
         var fromEmail = _configuration["Email:Smtp:FromEmail"];
         var fromName = _configuration["Email:Smtp:FromName"] ?? "OrgTechRepair";
         var enableSsl = _configuration.GetValue<bool?>("Email:Smtp:EnableSsl") ?? true;
+        var timeoutSeconds = _configuration.GetValue<int?>("Email:Smtp:TimeoutSeconds") ?? 15;
+        var timeoutMilliseconds = Math.Max(5, timeoutSeconds) * 1000;
 
         if (string.IsNullOrWhiteSpace(host) ||
             string.IsNullOrWhiteSpace(username) ||
@@ -69,7 +71,8 @@ public sealed class SmtpEmailSender : IEmailSender
             {
                 EnableSsl = enableSsl,
                 UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(username, password)
+                Credentials = new NetworkCredential(username, password),
+                Timeout = timeoutMilliseconds
             };
 
             await client.SendMailAsync(message);

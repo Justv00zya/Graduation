@@ -604,12 +604,12 @@ public class AuthController : ControllerBase
                 var sent = await _emailSender!.SendTwoFactorCodeAsync(email, code);
                 if (!sent)
                 {
-                    _logger.LogWarning("Не удалось отправить 2FA код пользователю {UserName}", userName);
+                    _logger.LogWarning("Не удалось отправить 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Ошибка фоновой отправки 2FA кода пользователю {UserName}", userName);
+                _logger.LogError(ex, "Ошибка фоновой отправки 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
             }
         });
     }
