@@ -11,45 +11,52 @@
 
 <PageTitle>Двухфакторная аутентификация</PageTitle>
 
-<div class="twofa-wrap">
-    <h1 class="twofa-main-title">Двухфакторная аутентификация (2FA)</h1>
+<div class="container mt-4 mb-4">
+    <h2 class="mb-3">Двухфакторная аутентификация (2FA)</h2>
 
     @if (!string.IsNullOrWhiteSpace(statusMessage))
     {
-        <div class="twofa-status">@statusMessage</div>
+        <div class="alert alert-success">@statusMessage</div>
+    }
+
+    @if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <div class="alert alert-danger">@errorMessage</div>
     }
 
     @if (string.IsNullOrWhiteSpace(errorMessage))
     {
-        <div class="twofa-sub">@((isEnabled ? "2FA включена" : "2FA отключена"))</div>
+        <p class="text-muted mb-3">@((isEnabled ? "2FA включена" : "2FA отключена"))</p>
 
-        @if (!string.IsNullOrWhiteSpace(qrImageUrl))
-        {
-            <img class="twofa-qr" src="@qrImageUrl" alt="QR для 2FA" />
-        }
+        <div class="card">
+            <div class="card-body">
+                @if (!string.IsNullOrWhiteSpace(qrImageUrl))
+                {
+                    <img class="twofa-qr" src="@qrImageUrl" alt="QR для 2FA" />
+                }
 
-        <form method="post" @onsubmit="EnableTwoFactorAsync">
-            <div class="twofa-card">
-                <label class="twofa-label" for="code">Код из приложения</label>
-                <input id="code" class="twofa-input" @bind="code" maxlength="6" />
-                <button class="twofa-btn" type="submit">Подтвердить и включить 2FA</button>
+                <form method="post" @onsubmit="EnableTwoFactorAsync">
+                    <div class="mb-3">
+                        <label class="form-label" for="code">Код из приложения</label>
+                        <input id="code" class="form-control" @bind="code" maxlength="6" />
+                    </div>
+                    <button class="btn btn-primary w-100" type="submit">Подтвердить и включить 2FA</button>
+                </form>
             </div>
-        </form>
+        </div>
 
         @if (recoveryCodes.Count > 0)
         {
-            <div class="twofa-codes">
-                <div class="twofa-codes-title">Резервные коды (сохраните отдельно):</div>
-                @foreach (var rc in recoveryCodes)
-                {
-                    <div class="twofa-code-item">@rc</div>
-                }
+            <div class="card mt-3">
+                <div class="card-body">
+                    <h5 class="mb-2">Резервные коды (сохраните отдельно)</h5>
+                    @foreach (var rc in recoveryCodes)
+                    {
+                        <div class="twofa-code-item">@rc</div>
+                    }
+                </div>
             </div>
         }
-    }
-    else
-    {
-        <div class="twofa-error">@errorMessage</div>
     }
 </div>
 
@@ -134,97 +141,14 @@
 }
 
 <style>
-    .twofa-wrap {
-        padding: 18px 24px 28px;
-    }
-    .twofa-main-title {
-        font-size: 48px;
-        margin: 0 0 12px;
-        color: #151c42;
-        font-weight: 700;
-    }
-    .twofa-status {
-        border: 1px solid #b8e2cc;
-        background: #e7f8ef;
-        border-radius: 12px;
-        color: #226a45;
-        padding: 12px 14px;
-        margin-bottom: 10px;
-        font-size: 28px;
-    }
-    .twofa-sub {
-        color: #2b3151;
-        font-size: 24px;
-        margin-bottom: 10px;
-    }
     .twofa-qr {
         width: 220px;
         height: 220px;
-        background: #fff;
-        border-radius: 10px;
-        padding: 8px;
         display: block;
-        margin-bottom: 14px;
-    }
-    .twofa-card {
-        background: #e8eef8;
-        border-radius: 16px;
-        padding: 18px;
-        max-width: 980px;
-    }
-    .twofa-label {
-        display: block;
-        font-size: 28px;
-        margin-bottom: 8px;
-        color: #1f2440;
-        font-weight: 600;
-    }
-    .twofa-input {
-        width: 100%;
-        border-radius: 14px;
-        border: 1px solid #d2d9e8;
-        height: 56px;
-        font-size: 28px;
-        padding: 0 12px;
-        margin-bottom: 12px;
-        background: #f7f9fc;
-        color: #171a29;
-    }
-    .twofa-btn {
-        width: 100%;
-        border: 0;
-        border-radius: 14px;
-        height: 54px;
-        color: #fff;
-        font-size: 26px;
-        font-weight: 600;
-        background: linear-gradient(90deg, #6976f2 0%, #875cf8 100%);
-    }
-    .twofa-error {
-        border: 1px solid #f2b6b1;
-        color: #b63e2a;
-        background: #f8eceb;
-        border-radius: 12px;
-        padding: 12px 14px;
-        font-size: 26px;
-    }
-    .twofa-codes {
-        margin-top: 14px;
-        max-width: 700px;
-        background: #eef3ff;
-        border: 1px solid #d2d9e8;
-        border-radius: 12px;
-        padding: 10px 14px;
-    }
-    .twofa-codes-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: #1f2440;
-        margin-bottom: 8px;
+        margin-bottom: 1rem;
     }
     .twofa-code-item {
         font-family: Consolas, monospace;
-        font-size: 20px;
-        color: #16214a;
+        font-size: .95rem;
     }
 </style>
