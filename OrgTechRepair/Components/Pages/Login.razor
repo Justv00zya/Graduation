@@ -1,9 +1,11 @@
 @page "/Login"
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.Extensions.Caching.Memory
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IAntiforgery Antiforgery
+@inject IMemoryCache MemoryCache
 
 <PageTitle>Вход в систему</PageTitle>
 
@@ -15,9 +17,31 @@
                     <h3 class="text-center">Вход в систему</h3>
                 </div>
                 <div class="card-body">
+                    @if (isTwoFactorStep)
+                    {
+                        <form method="post" action="/Account/VerifyTwoFactorWeb">
+                            <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
+                            <input type="hidden" name="returnUrl" value="@returnUrl" />
+                            <input type="hidden" name="challengeId" value="@challengeId" />
+                            
+                            <div class="alert alert-info">
+                                На ваш email отправлен код подтверждения. Введите его ниже.
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Код 2FA</label>
+                                <input type="text" name="code" class="form-control" maxlength="6" required />
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100">Подтвердить вход</button>
+                        </form>
+                    }
+                    else
+                    {
                     <form method="post" action="/Account/Login">
                         <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <input type="hidden" name="captchaId" value="@captchaId" />
                         
                         <div class="mb-3">
                             <label class="form-label">Логин или Email</label>
@@ -33,9 +57,18 @@
                             <input type="checkbox" name="rememberMe" value="true" class="form-check-input" id="rememberMe" />
                             <label class="form-check-label" for="rememberMe">Запомнить меня</label>
                         </div>
+
+                        @if (!string.IsNullOrWhiteSpace(captchaQuestion))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Капча: @captchaQuestion</label>
+                                <input type="text" name="captchaAnswer" class="form-control" autocomplete="off" required />
+                            </div>
+                        }
                         
                         <button type="submit" class="btn btn-primary w-100">Войти</button>
                     </form>
+                    }
                     
                     @if (!string.IsNullOrEmpty(errorMessage))
                     {
@@ -58,6 +91,10 @@
 @code {
     private string? errorMessage;
     private string? returnUrl;
+    private bool isTwoFactorStep;
+    private string? challengeId;
+    private string? captchaId;
+    private string? captchaQuestion;
 
     protected override void OnInitialized()
     {
@@ -72,6 +109,18 @@
         
         returnUrl = query.ContainsKey("returnUrl") ? query["returnUrl"].ToString() : 
                     query.ContainsKey("ReturnUrl") ? query["ReturnUrl"].ToString() : null;
+
+        isTwoFactorStep = query.ContainsKey("twoFactor") && query["twoFactor"].ToString() == "1";
+        challengeId = query.ContainsKey("challengeId") ? query["challengeId"].ToString() : null;
+
+        if (!isTwoFactorStep)
+        {
+            var left = Random.Shared.Next(1, 10);
+            var right = Random.Shared.Next(1, 10);
+            captchaId = Guid.NewGuid().ToString("N");
+            captchaQuestion = $"{left} + {right} = ?";
+            MemoryCache.Set($"captcha:{captchaId}", (left + right).ToString(), TimeSpan.FromMinutes(3));
+        }
     }
 
     private string GetAntiforgeryToken()

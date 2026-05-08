@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using OrgTechRepair.Data;
 using OrgTechRepair.Services;
 
@@ -17,23 +18,40 @@ public class AccountController : Controller
     private readonly IAntiforgery _antiforgery;
     private readonly ILogger<AccountController> _logger;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
+    private readonly IMemoryCache _cache;
+    private readonly IEmailSender? _emailSender;
+    private readonly bool _captchaEnabled;
+    private readonly bool _twoFactorEnabled;
 
     public AccountController(
         UserManager<IdentityUser> userManager,
         SignInManager<IdentityUser> signInManager,
         IAntiforgery antiforgery,
         ILogger<AccountController> logger,
-        IDbContextFactory<ApplicationDbContext> dbContextFactory)
+        IDbContextFactory<ApplicationDbContext> dbContextFactory,
+        IMemoryCache cache,
+        IConfiguration configuration,
+        IEmailSender? emailSender = null)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _antiforgery = antiforgery;
         _logger = logger;
         _dbContextFactory = dbContextFactory;
+        _cache = cache;
+        _emailSender = emailSender;
+        _captchaEnabled = configuration.GetValue<bool?>("Security:Captcha:Enabled") ?? true;
+        _twoFactorEnabled = configuration.GetValue<bool?>("Security:TwoFactor:Enabled") ?? true;
     }
 
     [HttpPost("Login")]
-    public async Task<IActionResult> Login(string loginOrEmail, string password, bool rememberMe, string? returnUrl = null)
+    public async Task<IActionResult> Login(
+        string loginOrEmail,
+        string password,
+        bool rememberMe,
+        string? captchaId,
+        string? captchaAnswer,
+        string? returnUrl = null)
     {
         try
         {
@@ -51,6 +69,11 @@ public class AccountController : Controller
         {
             return Redirect($"/Login?error={Uri.EscapeDataString("Укажите логин/email и пароль")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
+        
+        if (_captchaEnabled && !IsCaptchaValid(captchaId, captchaAnswer))
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Неверная капча")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
 
         var user = await _userManager.FindByNameAsync(loginOrEmail);
         if (user == null && loginOrEmail.Contains('@', StringComparison.Ordinal))
@@ -63,14 +86,40 @@ public class AccountController : Controller
             return Redirect($"/Login?error={Uri.EscapeDataString("Пользователь с таким логином или email не найден")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
 
-        var result = await _signInManager.PasswordSignInAsync(
-            user.UserName!,
-            password,
-            rememberMe,
-            lockoutOnFailure: true);
+        var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
+
+        if (result.Succeeded && _twoFactorEnabled)
+        {
+            if (string.IsNullOrWhiteSpace(user.Email))
+                return Redirect($"/Login?error={Uri.EscapeDataString("Для 2FA у пользователя не указан email")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+
+            var code = Random.Shared.Next(100000, 1000000).ToString();
+            var challengeId = Guid.NewGuid().ToString("N");
+            _cache.Set(
+                $"web2fa:{challengeId}",
+                new PendingWebTwoFactor
+                {
+                    UserId = user.Id,
+                    Code = code,
+                    RememberMe = rememberMe,
+                    ReturnUrl = returnUrl
+                },
+                TimeSpan.FromMinutes(5));
+
+            if (_emailSender != null)
+                await _emailSender.SendTwoFactorCodeAsync(user.Email, code);
+            else
+                _logger.LogWarning("WEB 2FA код для {UserName}: {Code}", user.UserName, code);
+
+            var twoFactorUrl =
+                $"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}" +
+                $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}";
+            return Redirect(twoFactorUrl);
+        }
 
         if (result.Succeeded)
         {
+            await _signInManager.SignInAsync(user, rememberMe);
             return Redirect(returnUrl ?? "/");
         }
         else if (result.IsLockedOut)
@@ -85,6 +134,44 @@ public class AccountController : Controller
         {
             return Redirect($"/Login?error={Uri.EscapeDataString("Неверный пароль")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
+    }
+
+    [HttpPost("VerifyTwoFactorWeb")]
+    public async Task<IActionResult> VerifyTwoFactorWeb(string challengeId, string code, string? returnUrl = null)
+    {
+        try
+        {
+            await _antiforgery.ValidateRequestAsync(HttpContext);
+        }
+        catch
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Неверный запрос. Пожалуйста, попробуйте снова.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        if (string.IsNullOrWhiteSpace(challengeId) || string.IsNullOrWhiteSpace(code))
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Введите код подтверждения")}&twoFactor=1&challengeId={Uri.EscapeDataString(challengeId ?? "")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        if (!_cache.TryGetValue<PendingWebTwoFactor>($"web2fa:{challengeId}", out var pending) || pending == null)
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Код истек. Войдите снова.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        if (!string.Equals(pending.Code, code.Trim(), StringComparison.Ordinal))
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Неверный код подтверждения")}&twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        var user = await _userManager.FindByIdAsync(pending.UserId);
+        if (user == null)
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Пользователь не найден")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        _cache.Remove($"web2fa:{challengeId}");
+        await _signInManager.SignInAsync(user, pending.RememberMe);
+        return Redirect(pending.ReturnUrl ?? returnUrl ?? "/");
     }
 
     /// <summary>Регистрация клиента: запись в БД (AspNetUsers + роль + карточка Client) и вход в ту же сессию, что и /Account/Login.</summary>
@@ -179,5 +266,25 @@ public class AccountController : Controller
             _logger.LogWarning(ex, "Ошибка при выходе");
         }
         return Redirect("/Login");
+    }
+
+    private bool IsCaptchaValid(string? captchaId, string? captchaAnswer)
+    {
+        if (string.IsNullOrWhiteSpace(captchaId) || string.IsNullOrWhiteSpace(captchaAnswer))
+            return false;
+
+        if (!_cache.TryGetValue<string>($"captcha:{captchaId}", out var expected) || string.IsNullOrWhiteSpace(expected))
+            return false;
+
+        _cache.Remove($"captcha:{captchaId}");
+        return string.Equals(expected.Trim(), captchaAnswer.Trim(), StringComparison.Ordinal);
+    }
+
+    private sealed class PendingWebTwoFactor
+    {
+        public string UserId { get; set; } = string.Empty;
+        public string Code { get; set; } = string.Empty;
+        public bool RememberMe { get; set; }
+        public string? ReturnUrl { get; set; }
     }
 }
