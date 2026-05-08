@@ -65,10 +65,15 @@
                         @if (useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey))
                         {
                             <div class="captcha-box">
-                                <div class="cf-turnstile"
+                                <div id="turnstile-widget"
+                                     class="cf-turnstile"
                                      data-sitekey="@captchaSiteKey"
                                      data-response-field="true"
-                                     data-response-field-name="cf-turnstile-response"></div>
+                                     data-response-field-name="cf-turnstile-response"
+                                     data-appearance="always"
+                                     data-callback="onTurnstileSuccess"
+                                     data-expired-callback="onTurnstileExpired"
+                                     data-error-callback="onTurnstileError"></div>
                             </div>
                         }
                         else if (!string.IsNullOrWhiteSpace(captchaQuestion))
@@ -97,6 +102,30 @@
     </div>
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+<script>
+    window.onTurnstileSuccess = function (_token) {
+        // Token is posted via cf-turnstile-response hidden input.
+    };
+
+    window.onTurnstileExpired = function () {
+        if (window.turnstile) {
+            window.turnstile.reset();
+        }
+    };
+
+    window.onTurnstileError = function () {
+        if (window.turnstile) {
+            window.turnstile.reset();
+        }
+    };
+
+    window.addEventListener("load", function () {
+        var hasLoginError = new URLSearchParams(window.location.search).has("error");
+        if (hasLoginError && window.turnstile) {
+            window.turnstile.reset();
+        }
+    });
+</script>
 @code {
     private string? errorMessage;
     private string? returnUrl;
