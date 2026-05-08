@@ -46,7 +46,6 @@
                         <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                         <input type="hidden" name="captchaId" value="@captchaId" />
-                        <input type="hidden" id="captchaToken" name="captchaToken" />
 
                         <div class="mb-3">
                             <label class="form-label">Логин или почта</label>
@@ -69,7 +68,7 @@
                                 <div class="cf-turnstile"
                                      data-sitekey="@captchaSiteKey"
                                      data-response-field="true"
-                                     data-response-field-name="captchaToken"></div>
+                                     data-response-field-name="cf-turnstile-response"></div>
                             </div>
                         }
                         else if (!string.IsNullOrWhiteSpace(captchaQuestion))
