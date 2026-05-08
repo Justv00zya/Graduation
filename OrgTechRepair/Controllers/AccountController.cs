@@ -115,6 +115,7 @@ public class AccountController : Controller
                     ReturnUrl = returnUrl
                 },
                 TimeSpan.FromMinutes(5));
+            _cache.Set($"web2fa:resend:{challengeId}", DateTimeOffset.UtcNow.AddSeconds(45), TimeSpan.FromMinutes(5));
 
             if (_emailSender != null)
                 QueueTwoFactorEmail(user.Email, code, user.UserName);
@@ -182,6 +183,56 @@ public class AccountController : Controller
         _cache.Remove($"web2fa:{challengeId}");
         await _signInManager.SignInAsync(user, pending.RememberMe);
         return Redirect(pending.ReturnUrl ?? returnUrl ?? "/");
+    }
+
+    [HttpPost("ResendTwoFactorWeb")]
+    public async Task<IActionResult> ResendTwoFactorWeb(string challengeId, string? returnUrl = null)
+    {
+        try
+        {
+            await _antiforgery.ValidateRequestAsync(HttpContext);
+        }
+        catch
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Неверный запрос. Пожалуйста, попробуйте снова.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        if (string.IsNullOrWhiteSpace(challengeId))
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Код истек. Войдите снова.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        if (!_cache.TryGetValue<PendingWebTwoFactor>($"web2fa:{challengeId}", out var pending) || pending == null)
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Код истек. Войдите снова.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        if (_cache.TryGetValue<DateTimeOffset>($"web2fa:resend:{challengeId}", out var nextResendAt))
+        {
+            var waitSeconds = (int)Math.Ceiling((nextResendAt - DateTimeOffset.UtcNow).TotalSeconds);
+            if (waitSeconds > 0)
+            {
+                return Redirect($"/Login?error={Uri.EscapeDataString($"Повторная отправка доступна через {waitSeconds} сек.")}&twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}");
+            }
+        }
+
+        var user = await _userManager.FindByIdAsync(pending.UserId);
+        if (user == null || string.IsNullOrWhiteSpace(user.Email))
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Пользователь не найден или email не указан.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        var newCode = Random.Shared.Next(100000, 1000000).ToString();
+        pending.Code = newCode;
+        _cache.Set($"web2fa:{challengeId}", pending, TimeSpan.FromMinutes(5));
+        _cache.Set($"web2fa:resend:{challengeId}", DateTimeOffset.UtcNow.AddSeconds(45), TimeSpan.FromMinutes(5));
+
+        if (_emailSender != null)
+            QueueTwoFactorEmail(user.Email, newCode, user.UserName);
+        else
+            _logger.LogWarning("WEB 2FA код (повтор) для {UserName}: {Code}", user.UserName, newCode);
+
+        return Redirect($"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}&message={Uri.EscapeDataString("Код отправлен повторно.")}");
     }
 
     /// <summary>Регистрация клиента: запись в БД (AspNetUsers + роль + карточка Client) и вход в ту же сессию, что и /Account/Login.</summary>

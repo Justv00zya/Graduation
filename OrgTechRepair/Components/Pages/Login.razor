@@ -22,6 +22,10 @@
                     {
                         <div class="alert alert-danger mb-3">@errorMessage</div>
                     }
+                    @if (!string.IsNullOrEmpty(infoMessage))
+                    {
+                        <div class="alert alert-info mb-3">@infoMessage</div>
+                    }
 
                 @if (isTwoFactorStep)
                 {
@@ -39,6 +43,13 @@
 
                         <button type="submit" class="btn btn-primary w-100">Подтвердить вход</button>
                     </form>
+                    <form method="post" action="/Account/ResendTwoFactorWeb" class="mt-2">
+                        <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
+                        <input type="hidden" name="returnUrl" value="@returnUrl" />
+                        <input type="hidden" name="challengeId" value="@challengeId" />
+                        <button id="resendCodeButton" type="submit" class="btn btn-outline-secondary w-100">Отправить код повторно</button>
+                    </form>
+                    <div id="resendCodeHint" class="form-text text-center mt-2"></div>
                 }
                 else
                 {
@@ -138,8 +149,35 @@
         }
     });
 </script>
+@if (isTwoFactorStep)
+{
+    <script>
+        (function () {
+            var button = document.getElementById("resendCodeButton");
+            var hint = document.getElementById("resendCodeHint");
+            if (!button || !hint) return;
+
+            var secondsLeft = 45;
+            var tick = function () {
+                if (secondsLeft <= 0) {
+                    button.disabled = false;
+                    hint.textContent = "Можно отправить код повторно.";
+                    return;
+                }
+
+                button.disabled = true;
+                hint.textContent = "Повторная отправка через " + secondsLeft + " сек.";
+                secondsLeft -= 1;
+                setTimeout(tick, 1000);
+            };
+
+            tick();
+        })();
+    </script>
+}
 @code {
     private string? errorMessage;
+    private string? infoMessage;
     private string? returnUrl;
     private bool isTwoFactorStep;
     private string? challengeId;
@@ -157,6 +195,10 @@
         if (query.ContainsKey("error"))
         {
             errorMessage = query["error"].ToString();
+        }
+        if (query.ContainsKey("message"))
+        {
+            infoMessage = query["message"].ToString();
         }
         
         returnUrl = query.ContainsKey("returnUrl") ? query["returnUrl"].ToString() : 
