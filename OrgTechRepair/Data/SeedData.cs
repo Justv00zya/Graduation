@@ -222,8 +222,9 @@ public static class SeedData
 
         // Для тестовых учеток можно закрепить общий e-mail через конфиг; обычных пользователей не трогаем.
         var configuration = serviceProvider.GetService<IConfiguration>();
+        var enableSharedTwoFactorEmail = configuration?.GetValue<bool>("SeedData:EnableSharedTwoFactorEmail") ?? false;
         var sharedTwoFactorEmail = configuration?["SeedData:SharedTwoFactorEmail"];
-        if (!string.IsNullOrWhiteSpace(sharedTwoFactorEmail))
+        if (enableSharedTwoFactorEmail && !string.IsNullOrWhiteSpace(sharedTwoFactorEmail))
         {
             var seededUsernames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
             {
