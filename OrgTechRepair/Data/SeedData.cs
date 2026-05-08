@@ -219,10 +219,23 @@ public static class SeedData
                 await userManager.AddToRoleAsync(u, "Director");
         }
 
-        // Унифицируем e-mail для всех учетных записей (по запросу проекта для 2FA)
+        // Для тестовых учеток закрепляем общий e-mail; обычных пользователей не трогаем.
         const string sharedTwoFactorEmail = "valpcon2@gmail.com";
-        var allUsers = await userManager.Users.ToListAsync();
-        foreach (var user in allUsers)
+        var seededUsernames = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "admin",
+            "demo_manager",
+            "demo_client",
+            "demo_service",
+            "demo_office",
+            "demo_cashier",
+            "demo_warehouse",
+            "demo_director"
+        };
+        var seededUsers = await userManager.Users
+            .Where(u => seededUsernames.Contains(u.UserName ?? string.Empty))
+            .ToListAsync();
+        foreach (var user in seededUsers)
         {
             var needsUpdate = user.Email != sharedTwoFactorEmail || !user.EmailConfirmed;
             if (!needsUpdate) continue;
@@ -239,7 +252,7 @@ public static class SeedData
                 foreach (var error in updateResult.Errors)
                 {
                     logger?.LogWarning(
-                        "Не удалось обновить email для пользователя {UserName}: {Error}",
+                        "Не удалось обновить email тестового пользователя {UserName}: {Error}",
                         user.UserName,
                         error.Description);
                 }
