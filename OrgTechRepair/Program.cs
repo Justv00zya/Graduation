@@ -198,9 +198,22 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add authentication state provider for Blazor Server
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider>();
 
-// Add Email Sender (SMTP в проде, логгер-почта в dev/fallback)
+// Почта: Brevo API (HTTPS) при блокировке SMTP на хостинге; иначе SMTP; иначе вывод в логи
+var brevoApiEnabled = builder.Configuration.GetValue<bool?>("Email:Brevo:Enabled") ?? false;
 var smtpEnabled = builder.Configuration.GetValue<bool?>("Email:Smtp:Enabled") ?? false;
-if (smtpEnabled)
+if (brevoApiEnabled)
+{
+    builder.Services.AddHttpClient<OrgTechRepair.Services.BrevoTransactionalEmailSender>((sp, client) =>
+    {
+        var cfg = sp.GetRequiredService<IConfiguration>();
+        var baseUrl = (cfg["Email:Brevo:BaseUrl"] ?? "https://api.brevo.com").TrimEnd('/');
+        client.BaseAddress = new Uri($"{baseUrl}/v3/");
+        var timeoutSec = Math.Clamp(cfg.GetValue<int?>("Email:Brevo:TimeoutSeconds") ?? 60, 10, 300);
+        client.Timeout = TimeSpan.FromSeconds(timeoutSec);
+    });
+    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.BrevoTransactionalEmailSender>();
+}
+else if (smtpEnabled)
 {
     builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.SmtpEmailSender>();
 }
