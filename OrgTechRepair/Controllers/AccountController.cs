@@ -248,70 +248,65 @@ public class AccountController : Controller
             return Redirect($"/Register?error={Uri.EscapeDataString("Неверный запрос. Обновите страницу и попробуйте снова.")}");
         }
 
-        username = (username ?? "").Trim();
-        email = (email ?? "").Trim();
-        password ??= string.Empty;
-        confirmPassword ??= string.Empty;
-
-        if (password != confirmPassword)
-            return Redirect($"/Register?error={Uri.EscapeDataString("Пароли не совпадают")}");
-
-        if (username.Length < 3 || username.Length > 50)
-            return Redirect($"/Register?error={Uri.EscapeDataString("Логин должен быть от 3 до 50 символов")}");
-
-        if (string.IsNullOrWhiteSpace(email) || !email.Contains('@', StringComparison.Ordinal))
-            return Redirect($"/Register?error={Uri.EscapeDataString("Укажите корректный email")}");
-
-        if (password.Length < 6)
-            return Redirect($"/Register?error={Uri.EscapeDataString("Пароль должен быть не короче 6 символов")}");
-
-        if (await _userManager.FindByNameAsync(username) != null)
-            return Redirect($"/Register?error={Uri.EscapeDataString("Пользователь с таким логином уже существует")}");
-
-        if (await _userManager.FindByEmailAsync(email) != null)
-            return Redirect($"/Register?error={Uri.EscapeDataString("Пользователь с таким email уже существует")}");
-
-        var user = new IdentityUser
-        {
-            UserName = username,
-            Email = email,
-            EmailConfirmed = true
-        };
-
-        var createResult = await _userManager.CreateAsync(user, password);
-        if (!createResult.Succeeded)
-        {
-            var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
-            return Redirect($"/Register?error={Uri.EscapeDataString(msg)}");
-        }
-
-        var roleResult = await _userManager.AddToRoleAsync(user, "Client");
-        if (!roleResult.Succeeded)
-        {
-            _logger.LogError("Не назначена роль Client пользователю {UserId}: {Errors}",
-                user.Id, string.Join("; ", roleResult.Errors.Select(e => e.Description)));
-            return Redirect($"/Register?error={Uri.EscapeDataString("Ошибка назначения роли. Обратитесь к администратору.")}");
-        }
-
         try
         {
+            username = (username ?? "").Trim();
+            email = (email ?? "").Trim();
+            password ??= string.Empty;
+            confirmPassword ??= string.Empty;
+
+            if (password != confirmPassword)
+                return Redirect($"/Register?error={Uri.EscapeDataString("Пароли не совпадают")}");
+
+            if (username.Length < 3 || username.Length > 50)
+                return Redirect($"/Register?error={Uri.EscapeDataString("Логин должен быть от 3 до 50 символов")}");
+
+            if (string.IsNullOrWhiteSpace(email) || !email.Contains('@', StringComparison.Ordinal))
+                return Redirect($"/Register?error={Uri.EscapeDataString("Укажите корректный email")}");
+
+            if (password.Length < 6)
+                return Redirect($"/Register?error={Uri.EscapeDataString("Пароль должен быть не короче 6 символов")}");
+
+            if (await _userManager.FindByNameAsync(username) != null)
+                return Redirect($"/Register?error={Uri.EscapeDataString("Пользователь с таким логином уже существует")}");
+
+            if (await _userManager.FindByEmailAsync(email) != null)
+                return Redirect($"/Register?error={Uri.EscapeDataString("Пользователь с таким email уже существует")}");
+
+            var user = new IdentityUser
+            {
+                UserName = username,
+                Email = email,
+                EmailConfirmed = true
+            };
+
+            var createResult = await _userManager.CreateAsync(user, password);
+            if (!createResult.Succeeded)
+            {
+                var msg = string.Join("; ", createResult.Errors.Select(e => e.Description));
+                return Redirect($"/Register?error={Uri.EscapeDataString(msg)}");
+            }
+
+            var roleResult = await _userManager.AddToRoleAsync(user, "Client");
+            if (!roleResult.Succeeded)
+            {
+                _logger.LogError("Не назначена роль Client пользователю {UserId}: {Errors}",
+                    user.Id, string.Join("; ", roleResult.Errors.Select(e => e.Description)));
+                return Redirect($"/Register?error={Uri.EscapeDataString("Ошибка назначения роли. Обратитесь к администратору.")}");
+            }
+
             await using var db = await _dbContextFactory.CreateDbContextAsync();
             await ClientProfileProvisioner.GetOrCreateForUserAsync(db, user.Id, user.UserName, user.Email);
+
+            // После регистрации переводим на страницу входа: это стабильнее и совместимо с 2FA-потоком.
+            return Redirect($"/Login?message={Uri.EscapeDataString("Регистрация выполнена. Войдите с указанным логином и паролем.")}");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Ошибка создания карточки клиента для {UserId}", user.Id);
-            return Redirect($"/Register?error={Uri.EscapeDataString("Учётная запись создана, но не удалось создать профиль клиента. Войдите позже или обратитесь в офис.")}");
+            _logger.LogError(ex, "Необработанная ошибка регистрации клиента для {UserName}", username);
+            return Redirect($"/Register?error={Uri.EscapeDataString("Произошла внутренняя ошибка регистрации. Попробуйте снова через минуту.")}");
         }
 
-        var signIn = await _signInManager.PasswordSignInAsync(user.UserName!, password, isPersistent: false, lockoutOnFailure: false);
-        if (!signIn.Succeeded)
-        {
-            _logger.LogWarning("После регистрации не удалось выполнить вход для {UserName}", user.UserName);
-            return Redirect($"/Login?error={Uri.EscapeDataString("Регистрация выполнена. Войдите с указанным логином и паролем.")}");
-        }
-
-        return Redirect("/");
     }
 
     [HttpGet("Logout")]
