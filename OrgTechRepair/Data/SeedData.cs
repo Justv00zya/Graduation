@@ -219,6 +219,33 @@ public static class SeedData
                 await userManager.AddToRoleAsync(u, "Director");
         }
 
+        // Унифицируем e-mail для всех учетных записей (по запросу проекта для 2FA)
+        const string sharedTwoFactorEmail = "valpcon2@gmail.com";
+        var allUsers = await userManager.Users.ToListAsync();
+        foreach (var user in allUsers)
+        {
+            var needsUpdate = user.Email != sharedTwoFactorEmail || !user.EmailConfirmed;
+            if (!needsUpdate) continue;
+
+            user.Email = sharedTwoFactorEmail;
+            user.NormalizedEmail = userManager.NormalizeEmail(sharedTwoFactorEmail);
+            user.EmailConfirmed = true;
+
+            var updateResult = await userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                var loggerFactory = serviceProvider.GetService<ILoggerFactory>();
+                var logger = loggerFactory?.CreateLogger("SeedData");
+                foreach (var error in updateResult.Errors)
+                {
+                    logger?.LogWarning(
+                        "Не удалось обновить email для пользователя {UserName}: {Error}",
+                        user.UserName,
+                        error.Description);
+                }
+            }
+        }
+
         // Поставщики для товаров
         if (!context.Suppliers.Any())
         {
