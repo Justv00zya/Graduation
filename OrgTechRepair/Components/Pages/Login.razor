@@ -68,9 +68,8 @@
                             <div class="captcha-box">
                                 <div class="cf-turnstile"
                                      data-sitekey="@captchaSiteKey"
-                                     data-callback="onTurnstileSuccess"
-                                     data-expired-callback="onTurnstileExpired"
-                                     data-error-callback="onTurnstileError"></div>
+                                     data-response-field="true"
+                                     data-response-field-name="captchaToken"></div>
                             </div>
                         }
                         else if (!string.IsNullOrWhiteSpace(captchaQuestion))
@@ -99,21 +98,6 @@
     </div>
 
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
-<script>
-  window.onTurnstileSuccess = function(token) {
-    const input = document.getElementById('captchaToken');
-    if (input) input.value = token;
-  };
-  window.onTurnstileExpired = function() {
-    const input = document.getElementById('captchaToken');
-    if (input) input.value = '';
-  };
-  window.onTurnstileError = function() {
-    const input = document.getElementById('captchaToken');
-    if (input) input.value = '';
-  };
-</script>
-
 @code {
     private string? errorMessage;
     private string? returnUrl;

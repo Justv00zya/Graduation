@@ -59,6 +59,7 @@ public class AccountController : Controller
         string? captchaId,
         string? captchaAnswer,
         string? captchaToken,
+        [FromForm(Name = "cf-turnstile-response")] string? turnstileResponse,
         string? returnUrl = null)
     {
         try
@@ -78,7 +79,8 @@ public class AccountController : Controller
             return Redirect($"/Login?error={Uri.EscapeDataString("Укажите логин/email и пароль")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
         
-        if (_captchaEnabled && !await IsCaptchaValidAsync(captchaId, captchaAnswer, captchaToken, HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.RequestAborted))
+        var effectiveCaptchaToken = string.IsNullOrWhiteSpace(captchaToken) ? turnstileResponse : captchaToken;
+        if (_captchaEnabled && !await IsCaptchaValidAsync(captchaId, captchaAnswer, effectiveCaptchaToken, HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.RequestAborted))
         {
             return Redirect($"/Login?error={Uri.EscapeDataString("Неверная капча")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
