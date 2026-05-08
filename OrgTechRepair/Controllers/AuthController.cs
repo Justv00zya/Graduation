@@ -238,6 +238,42 @@ public class AuthController : ControllerBase
         });
     }
 
+    [HttpPost("resend-2fa")]
+    [AllowAnonymous]
+    public async Task<ActionResult> ResendTwoFactor([FromBody] ResendTwoFactorRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.ChallengeId))
+            return BadRequest(new { message = "Неверный запрос 2FA." });
+
+        if (!_cache.TryGetValue<PendingTwoFactorLogin>($"2fa:{request.ChallengeId}", out var pending) || pending == null)
+            return BadRequest(new { message = "Код 2FA истёк или недействителен." });
+
+        if (_cache.TryGetValue<DateTimeOffset>($"2fa:resend:{request.ChallengeId}", out var nextResendAt))
+        {
+            var waitSeconds = (int)Math.Ceiling((nextResendAt - DateTimeOffset.UtcNow).TotalSeconds);
+            if (waitSeconds > 0)
+            {
+                return BadRequest(new { message = $"Повторная отправка доступна через {waitSeconds} сек.", resendAfterSeconds = waitSeconds });
+            }
+        }
+
+        var user = await _userManager.FindByIdAsync(pending.UserId);
+        if (user == null || string.IsNullOrWhiteSpace(user.Email))
+            return BadRequest(new { message = "Пользователь не найден или email не указан." });
+
+        var newCode = Random.Shared.Next(100000, 1000000).ToString();
+        pending.Code = newCode;
+        _cache.Set($"2fa:{request.ChallengeId}", pending, TimeSpan.FromMinutes(5));
+        _cache.Set($"2fa:resend:{request.ChallengeId}", DateTimeOffset.UtcNow.AddSeconds(45), TimeSpan.FromMinutes(5));
+
+        if (_emailSender != null)
+            QueueTwoFactorEmail(user.Email, newCode, user.UserName);
+        else
+            _logger.LogWarning("2FA код (повтор) для {UserName}: {Code}", user.UserName, newCode);
+
+        return Ok(new { message = "Код подтверждения отправлен повторно.", resendAfterSeconds = 45 });
+    }
+
     [HttpPost("2fa/setup-authenticator")]
     [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
     public async Task<ActionResult<AuthenticatorSetupResponse>> SetupAuthenticator()
@@ -483,6 +519,11 @@ public class AuthController : ControllerBase
         public string ChallengeId { get; set; } = string.Empty;
         public string Code { get; set; } = string.Empty;
         public string? Method { get; set; }
+    }
+
+    public class ResendTwoFactorRequest
+    {
+        public string ChallengeId { get; set; } = string.Empty;
     }
 
     public class AuthenticatorSetupResponse
