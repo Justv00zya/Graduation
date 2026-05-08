@@ -198,8 +198,16 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add authentication state provider for Blazor Server
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider>();
 
-// Add Email Sender (для разработки - выводит в логи, в продакшене замените на реальную реализацию)
-builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.DevelopmentEmailSender>();
+// Add Email Sender (SMTP в проде, логгер-почта в dev/fallback)
+var smtpEnabled = builder.Configuration.GetValue<bool?>("Email:Smtp:Enabled") ?? false;
+if (smtpEnabled)
+{
+    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.SmtpEmailSender>();
+}
+else
+{
+    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.DevelopmentEmailSender>();
+}
 builder.Services.AddScoped<OrgTechRepair.Services.IOrderPdfService, OrgTechRepair.Services.OrderPdfService>();
 builder.Services.AddHttpClient<OrgTechRepair.Services.ICaptchaVerifier, OrgTechRepair.Services.TurnstileCaptchaVerifier>();
 
