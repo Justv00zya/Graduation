@@ -157,7 +157,7 @@
             var hint = document.getElementById("resendCodeHint");
             if (!button || !hint) return;
 
-            var secondsLeft = 45;
+            var secondsLeft = @twoFactorResendCooldownSeconds;
             var tick = function () {
                 if (secondsLeft <= 0) {
                     button.disabled = false;
@@ -185,6 +185,7 @@
     private string? captchaQuestion;
     private bool useExternalCaptcha;
     private string? captchaSiteKey;
+    private int twoFactorResendCooldownSeconds = 30;
 
     protected override void OnInitialized()
     {
@@ -209,6 +210,7 @@
 
         useExternalCaptcha = (Configuration["Security:Captcha:UseExternal"]?.ToLowerInvariant() == "true");
         captchaSiteKey = Configuration["Security:Captcha:SiteKey"];
+        twoFactorResendCooldownSeconds = Math.Clamp(Configuration.GetValue<int?>("Security:TwoFactor:ResendCooldownSeconds") ?? 30, 5, 300);
 
         if (!isTwoFactorStep)
         {

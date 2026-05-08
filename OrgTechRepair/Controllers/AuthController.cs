@@ -33,6 +33,8 @@ public class AuthController : ControllerBase
     private readonly bool _externalCaptchaEnabled;
     private readonly bool _allowLocalCaptchaFallback;
     private readonly bool _totpFallbackEnabled;
+    private readonly int _twoFactorCodeTtlMinutes;
+    private readonly int _twoFactorResendCooldownSeconds;
 
     public AuthController(
         UserManager<IdentityUser> userManager,
@@ -57,6 +59,8 @@ public class AuthController : ControllerBase
         _externalCaptchaEnabled = _configuration.GetValue<bool?>("Security:Captcha:UseExternal") ?? true;
         _allowLocalCaptchaFallback = _configuration.GetValue<bool?>("Security:Captcha:AllowLocalFallback") ?? true;
         _totpFallbackEnabled = _configuration.GetValue<bool?>("Security:TwoFactor:EnableAuthenticatorFallback") ?? true;
+        _twoFactorCodeTtlMinutes = Math.Clamp(_configuration.GetValue<int?>("Security:TwoFactor:CodeTtlMinutes") ?? 10, 1, 30);
+        _twoFactorResendCooldownSeconds = Math.Clamp(_configuration.GetValue<int?>("Security:TwoFactor:ResendCooldownSeconds") ?? 30, 5, 300);
     }
 
     [HttpGet("captcha-config")]
@@ -150,7 +154,7 @@ public class AuthController : ControllerBase
                     UserId = user.Id,
                     Code = code
                 },
-                TimeSpan.FromMinutes(5));
+                TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
             if (_emailSender != null)
             {
@@ -263,15 +267,18 @@ public class AuthController : ControllerBase
 
         var newCode = Random.Shared.Next(100000, 1000000).ToString();
         pending.Code = newCode;
-        _cache.Set($"2fa:{request.ChallengeId}", pending, TimeSpan.FromMinutes(5));
-        _cache.Set($"2fa:resend:{request.ChallengeId}", DateTimeOffset.UtcNow.AddSeconds(45), TimeSpan.FromMinutes(5));
+        _cache.Set($"2fa:{request.ChallengeId}", pending, TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
+        _cache.Set(
+            $"2fa:resend:{request.ChallengeId}",
+            DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
+            TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
         if (_emailSender != null)
             QueueTwoFactorEmail(user.Email, newCode, user.UserName);
         else
             _logger.LogWarning("2FA код (повтор) для {UserName}: {Code}", user.UserName, newCode);
 
-        return Ok(new { message = "Код подтверждения отправлен повторно.", resendAfterSeconds = 45 });
+        return Ok(new { message = "Код подтверждения отправлен повторно.", resendAfterSeconds = _twoFactorResendCooldownSeconds });
     }
 
     [HttpPost("2fa/setup-authenticator")]

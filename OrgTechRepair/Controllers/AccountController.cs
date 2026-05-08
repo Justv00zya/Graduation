@@ -22,6 +22,8 @@ public class AccountController : Controller
     private readonly IEmailSender? _emailSender;
     private readonly bool _captchaEnabled;
     private readonly bool _twoFactorEnabled;
+    private readonly int _twoFactorCodeTtlMinutes;
+    private readonly int _twoFactorResendCooldownSeconds;
     private readonly bool _externalCaptchaEnabled;
     private readonly bool _allowLocalCaptchaFallback;
     private readonly ICaptchaVerifier _captchaVerifier;
@@ -46,6 +48,8 @@ public class AccountController : Controller
         _emailSender = emailSender;
         _captchaEnabled = configuration.GetValue<bool?>("Security:Captcha:Enabled") ?? true;
         _twoFactorEnabled = configuration.GetValue<bool?>("Security:TwoFactor:Enabled") ?? true;
+        _twoFactorCodeTtlMinutes = Math.Clamp(configuration.GetValue<int?>("Security:TwoFactor:CodeTtlMinutes") ?? 10, 1, 30);
+        _twoFactorResendCooldownSeconds = Math.Clamp(configuration.GetValue<int?>("Security:TwoFactor:ResendCooldownSeconds") ?? 30, 5, 300);
         _externalCaptchaEnabled = configuration.GetValue<bool?>("Security:Captcha:UseExternal") ?? true;
         _allowLocalCaptchaFallback = configuration.GetValue<bool?>("Security:Captcha:AllowLocalFallback") ?? true;
         _captchaVerifier = captchaVerifier;
@@ -114,8 +118,11 @@ public class AccountController : Controller
                     RememberMe = rememberMe,
                     ReturnUrl = returnUrl
                 },
-                TimeSpan.FromMinutes(5));
-            _cache.Set($"web2fa:resend:{challengeId}", DateTimeOffset.UtcNow.AddSeconds(45), TimeSpan.FromMinutes(5));
+                TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
+            _cache.Set(
+                $"web2fa:resend:{challengeId}",
+                DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
+                TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
             if (_emailSender != null)
                 QueueTwoFactorEmail(user.Email, code, user.UserName);
@@ -224,8 +231,11 @@ public class AccountController : Controller
 
         var newCode = Random.Shared.Next(100000, 1000000).ToString();
         pending.Code = newCode;
-        _cache.Set($"web2fa:{challengeId}", pending, TimeSpan.FromMinutes(5));
-        _cache.Set($"web2fa:resend:{challengeId}", DateTimeOffset.UtcNow.AddSeconds(45), TimeSpan.FromMinutes(5));
+        _cache.Set($"web2fa:{challengeId}", pending, TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
+        _cache.Set(
+            $"web2fa:resend:{challengeId}",
+            DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
+            TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
         if (_emailSender != null)
             QueueTwoFactorEmail(user.Email, newCode, user.UserName);
