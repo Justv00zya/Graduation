@@ -1,8 +1,12 @@
-using System.Net;
-using System.Net.Mail;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
 
 namespace OrgTechRepair.Services;
 
+/// <summary>
+/// SMTP через MailKit: <see cref="System.Net.Mail.SmtpClient"/> на Linux/с Brevo иногда шлёт MAIL до AUTH (5.7.0 Please authenticate first).
+/// </summary>
 public sealed class SmtpEmailSender : IEmailSender
 {
     private readonly IConfiguration _configuration;
@@ -45,7 +49,6 @@ public sealed class SmtpEmailSender : IEmailSender
         var fromName = _configuration["Email:Smtp:FromName"] ?? "OrgTechRepair";
         var enableSsl = _configuration.GetValue<bool?>("Email:Smtp:EnableSsl") ?? true;
         var timeoutSeconds = _configuration.GetValue<int?>("Email:Smtp:TimeoutSeconds") ?? 15;
-        var timeoutMilliseconds = Math.Max(5, timeoutSeconds) * 1000;
 
         if (string.IsNullOrWhiteSpace(host) ||
             string.IsNullOrWhiteSpace(username) ||
@@ -56,26 +59,23 @@ public sealed class SmtpEmailSender : IEmailSender
             return false;
         }
 
+        var message = new MimeMessage();
+        message.From.Add(new MailboxAddress(fromName, fromEmail));
+        message.To.Add(MailboxAddress.Parse(toEmail));
+        message.Subject = subject;
+        message.Body = new TextPart("plain") { Text = body };
+
         try
         {
-            using var message = new MailMessage
-            {
-                From = new MailAddress(fromEmail, fromName),
-                Subject = subject,
-                Body = body,
-                IsBodyHtml = false
-            };
-            message.To.Add(toEmail);
+            using var client = new SmtpClient();
 
-            using var client = new SmtpClient(host, port)
-            {
-                EnableSsl = enableSsl,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(username, password),
-                Timeout = timeoutMilliseconds
-            };
+            client.Timeout = Math.Max(5, timeoutSeconds) * 1000;
 
-            await client.SendMailAsync(message);
+            await client.ConnectAsync(host, port, ResolveSecureSocketOptions(port, enableSsl));
+            await client.AuthenticateAsync(username, password);
+            await client.SendAsync(message);
+            await client.DisconnectAsync(true);
+
             return true;
         }
         catch (Exception ex)
@@ -83,5 +83,14 @@ public sealed class SmtpEmailSender : IEmailSender
             _logger.LogError(ex, "SMTP email send failed to {Email}", toEmail);
             return false;
         }
+    }
+
+    private static SecureSocketOptions ResolveSecureSocketOptions(int port, bool enableSsl)
+    {
+        // 465 — implicit TLS; иначе при enableSsl используем STARTTLS (587/2525 для Brevo и др.)
+        if (!enableSsl)
+            return SecureSocketOptions.None;
+
+        return port == 465 ? SecureSocketOptions.SslOnConnect : SecureSocketOptions.StartTls;
     }
 }
