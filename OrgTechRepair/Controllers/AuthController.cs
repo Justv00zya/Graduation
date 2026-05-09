@@ -156,14 +156,7 @@ public class AuthController : ControllerBase
                 },
                 TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-            if (_emailSender != null)
-            {
-                QueueTwoFactorEmail(user.Email, code, user.UserName);
-            }
-            else
-            {
-                _logger.LogWarning("2FA код для {UserName}: {Code}", user.UserName, code);
-            }
+            await SendApiTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
 
             var methods = new List<string> { "email" };
             var authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
@@ -273,10 +266,7 @@ public class AuthController : ControllerBase
             DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
             TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-        if (_emailSender != null)
-            QueueTwoFactorEmail(user.Email, newCode, user.UserName);
-        else
-            _logger.LogWarning("2FA код (повтор) для {UserName}: {Code}", user.UserName, newCode);
+        await SendApiTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
 
         return Ok(new { message = "Код подтверждения отправлен повторно.", resendAfterSeconds = _twoFactorResendCooldownSeconds });
     }
@@ -602,23 +592,30 @@ public class AuthController : ControllerBase
         return string.Equals(expected.Trim(), captchaAnswer.Trim(), StringComparison.Ordinal);
     }
 
-    private void QueueTwoFactorEmail(string email, string code, string? userName)
+    /// <summary>
+    /// Отправка 2FA в том же запросе: иначе scoped HttpClient из IEmailSender оказывается disposed после Task.Run.
+    /// </summary>
+    private async Task SendApiTwoFactorEmailOrLogAsync(string email, string code, string? userName, bool isResend = false)
     {
-        _ = Task.Run(async () =>
+        if (_emailSender == null)
         {
-            try
-            {
-                var sent = await _emailSender!.SendTwoFactorCodeAsync(email, code);
-                if (!sent)
-                {
-                    _logger.LogWarning("Не удалось отправить 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка фоновой отправки 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
-            }
-        });
+            _logger.LogWarning(
+                isResend ? "2FA код (повтор) для {UserName}: {Code}" : "2FA код для {UserName}: {Code}",
+                userName,
+                code);
+            return;
+        }
+
+        try
+        {
+            var sent = await _emailSender.SendTwoFactorCodeAsync(email, code);
+            if (!sent)
+                _logger.LogWarning("Не удалось отправить 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка отправки 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
+        }
     }
 
     private sealed class PendingTwoFactorLogin

@@ -124,10 +124,7 @@ public class AccountController : Controller
                 DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
                 TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-            if (_emailSender != null)
-                QueueTwoFactorEmail(user.Email, code, user.UserName);
-            else
-                _logger.LogWarning("WEB 2FA код для {UserName}: {Code}", user.UserName, code);
+            await SendWebTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
 
             var twoFactorUrl =
                 $"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}" +
@@ -237,10 +234,7 @@ public class AccountController : Controller
             DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
             TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-        if (_emailSender != null)
-            QueueTwoFactorEmail(user.Email, newCode, user.UserName);
-        else
-            _logger.LogWarning("WEB 2FA код (повтор) для {UserName}: {Code}", user.UserName, newCode);
+        await SendWebTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
 
         return Redirect($"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}&message={Uri.EscapeDataString("Код отправлен повторно.")}");
     }
@@ -358,23 +352,30 @@ public class AccountController : Controller
         return string.Equals(expected.Trim(), captchaAnswer.Trim(), StringComparison.Ordinal);
     }
 
-    private void QueueTwoFactorEmail(string email, string code, string? userName)
+    /// <summary>
+    /// Отправка 2FA только в рамках запроса: scoped HttpClient нельзя использовать из Task.Run после dispose scope.
+    /// </summary>
+    private async Task SendWebTwoFactorEmailOrLogAsync(string email, string code, string? userName, bool isResend = false)
     {
-        _ = Task.Run(async () =>
+        if (_emailSender == null)
         {
-            try
-            {
-                var sent = await _emailSender!.SendTwoFactorCodeAsync(email, code);
-                if (!sent)
-                {
-                    _logger.LogWarning("Не удалось отправить WEB 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Ошибка фоновой отправки WEB 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
-            }
-        });
+            _logger.LogWarning(
+                isResend ? "WEB 2FA код (повтор) для {UserName}: {Code}" : "WEB 2FA код для {UserName}: {Code}",
+                userName,
+                code);
+            return;
+        }
+
+        try
+        {
+            var sent = await _emailSender.SendTwoFactorCodeAsync(email, code);
+            if (!sent)
+                _logger.LogWarning("Не удалось отправить WEB 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Ошибка отправки WEB 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
+        }
     }
 
     private sealed class PendingWebTwoFactor
