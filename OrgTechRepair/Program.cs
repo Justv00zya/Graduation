@@ -198,10 +198,13 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add authentication state provider for Blazor Server
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider>();
 
-// Почта: Brevo API (HTTPS) при блокировке SMTP на хостинге; иначе SMTP; иначе вывод в логи
+// Почта: Brevo API (HTTPS) при блокировке SMTP на хостинге; иначе SMTP; иначе вывод в логи.
+// Если API-ключ Brevo задан, автоматически выбираем API-провайдер даже при забытом флаге Enabled.
 var brevoApiEnabled = builder.Configuration.GetValue<bool?>("Email:Brevo:Enabled") ?? false;
+var brevoApiKey = builder.Configuration["Email:Brevo:ApiKey"];
+var useBrevoApi = brevoApiEnabled || !string.IsNullOrWhiteSpace(brevoApiKey);
 var smtpEnabled = builder.Configuration.GetValue<bool?>("Email:Smtp:Enabled") ?? false;
-if (brevoApiEnabled)
+if (useBrevoApi)
 {
     builder.Services.AddHttpClient<OrgTechRepair.Services.BrevoTransactionalEmailSender>((sp, client) =>
     {
