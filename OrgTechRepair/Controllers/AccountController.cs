@@ -124,11 +124,16 @@ public class AccountController : Controller
                 DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
                 TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-            await SendWebTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
+            var emailSent = await SendWebTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
 
             var twoFactorUrl =
                 $"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}" +
                 $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}";
+            if (!emailSent)
+            {
+                twoFactorUrl += "&message=" + Uri.EscapeDataString(
+                    "Почта не настроена на сервере. Код сохранён в файл OrgTechRepair-2FA-last.txt на рабочем столе этого ПК.");
+            }
             return Redirect(twoFactorUrl);
         }
 
@@ -233,9 +238,12 @@ public class AccountController : Controller
             DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
             TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-        await SendWebTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
+        var resent = await SendWebTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
+        var resendMsg = resent
+            ? "Код отправлен повторно."
+            : "Повторный код сохранён в OrgTechRepair-2FA-last.txt на рабочем столе (SMTP не настроен).";
 
-        return Redirect($"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}&message={Uri.EscapeDataString("Код отправлен повторно.")}");
+        return Redirect($"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}&message={Uri.EscapeDataString(resendMsg)}");
     }
 
     /// <summary>Регистрация клиента: запись в БД (AspNetUsers + роль + карточка Client) и вход в ту же сессию, что и /Account/Login.</summary>
@@ -366,7 +374,7 @@ public class AccountController : Controller
     /// <summary>
     /// Отправка 2FA только в рамках запроса: scoped HttpClient нельзя использовать из Task.Run после dispose scope.
     /// </summary>
-    private async Task SendWebTwoFactorEmailOrLogAsync(string email, string code, string? userName, bool isResend = false)
+    private async Task<bool> SendWebTwoFactorEmailOrLogAsync(string email, string code, string? userName, bool isResend = false)
     {
         if (_emailSender == null)
         {
@@ -374,7 +382,7 @@ public class AccountController : Controller
                 isResend ? "WEB 2FA код (повтор) для {UserName}: {Code}" : "WEB 2FA код для {UserName}: {Code}",
                 userName,
                 code);
-            return;
+            return false;
         }
 
         try
@@ -382,10 +390,12 @@ public class AccountController : Controller
             var sent = await _emailSender.SendTwoFactorCodeAsync(email, code);
             if (!sent)
                 _logger.LogWarning("Не удалось отправить WEB 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
+            return sent;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка отправки WEB 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
+            return false;
         }
     }
 

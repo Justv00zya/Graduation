@@ -10,6 +10,8 @@ _tmp_build/
 ## Local user files
 **/*.user
 **/*.suo
+**/appsettings.Local.json
+**/.data-protection-keys/
 
 ## Local database / logs
 **/*.db

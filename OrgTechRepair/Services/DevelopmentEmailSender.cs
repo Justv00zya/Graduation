@@ -3,8 +3,7 @@ using Microsoft.Extensions.Logging;
 namespace OrgTechRepair.Services;
 
 /// <summary>
-/// Реализация IEmailSender для разработки (выводит ссылки в консоль/логи)
-/// В продакшене замените на реальную реализацию (SMTP, SendGrid, и т.д.)
+/// Резервный отправитель: пишет письма в лог и на рабочий стол (когда SMTP/Brevo не настроены).
 /// </summary>
 public class DevelopmentEmailSender : IEmailSender
 {
@@ -17,35 +16,53 @@ public class DevelopmentEmailSender : IEmailSender
 
     public Task<bool> SendPasswordResetEmailAsync(string email, string resetLink)
     {
-        _logger.LogInformation("=== EMAIL (Development Mode) ===");
-        _logger.LogInformation("To: {Email}", email);
-        _logger.LogInformation("Subject: Восстановление пароля");
-        _logger.LogInformation("Body: Для восстановления пароля перейдите по ссылке: {ResetLink}", resetLink);
-        _logger.LogInformation("================================");
-        
-        // В продакшене здесь должна быть реальная отправка email
-        return Task.FromResult(true);
+        LogDevEmail(email, "Восстановление пароля", $"Ссылка: {resetLink}");
+        return Task.FromResult(false);
     }
 
     public Task<bool> SendEmailConfirmationAsync(string email, string confirmationLink)
     {
-        _logger.LogInformation("=== EMAIL (Development Mode) ===");
-        _logger.LogInformation("To: {Email}", email);
-        _logger.LogInformation("Subject: Подтверждение email адреса");
-        _logger.LogInformation("Body: Для подтверждения email перейдите по ссылке: {ConfirmationLink}", confirmationLink);
-        _logger.LogInformation("================================");
-        
-        // В продакшене здесь должна быть реальная отправка email
-        return Task.FromResult(true);
+        LogDevEmail(email, "Подтверждение email", $"Ссылка: {confirmationLink}");
+        return Task.FromResult(false);
     }
 
     public Task<bool> SendTwoFactorCodeAsync(string email, string code)
     {
-        _logger.LogInformation("=== EMAIL (Development Mode) ===");
-        _logger.LogInformation("To: {Email}", email);
-        _logger.LogInformation("Subject: Код подтверждения входа");
-        _logger.LogInformation("Body: Ваш код подтверждения: {Code}", code);
-        _logger.LogInformation("================================");
-        return Task.FromResult(true);
+        LogDevEmail(email, "Код подтверждения входа", $"Код: {code}");
+        WriteDesktopHint(email, code);
+        return Task.FromResult(false);
+    }
+
+    private void LogDevEmail(string to, string subject, string body)
+    {
+        _logger.LogWarning(
+            "Почта НЕ отправлена (SMTP/Brevo не настроены). To={Email}, Subject={Subject}, Body={Body}",
+            to,
+            subject,
+            body);
+    }
+
+    private void WriteDesktopHint(string email, string code)
+    {
+        try
+        {
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            if (string.IsNullOrWhiteSpace(desktop))
+                return;
+
+            var path = Path.Combine(desktop, "OrgTechRepair-2FA-last.txt");
+            var text =
+                $"Время (UTC): {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\r\n" +
+                $"Кому: {email}\r\n" +
+                $"Код 2FA: {code}\r\n\r\n" +
+                "Чтобы код приходил на почту, заполните Email:Smtp в appsettings.Local.json " +
+                "(см. appsettings.Local.json.example) и перезапустите сайт.\r\n";
+            File.WriteAllText(path, text);
+            _logger.LogWarning("Код 2FA записан на рабочий стол: {Path}", path);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Не удалось записать код 2FA на рабочий стол");
+        }
     }
 }

@@ -16,6 +16,9 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Локальные секреты (SMTP и т.д.) — не коммитить; см. appsettings.Local.json.example
+builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+
 var portFromEnv = Environment.GetEnvironmentVariable("PORT");
 var effectivePort = int.TryParse(portFromEnv, out var parsedPort) ? parsedPort : 5121;
 // На Render порт приходит через переменную PORT. Локально используем 5121.
@@ -404,6 +407,13 @@ using (var scope = app.Services.CreateScope())
 }
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
+var emailMode = useBrevoApi ? "Brevo API" : smtpEnabled ? "SMTP" : "Development (код 2FA → лог и файл OrgTechRepair-2FA-last.txt на рабочем столе)";
+logger.LogInformation("Режим отправки почты: {EmailMode}", emailMode);
+if (!useBrevoApi && !smtpEnabled)
+{
+    logger.LogWarning(
+        "SMTP/Brevo не настроены. Создайте OrgTechRepair/appsettings.Local.json по образцу appsettings.Local.json.example");
+}
 logger.LogInformation("Запуск сервера на http://0.0.0.0:{Port}", effectivePort);
 
 try
