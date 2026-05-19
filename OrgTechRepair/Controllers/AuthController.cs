@@ -55,9 +55,9 @@ public class AuthController : ControllerBase
         _captchaVerifier = captchaVerifier;
         _emailSender = emailSender;
         _twoFactorEnabled = _configuration.GetValue<bool?>("Security:TwoFactor:Enabled") ?? true;
-        _captchaEnabled = _configuration.GetValue<bool?>("Security:Captcha:Enabled") ?? true;
-        _externalCaptchaEnabled = _configuration.GetValue<bool?>("Security:Captcha:UseExternal") ?? true;
-        _allowLocalCaptchaFallback = _configuration.GetValue<bool?>("Security:Captcha:AllowLocalFallback") ?? true;
+        _captchaEnabled = CaptchaConfiguration.IsEnabled(_configuration);
+        _externalCaptchaEnabled = CaptchaConfiguration.UseExternalCaptcha(_configuration);
+        _allowLocalCaptchaFallback = CaptchaConfiguration.AllowLocalFallback(_configuration);
         _totpFallbackEnabled = _configuration.GetValue<bool?>("Security:TwoFactor:EnableAuthenticatorFallback") ?? true;
         _twoFactorCodeTtlMinutes = Math.Clamp(_configuration.GetValue<int?>("Security:TwoFactor:CodeTtlMinutes") ?? 10, 1, 30);
         _twoFactorResendCooldownSeconds = Math.Clamp(_configuration.GetValue<int?>("Security:TwoFactor:ResendCooldownSeconds") ?? 30, 5, 300);
@@ -67,13 +67,13 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public ActionResult<CaptchaConfigResponse> GetCaptchaConfig()
     {
-        var siteKey = _configuration["Security:Captcha:SiteKey"];
-        var useExternal = _captchaEnabled && _externalCaptchaEnabled && !string.IsNullOrWhiteSpace(siteKey);
+        var useExternal = _externalCaptchaEnabled;
+        var siteKey = useExternal ? _configuration["Security:Captcha:SiteKey"] : null;
         return Ok(new CaptchaConfigResponse
         {
             Enabled = _captchaEnabled,
             Mode = useExternal ? "external" : "local",
-            SiteKey = useExternal ? siteKey : null
+            SiteKey = siteKey
         });
     }
 
@@ -136,12 +136,13 @@ public class AuthController : ControllerBase
         }
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, request.Password, true);
-        if (!result.Succeeded)
-        {
-            return Unauthorized(new { message = "Неверный логин или пароль" });
-        }
+        if (result.IsLockedOut)
+            return Unauthorized(new { message = "Учётная запись заблокирована. Попробуйте позже." });
 
-        if (_twoFactorEnabled)
+        if (!result.Succeeded && !result.RequiresTwoFactor)
+            return Unauthorized(new { message = "Неверный логин или пароль" });
+
+        if ((result.Succeeded || result.RequiresTwoFactor) && _twoFactorEnabled)
         {
             if (string.IsNullOrWhiteSpace(user.Email))
                 return BadRequest(new { message = "Для 2FA у пользователя не указан email." });
@@ -154,6 +155,10 @@ public class AuthController : ControllerBase
                     UserId = user.Id,
                     Code = code
                 },
+                TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
+            _cache.Set(
+                $"2fa:resend:{challengeId}",
+                DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
                 TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
             await SendApiTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
@@ -365,10 +370,19 @@ public class AuthController : ControllerBase
     [AllowAnonymous]
     public async Task<ActionResult> RegisterPublic([FromBody] RegisterPublicRequest request)
     {
+        if (_captchaEnabled && !await IsCaptchaValidAsync(request, HttpContext.RequestAborted))
+            return BadRequest(new { message = "Неверная капча. Попробуйте снова." });
+
         if (request.Password != request.ConfirmPassword)
             return BadRequest(new { message = "Пароли не совпадают" });
 
-        if (await _userManager.FindByNameAsync(request.Username ?? "") != null)
+        request.Username = (request.Username ?? "").Trim();
+        request.Email = (request.Email ?? "").Trim();
+
+        if (request.Username.Length < 3 || request.Username.Length > 50)
+            return BadRequest(new { message = "Логин должен быть от 3 до 50 символов" });
+
+        if (await _userManager.FindByNameAsync(request.Username) != null)
             return BadRequest(new { message = "Пользователь с таким логином уже существует" });
 
         if (await _userManager.FindByEmailAsync(request.Email ?? "") != null)
@@ -398,6 +412,15 @@ public class AuthController : ControllerBase
             user.Id,
             user.UserName ?? request.Username,
             user.Email);
+
+        if (_twoFactorEnabled)
+        {
+            return Ok(new
+            {
+                message = "Регистрация выполнена. Войдите с указанным логином и паролем — код подтверждения придёт на email.",
+                requiresLogin = true
+            });
+        }
 
         var roles = await _userManager.GetRolesAsync(user);
         var token = GenerateJwtToken(user, roles);
@@ -553,6 +576,9 @@ public class AuthController : ControllerBase
         public string Email { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ConfirmPassword { get; set; } = string.Empty;
+        public string? CaptchaId { get; set; }
+        public string? CaptchaAnswer { get; set; }
+        public string? CaptchaToken { get; set; }
         /// <summary>Должно быть только Client (совместимость со старыми клиентами). Иное отклоняется.</summary>
         public string UserType { get; set; } = "Client";
     }
@@ -570,18 +596,26 @@ public class AuthController : ControllerBase
         public string ConfirmPassword { get; set; } = string.Empty;
     }
 
-    private async Task<bool> IsCaptchaValidAsync(LoginRequest request, CancellationToken cancellationToken)
+    private async Task<bool> IsCaptchaValidAsync(RegisterPublicRequest request, CancellationToken cancellationToken) =>
+        await IsCaptchaValidCoreAsync(request.CaptchaId, request.CaptchaAnswer, request.CaptchaToken, cancellationToken);
+
+    private async Task<bool> IsCaptchaValidAsync(LoginRequest request, CancellationToken cancellationToken) =>
+        await IsCaptchaValidCoreAsync(request.CaptchaId, request.CaptchaAnswer, request.CaptchaToken, cancellationToken);
+
+    private async Task<bool> IsCaptchaValidCoreAsync(
+        string? captchaId,
+        string? captchaAnswer,
+        string? captchaToken,
+        CancellationToken cancellationToken)
     {
-        if (_externalCaptchaEnabled && !string.IsNullOrWhiteSpace(request.CaptchaToken))
+        if (_externalCaptchaEnabled && !string.IsNullOrWhiteSpace(captchaToken))
         {
             var remoteIp = HttpContext.Connection.RemoteIpAddress?.ToString();
-            var externalOk = await _captchaVerifier.VerifyAsync(request.CaptchaToken, remoteIp, cancellationToken);
+            var externalOk = await _captchaVerifier.VerifyAsync(captchaToken, remoteIp, cancellationToken);
             if (externalOk) return true;
             if (!_allowLocalCaptchaFallback) return false;
         }
 
-        var captchaId = request.CaptchaId;
-        var captchaAnswer = request.CaptchaAnswer;
         if (string.IsNullOrWhiteSpace(captchaId) || string.IsNullOrWhiteSpace(captchaAnswer))
             return false;
 

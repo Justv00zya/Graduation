@@ -46,12 +46,12 @@ public class AccountController : Controller
         _dbContextFactory = dbContextFactory;
         _cache = cache;
         _emailSender = emailSender;
-        _captchaEnabled = configuration.GetValue<bool?>("Security:Captcha:Enabled") ?? true;
+        _captchaEnabled = CaptchaConfiguration.IsEnabled(configuration);
         _twoFactorEnabled = configuration.GetValue<bool?>("Security:TwoFactor:Enabled") ?? true;
         _twoFactorCodeTtlMinutes = Math.Clamp(configuration.GetValue<int?>("Security:TwoFactor:CodeTtlMinutes") ?? 10, 1, 30);
         _twoFactorResendCooldownSeconds = Math.Clamp(configuration.GetValue<int?>("Security:TwoFactor:ResendCooldownSeconds") ?? 30, 5, 300);
-        _externalCaptchaEnabled = configuration.GetValue<bool?>("Security:Captcha:UseExternal") ?? true;
-        _allowLocalCaptchaFallback = configuration.GetValue<bool?>("Security:Captcha:AllowLocalFallback") ?? true;
+        _externalCaptchaEnabled = CaptchaConfiguration.UseExternalCaptcha(configuration);
+        _allowLocalCaptchaFallback = CaptchaConfiguration.AllowLocalFallback(configuration);
         _captchaVerifier = captchaVerifier;
     }
 
@@ -102,7 +102,7 @@ public class AccountController : Controller
 
         var result = await _signInManager.CheckPasswordSignInAsync(user, password, lockoutOnFailure: true);
 
-        if (result.Succeeded && _twoFactorEnabled)
+        if ((result.Succeeded || result.RequiresTwoFactor) && _twoFactorEnabled)
         {
             if (string.IsNullOrWhiteSpace(user.Email))
                 return Redirect($"/Login?error={Uri.EscapeDataString("Для 2FA у пользователя не указан email")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
@@ -140,10 +140,6 @@ public class AccountController : Controller
         else if (result.IsLockedOut)
         {
             return Redirect($"/Login?error={Uri.EscapeDataString("Учетная запись заблокирована")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
-        }
-        else if (result.RequiresTwoFactor)
-        {
-            return Redirect($"/Login?error={Uri.EscapeDataString("Требуется двухфакторная аутентификация")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
         else
         {
@@ -186,7 +182,10 @@ public class AccountController : Controller
 
         _cache.Remove($"web2fa:{challengeId}");
         await _signInManager.SignInAsync(user, pending.RememberMe);
-        return Redirect(pending.ReturnUrl ?? returnUrl ?? "/");
+        var target = pending.ReturnUrl ?? returnUrl ?? "/";
+        if (!Url.IsLocalUrl(target))
+            target = "/";
+        return Redirect(target);
     }
 
     [HttpPost("ResendTwoFactorWeb")]
@@ -241,7 +240,15 @@ public class AccountController : Controller
 
     /// <summary>Регистрация клиента: запись в БД (AspNetUsers + роль + карточка Client) и вход в ту же сессию, что и /Account/Login.</summary>
     [HttpPost("Register")]
-    public async Task<IActionResult> RegisterClient(string username, string email, string password, string confirmPassword)
+    public async Task<IActionResult> RegisterClient(
+        string username,
+        string email,
+        string password,
+        string confirmPassword,
+        string? captchaId,
+        string? captchaAnswer,
+        string? captchaToken,
+        [FromForm(Name = "cf-turnstile-response")] string? turnstileResponse)
     {
         try
         {
@@ -258,6 +265,10 @@ public class AccountController : Controller
             email = (email ?? "").Trim();
             password ??= string.Empty;
             confirmPassword ??= string.Empty;
+
+            var effectiveCaptchaToken = string.IsNullOrWhiteSpace(captchaToken) ? turnstileResponse : captchaToken;
+            if (_captchaEnabled && !await IsCaptchaValidAsync(captchaId, captchaAnswer, effectiveCaptchaToken, HttpContext.Connection.RemoteIpAddress?.ToString(), HttpContext.RequestAborted))
+                return Redirect($"/Register?error={Uri.EscapeDataString("Неверная капча")}");
 
             if (password != confirmPassword)
                 return Redirect($"/Register?error={Uri.EscapeDataString("Пароли не совпадают")}");
@@ -325,7 +336,7 @@ public class AccountController : Controller
         {
             _logger.LogWarning(ex, "Ошибка при выходе");
         }
-        return Redirect("/Login");
+        return Redirect("/Login?message=" + Uri.EscapeDataString("Вы вышли из системы."));
     }
 
     private async Task<bool> IsCaptchaValidAsync(

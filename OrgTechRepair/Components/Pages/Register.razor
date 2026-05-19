@@ -2,9 +2,13 @@
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.Extensions.Caching.Memory
+@using OrgTechRepair.Services
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IAntiforgery Antiforgery
+@inject IMemoryCache MemoryCache
+@inject IConfiguration Configuration
 @inject AuthenticationStateProvider AuthenticationStateProvider
 
 <PageTitle>Регистрация</PageTitle>
@@ -18,8 +22,14 @@
                     <p class="text-muted small text-center mb-0">Учётные записи сотрудников создаёт администратор.</p>
                 </div>
                 <div class="card-body">
+                    @if (!string.IsNullOrEmpty(errorMessage))
+                    {
+                        <div class="alert alert-danger mb-3">@errorMessage</div>
+                    }
+
                     <form method="post" action="/Account/Register">
                         <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
+                        <input type="hidden" name="captchaId" value="@captchaId" />
 
                         <div class="mb-3">
                             <label class="form-label">Логин <span class="text-danger">*</span></label>
@@ -34,7 +44,7 @@
                         <div class="mb-3">
                             <label class="form-label">Пароль <span class="text-danger">*</span></label>
                             <input type="password" name="password" class="form-control" autocomplete="new-password" required minlength="6" />
-                            <small class="form-text text-muted">Минимум 6 символов (для учебного проекта допускаются простые пароли)</small>
+                            <small class="form-text text-muted">Минимум 6 символов</small>
                         </div>
 
                         <div class="mb-3">
@@ -42,13 +52,25 @@
                             <input type="password" name="confirmPassword" class="form-control" autocomplete="new-password" required minlength="6" />
                         </div>
 
+                        @if (captchaEnabled && useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey))
+                        {
+                            <div class="captcha-box mb-3">
+                                <div class="cf-turnstile"
+                                     data-sitekey="@captchaSiteKey"
+                                     data-response-field="true"
+                                     data-response-field-name="cf-turnstile-response"></div>
+                            </div>
+                        }
+                        else if (captchaEnabled && !string.IsNullOrWhiteSpace(captchaQuestion))
+                        {
+                            <div class="mb-3">
+                                <label class="form-label">Капча: @captchaQuestion</label>
+                                <input type="text" name="captchaAnswer" class="form-control" autocomplete="off" required />
+                            </div>
+                        }
+
                         <button type="submit" class="btn btn-primary w-100">Зарегистрироваться</button>
                     </form>
-
-                    @if (!string.IsNullOrEmpty(errorMessage))
-                    {
-                        <div class="alert alert-danger mt-3">@errorMessage</div>
-                    }
 
                     <div class="text-center mt-3">
                         <p>Уже есть аккаунт? <a href="/Login">Войти</a></p>
@@ -59,24 +81,39 @@
     </div>
 </div>
 
+@if (captchaEnabled && useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey))
+{
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+}
+
 @code {
     private string? errorMessage;
+    private string? captchaId;
+    private string? captchaQuestion;
+    private bool captchaEnabled;
+    private bool useExternalCaptcha;
+    private string? captchaSiteKey;
 
     protected override async Task OnInitializedAsync()
     {
         var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated == true)
         {
-            Navigation.NavigateTo("/", forceLoad: false);
+            Navigation.NavigateTo("/", forceLoad: true);
             return;
         }
 
         var uri = new Uri(Navigation.Uri);
         var query = QueryHelpers.ParseQuery(uri.Query);
         if (query.TryGetValue("error", out var err) && !string.IsNullOrEmpty(err))
-        {
             errorMessage = err.ToString();
-        }
+
+        captchaEnabled = CaptchaConfiguration.IsEnabled(Configuration);
+        useExternalCaptcha = CaptchaConfiguration.UseExternalCaptcha(Configuration);
+        captchaSiteKey = useExternalCaptcha ? Configuration["Security:Captcha:SiteKey"] : null;
+
+        if (captchaEnabled && !useExternalCaptcha)
+            CaptchaConfiguration.IssueLocalChallenge(MemoryCache, out captchaId, out captchaQuestion);
     }
 
     private string GetAntiforgeryToken()
@@ -90,3 +127,10 @@
         return string.Empty;
     }
 }
+
+<style>
+    .captcha-box {
+        display: flex;
+        justify-content: flex-start;
+    }
+</style>

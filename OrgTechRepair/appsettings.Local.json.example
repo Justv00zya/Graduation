@@ -1,0 +1,23 @@
+{
+  "Email": {
+    "Smtp": {
+      "Enabled": true,
+      "Host": "smtp.gmail.com",
+      "Port": 587,
+      "Username": "your@gmail.com",
+      "Password": "your-app-password",
+      "FromEmail": "your@gmail.com",
+      "FromName": "ВузяПринт",
+      "EnableSsl": true
+    }
+  },
+  "Security": {
+    "Captcha": {
+      "Enabled": true,
+      "UseExternal": false
+    },
+    "TwoFactor": {
+      "Enabled": true
+    }
+  }
+}

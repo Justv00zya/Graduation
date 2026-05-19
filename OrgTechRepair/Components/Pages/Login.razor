@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.WebUtilities
 @using Microsoft.AspNetCore.Antiforgery
 @using Microsoft.Extensions.Caching.Memory
+@using OrgTechRepair.Services
 @inject NavigationManager Navigation
 @inject IHttpContextAccessor HttpContextAccessor
 @inject IAntiforgery Antiforgery
@@ -29,6 +30,12 @@
 
                 @if (isTwoFactorStep)
                 {
+                    @if (captchaEnabled)
+                    {
+                        <div class="alert alert-secondary mb-3" role="status">
+                            Проверка «не робот» выполнена. Введите код из письма на ваш email.
+                        </div>
+                    }
                     <form method="post" action="/Account/VerifyTwoFactorWeb">
                         <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
@@ -73,7 +80,7 @@
                             <label class="form-check-label" for="rememberMe">Запомнить меня</label>
                         </div>
 
-                        @if (useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey))
+                        @if (captchaEnabled && useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey))
                         {
                             <div class="captcha-box">
                                 <div id="turnstile-widget"
@@ -87,7 +94,7 @@
                                      data-error-callback="onTurnstileError"></div>
                             </div>
                         }
-                        else if (!string.IsNullOrWhiteSpace(captchaQuestion))
+                        else if (captchaEnabled && !string.IsNullOrWhiteSpace(captchaQuestion))
                         {
                             <div class="mb-3">
                                 <label class="form-label">Капча: @captchaQuestion</label>
@@ -183,6 +190,7 @@
     private string? challengeId;
     private string? captchaId;
     private string? captchaQuestion;
+    private bool captchaEnabled;
     private bool useExternalCaptcha;
     private string? captchaSiteKey;
     private int twoFactorResendCooldownSeconds = 30;
@@ -208,20 +216,14 @@
         isTwoFactorStep = query.ContainsKey("twoFactor") && query["twoFactor"].ToString() == "1";
         challengeId = query.ContainsKey("challengeId") ? query["challengeId"].ToString() : null;
 
-        useExternalCaptcha = (Configuration["Security:Captcha:UseExternal"]?.ToLowerInvariant() == "true");
-        captchaSiteKey = Configuration["Security:Captcha:SiteKey"];
+        captchaEnabled = CaptchaConfiguration.IsEnabled(Configuration);
+        useExternalCaptcha = CaptchaConfiguration.UseExternalCaptcha(Configuration);
+        captchaSiteKey = useExternalCaptcha ? Configuration["Security:Captcha:SiteKey"] : null;
         twoFactorResendCooldownSeconds = Math.Clamp(Configuration.GetValue<int?>("Security:TwoFactor:ResendCooldownSeconds") ?? 30, 5, 300);
 
-        if (!isTwoFactorStep)
+        if (captchaEnabled && !useExternalCaptcha)
         {
-            if (!(useExternalCaptcha && !string.IsNullOrWhiteSpace(captchaSiteKey)))
-            {
-                var left = Random.Shared.Next(1, 10);
-                var right = Random.Shared.Next(1, 10);
-                captchaId = Guid.NewGuid().ToString("N");
-                captchaQuestion = $"{left} + {right} = ?";
-                MemoryCache.Set($"captcha:{captchaId}", (left + right).ToString(), TimeSpan.FromMinutes(3));
-            }
+            CaptchaConfiguration.IssueLocalChallenge(MemoryCache, out captchaId, out captchaQuestion);
         }
     }
 

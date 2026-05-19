@@ -30,7 +30,11 @@ var dataProtectionBuilder = builder.Services
     .AddDataProtection()
     .SetApplicationName("OrgTechRepair");
 var dataProtectionKeysPath = builder.Configuration["DataProtection:KeysPath"];
-if (string.IsNullOrWhiteSpace(dataProtectionKeysPath) && !builder.Environment.IsDevelopment())
+if (string.IsNullOrWhiteSpace(dataProtectionKeysPath) && builder.Environment.IsDevelopment())
+{
+    dataProtectionKeysPath = Path.Combine(builder.Environment.ContentRootPath, ".data-protection-keys");
+}
+else if (string.IsNullOrWhiteSpace(dataProtectionKeysPath) && !builder.Environment.IsDevelopment())
 {
     dataProtectionKeysPath = "/var/data/orgtechrepair-dpkeys";
 }
@@ -193,6 +197,11 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.LoginPath = "/Login";
     options.LogoutPath = "/Account/Logout";
     options.AccessDeniedPath = "/AccessDenied";
+    options.ExpireTimeSpan = TimeSpan.FromDays(14);
+    options.SlidingExpiration = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
 
 // Add authentication state provider for Blazor Server
@@ -203,7 +212,18 @@ builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuth
 var brevoApiEnabled = builder.Configuration.GetValue<bool?>("Email:Brevo:Enabled") ?? false;
 var brevoApiKey = builder.Configuration["Email:Brevo:ApiKey"];
 var useBrevoApi = brevoApiEnabled || !string.IsNullOrWhiteSpace(brevoApiKey);
-var smtpEnabled = builder.Configuration.GetValue<bool?>("Email:Smtp:Enabled") ?? false;
+var smtpUser = builder.Configuration["Email:Smtp:Username"];
+var smtpPass = builder.Configuration["Email:Smtp:Password"];
+var smtpFrom = builder.Configuration["Email:Smtp:FromEmail"];
+var smtpEnabledExplicit = builder.Configuration.GetValue<bool?>("Email:Smtp:Enabled") ?? false;
+var smtpConfigured = !string.IsNullOrWhiteSpace(smtpUser) &&
+                     !string.IsNullOrWhiteSpace(smtpPass) &&
+                     !string.IsNullOrWhiteSpace(smtpFrom);
+var smtpEnabled = smtpEnabledExplicit || smtpConfigured;
+
+builder.Services.AddScoped<OrgTechRepair.Services.SmtpEmailSender>();
+builder.Services.AddScoped<OrgTechRepair.Services.DevelopmentEmailSender>();
+
 if (useBrevoApi)
 {
     builder.Services.AddHttpClient<OrgTechRepair.Services.BrevoTransactionalEmailSender>((sp, client) =>
