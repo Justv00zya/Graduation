@@ -27,6 +27,8 @@ public class AccountController : Controller
     private readonly bool _externalCaptchaEnabled;
     private readonly bool _allowLocalCaptchaFallback;
     private readonly ICaptchaVerifier _captchaVerifier;
+    private readonly bool _smtpConfigured;
+    private readonly bool _brevoConfigured;
 
     public AccountController(
         UserManager<IdentityUser> userManager,
@@ -53,6 +55,8 @@ public class AccountController : Controller
         _externalCaptchaEnabled = CaptchaConfiguration.UseExternalCaptcha(configuration);
         _allowLocalCaptchaFallback = CaptchaConfiguration.AllowLocalFallback(configuration);
         _captchaVerifier = captchaVerifier;
+        _smtpConfigured = EmailConfiguration.IsSmtpConfigured(configuration);
+        _brevoConfigured = EmailConfiguration.IsBrevoConfigured(configuration);
     }
 
     [HttpPost("Login")]
@@ -131,8 +135,7 @@ public class AccountController : Controller
                 $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}";
             if (!emailSent)
             {
-                twoFactorUrl += "&message=" + Uri.EscapeDataString(
-                    "Почта не настроена на сервере. Код сохранён в файл OrgTechRepair-2FA-last.txt на рабочем столе этого ПК.");
+                twoFactorUrl += "&message=" + Uri.EscapeDataString(BuildTwoFactorEmailFailureMessage());
             }
             return Redirect(twoFactorUrl);
         }
@@ -241,7 +244,7 @@ public class AccountController : Controller
         var resent = await SendWebTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
         var resendMsg = resent
             ? "Код отправлен повторно."
-            : "Повторный код сохранён в OrgTechRepair-2FA-last.txt на рабочем столе (SMTP не настроен).";
+            : BuildTwoFactorEmailFailureMessage();
 
         return Redirect($"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}&message={Uri.EscapeDataString(resendMsg)}");
     }
@@ -382,6 +385,7 @@ public class AccountController : Controller
                 isResend ? "WEB 2FA код (повтор) для {UserName}: {Code}" : "WEB 2FA код для {UserName}: {Code}",
                 userName,
                 code);
+            WriteTwoFactorCodeToDesktop(email, code);
             return false;
         }
 
@@ -389,13 +393,53 @@ public class AccountController : Controller
         {
             var sent = await _emailSender.SendTwoFactorCodeAsync(email, code);
             if (!sent)
+            {
                 _logger.LogWarning("Не удалось отправить WEB 2FA код пользователю {UserName}. Резервный код: {Code}", userName, code);
+                WriteTwoFactorCodeToDesktop(email, code);
+            }
             return sent;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Ошибка отправки WEB 2FA кода пользователю {UserName}. Резервный код: {Code}", userName, code);
+            WriteTwoFactorCodeToDesktop(email, code);
             return false;
+        }
+    }
+
+    private string BuildTwoFactorEmailFailureMessage()
+    {
+        if (_smtpConfigured || _brevoConfigured)
+        {
+            return "Письмо не отправлено (ошибка SMTP на этом сервере). " +
+                   "Код сохранён в OrgTechRepair-2FA-last.txt на рабочем столе ПК, где запущен сайт.";
+        }
+
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
+        {
+            return "На Render не заданы переменные Email__Smtp__* (пароль приложения Gmail). " +
+                   "Добавьте их в Environment и сделайте Redeploy. Код: OrgTechRepair-2FA-last.txt на рабочем столе сервера недоступен — смотрите логи Render.";
+        }
+
+        return "Почта не настроена: создайте appsettings.Local.json (см. example) и перезапустите сайт. " +
+               "Код: OrgTechRepair-2FA-last.txt на рабочем столе.";
+    }
+
+    private static void WriteTwoFactorCodeToDesktop(string email, string code)
+    {
+        try
+        {
+            var desktop = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            if (string.IsNullOrWhiteSpace(desktop))
+                return;
+            var path = Path.Combine(desktop, "OrgTechRepair-2FA-last.txt");
+            System.IO.File.WriteAllText(
+                path,
+                $"Время (UTC): {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\r\nКому: {email}\r\nКод 2FA: {code}\r\n");
+        }
+        catch
+        {
+            // ignore
         }
     }
 
