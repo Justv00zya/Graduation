@@ -415,6 +415,12 @@ if (!useBrevoApi && !smtpEnabled)
     logger.LogWarning(
         "SMTP/Brevo не настроены. Создайте OrgTechRepair/appsettings.Local.json по образцу appsettings.Local.json.example");
 }
+else if (smtpEnabled && string.IsNullOrWhiteSpace(smtpPass))
+{
+    logger.LogWarning(
+        "SMTP включён, но Email:Smtp:Password пустой. Задайте пароль приложения Google для {User} в appsettings.Local.json или Email__Smtp__Password на Render.",
+        smtpUser ?? "(не задан Username)");
+}
 
 var shared2Fa = app.Configuration.GetValue<bool>("SeedData:EnableSharedTwoFactorEmail");
 var shared2FaEmail = app.Configuration["SeedData:SharedTwoFactorEmail"];

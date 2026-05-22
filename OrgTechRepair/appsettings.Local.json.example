@@ -4,13 +4,16 @@
       "Enabled": true,
       "Host": "smtp.gmail.com",
       "Port": 587,
-      "Username": "your@gmail.com",
-      "Password": "xxxx-xxxx-xxxx-xxxx",
-      "FromEmail": "your@gmail.com",
+      "Username": "v00zyaprint@gmail.com",
+      "Password": "your-app-password",
+      "FromEmail": "v00zyaprint@gmail.com",
       "FromName": "ВузяПринт",
-      "EnableSsl": true,
-      "TimeoutSeconds": 60
+      "EnableSsl": true
     }
+  },
+  "SeedData": {
+    "EnableSharedTwoFactorEmail": true,
+    "SharedTwoFactorEmail": "v00zyaprint@gmail.com"
   },
   "Security": {
     "Captcha": {

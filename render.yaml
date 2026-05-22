@@ -30,16 +30,16 @@ services:
       - key: Email__Smtp__FromName
         value: ВузяПринт
       - key: Email__Smtp__Username
-        sync: false
+        value: v00zyaprint@gmail.com
       - key: Email__Smtp__Password
         sync: false
       - key: Email__Smtp__FromEmail
-        sync: false
+        value: v00zyaprint@gmail.com
       # Код 2FA для всех демо-логинов (admin, demo_manager, demo_director …) уходит на один реальный ящик
       - key: SeedData__EnableSharedTwoFactorEmail
         value: "true"
       - key: SeedData__SharedTwoFactorEmail
-        sync: false
+        value: v00zyaprint@gmail.com
       # Если Gmail SMTP на Render не работает — Brevo (бесплатно, HTTPS): https://app.brevo.com
       - key: Email__Brevo__ApiKey
         sync: false
