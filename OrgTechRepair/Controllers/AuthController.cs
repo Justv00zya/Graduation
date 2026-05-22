@@ -24,7 +24,7 @@ public class AuthController : ControllerBase
     private readonly SignInManager<IdentityUser> _signInManager;
     private readonly IConfiguration _configuration;
     private readonly ILogger<AuthController> _logger;
-    private readonly IEmailSender? _emailSender;
+    private readonly IEmailSender _emailSender;
     private readonly IDbContextFactory<ApplicationDbContext> _contextFactory;
     private readonly IMemoryCache _cache;
     private readonly ICaptchaVerifier _captchaVerifier;
@@ -44,7 +44,7 @@ public class AuthController : ControllerBase
         IDbContextFactory<ApplicationDbContext> contextFactory,
         IMemoryCache cache,
         ICaptchaVerifier captchaVerifier,
-        IEmailSender? emailSender = null)
+        IEmailSender emailSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;

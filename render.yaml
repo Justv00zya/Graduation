@@ -18,6 +18,28 @@ services:
         fromDatabase:
           name: orgtechrepair-db
           property: connectionString
+      # Почта для 2FA (задайте в Dashboard → Environment; appsettings.Local.json на Render не используется)
+      - key: Email__Smtp__Enabled
+        value: "true"
+      - key: Email__Smtp__Host
+        value: smtp.gmail.com
+      - key: Email__Smtp__Port
+        value: "587"
+      - key: Email__Smtp__EnableSsl
+        value: "true"
+      - key: Email__Smtp__FromName
+        value: ВузяПринт
+      - key: Email__Smtp__Username
+        sync: false
+      - key: Email__Smtp__Password
+        sync: false
+      - key: Email__Smtp__FromEmail
+        sync: false
+      # Альтернатива при блокировке SMTP на хостинге — Brevo API (https://app.brevo.com):
+      # - key: Email__Brevo__ApiKey
+      #   sync: false
+      # - key: Email__Brevo__FromEmail
+      #   sync: false
 
 databases:
   - name: orgtechrepair-db

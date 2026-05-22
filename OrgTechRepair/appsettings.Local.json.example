@@ -5,10 +5,11 @@
       "Host": "smtp.gmail.com",
       "Port": 587,
       "Username": "your@gmail.com",
-      "Password": "your-app-password",
+      "Password": "xxxx-xxxx-xxxx-xxxx",
       "FromEmail": "your@gmail.com",
       "FromName": "ВузяПринт",
-      "EnableSsl": true
+      "EnableSsl": true,
+      "TimeoutSeconds": 60
     }
   },
   "Security": {

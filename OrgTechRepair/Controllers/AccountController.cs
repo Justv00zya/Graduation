@@ -19,7 +19,7 @@ public class AccountController : Controller
     private readonly ILogger<AccountController> _logger;
     private readonly IDbContextFactory<ApplicationDbContext> _dbContextFactory;
     private readonly IMemoryCache _cache;
-    private readonly IEmailSender? _emailSender;
+    private readonly IEmailSender _emailSender;
     private readonly bool _captchaEnabled;
     private readonly bool _twoFactorEnabled;
     private readonly int _twoFactorCodeTtlMinutes;
@@ -39,7 +39,7 @@ public class AccountController : Controller
         IMemoryCache cache,
         IConfiguration configuration,
         ICaptchaVerifier captchaVerifier,
-        IEmailSender? emailSender = null)
+        IEmailSender emailSender)
     {
         _userManager = userManager;
         _signInManager = signInManager;
@@ -383,16 +383,6 @@ public class AccountController : Controller
     /// </summary>
     private async Task<bool> SendWebTwoFactorEmailOrLogAsync(string email, string code, string? userName, bool isResend = false)
     {
-        if (_emailSender == null)
-        {
-            _logger.LogWarning(
-                isResend ? "WEB 2FA код (повтор) для {UserName}: {Code}" : "WEB 2FA код для {UserName}: {Code}",
-                userName,
-                code);
-            WriteTwoFactorCodeToDesktop(email, code);
-            return false;
-        }
-
         try
         {
             var sent = await _emailSender.SendTwoFactorCodeAsync(email, code);

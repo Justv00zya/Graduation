@@ -16,7 +16,7 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Локальные секреты (SMTP и т.д.) — не коммитить; см. appsettings.Local.json.example
+// Локальные секреты (SMTP) — последний JSON-слой, перекрывает appsettings.Development.json
 builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
 
 var portFromEnv = Environment.GetEnvironmentVariable("PORT");
@@ -247,6 +247,7 @@ else
 {
     builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.DevelopmentEmailSender>();
 }
+builder.Services.AddHostedService<OrgTechRepair.Services.EmailStartupCheck>();
 builder.Services.AddScoped<OrgTechRepair.Services.IOrderPdfService, OrgTechRepair.Services.OrderPdfService>();
 builder.Services.AddHttpClient<OrgTechRepair.Services.ICaptchaVerifier, OrgTechRepair.Services.TurnstileCaptchaVerifier>();
 

@@ -17,8 +17,7 @@ public static class EmailConfiguration
 
     public static bool IsBrevoConfigured(IConfiguration configuration)
     {
-        var enabled = configuration.GetValue<bool?>("Email:Brevo:Enabled") ?? false;
         var key = configuration["Email:Brevo:ApiKey"];
-        return enabled || !string.IsNullOrWhiteSpace(key);
+        return !string.IsNullOrWhiteSpace(key);
     }
 }
