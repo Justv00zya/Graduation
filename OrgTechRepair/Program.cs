@@ -211,11 +211,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 // Add authentication state provider for Blazor Server
 builder.Services.AddScoped<AuthenticationStateProvider, RevalidatingIdentityAuthenticationStateProvider>();
 
-// Почта: Brevo API (HTTPS) при блокировке SMTP на хостинге; иначе SMTP; иначе вывод в логи.
-// Если API-ключ Brevo задан, автоматически выбираем API-провайдер даже при забытом флаге Enabled.
+// Почта на Render: SMTP (587) заблокирован → Resend или Brevo API (HTTPS). Локально — SMTP.
+var resendApiKey = builder.Configuration["Email:Resend:ApiKey"];
+var useResendApi = !string.IsNullOrWhiteSpace(resendApiKey);
 var brevoApiEnabled = builder.Configuration.GetValue<bool?>("Email:Brevo:Enabled") ?? false;
 var brevoApiKey = builder.Configuration["Email:Brevo:ApiKey"];
-var useBrevoApi = brevoApiEnabled || !string.IsNullOrWhiteSpace(brevoApiKey);
+var useBrevoApi = !useResendApi && (brevoApiEnabled || !string.IsNullOrWhiteSpace(brevoApiKey));
 var smtpUser = builder.Configuration["Email:Smtp:Username"];
 var smtpPass = builder.Configuration["Email:Smtp:Password"];
 var smtpFrom = builder.Configuration["Email:Smtp:FromEmail"];
@@ -228,7 +229,19 @@ var smtpEnabled = smtpConfigured;
 builder.Services.AddScoped<OrgTechRepair.Services.SmtpEmailSender>();
 builder.Services.AddScoped<OrgTechRepair.Services.DevelopmentEmailSender>();
 
-if (useBrevoApi)
+if (useResendApi)
+{
+    builder.Services.AddHttpClient<OrgTechRepair.Services.ResendEmailSender>((sp, client) =>
+    {
+        var cfg = sp.GetRequiredService<IConfiguration>();
+        var baseUrl = (cfg["Email:Resend:BaseUrl"] ?? "https://api.resend.com").TrimEnd('/');
+        client.BaseAddress = new Uri($"{baseUrl}/");
+        var timeoutSec = Math.Clamp(cfg.GetValue<int?>("Email:Resend:TimeoutSeconds") ?? 60, 10, 300);
+        client.Timeout = TimeSpan.FromSeconds(timeoutSec);
+    });
+    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.ResendEmailSender>();
+}
+else if (useBrevoApi)
 {
     builder.Services.AddHttpClient<OrgTechRepair.Services.BrevoTransactionalEmailSender>((sp, client) =>
     {
@@ -409,12 +422,15 @@ using (var scope = app.Services.CreateScope())
 }
 
 var logger = app.Services.GetRequiredService<ILogger<Program>>();
-var emailMode = useBrevoApi ? "Brevo API" : smtpEnabled ? "SMTP" : "Development (код 2FA → лог и файл OrgTechRepair-2FA-last.txt на рабочем столе)";
+var emailMode = useResendApi ? "Resend API"
+    : useBrevoApi ? "Brevo API"
+    : smtpEnabled ? "SMTP"
+    : "Development (код 2FA → лог и файл OrgTechRepair-2FA-last.txt на рабочем столе)";
 logger.LogInformation("Режим отправки почты: {EmailMode}", emailMode);
-if (!useBrevoApi && !smtpEnabled)
+if (!useResendApi && !useBrevoApi && !smtpEnabled)
 {
     logger.LogWarning(
-        "SMTP/Brevo не настроены. Создайте OrgTechRepair/appsettings.Local.json по образцу appsettings.Local.json.example");
+        "Почта не настроена. Локально: appsettings.Local.json. На Render: Email__Resend__ApiKey (resend.com).");
 }
 else if (smtpEnabled && string.IsNullOrWhiteSpace(smtpPass))
 {

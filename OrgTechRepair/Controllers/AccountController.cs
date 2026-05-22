@@ -30,6 +30,7 @@ public class AccountController : Controller
     private readonly IConfiguration _configuration;
     private readonly bool _smtpConfigured;
     private readonly bool _brevoConfigured;
+    private readonly bool _resendConfigured;
 
     public AccountController(
         UserManager<IdentityUser> userManager,
@@ -59,6 +60,7 @@ public class AccountController : Controller
         _configuration = configuration;
         _smtpConfigured = EmailConfiguration.IsSmtpConfigured(configuration);
         _brevoConfigured = EmailConfiguration.IsBrevoConfigured(configuration);
+        _resendConfigured = EmailConfiguration.IsResendConfigured(configuration);
     }
 
     [HttpPost("Login")]
@@ -412,16 +414,26 @@ public class AccountController : Controller
 
     private string BuildTwoFactorEmailFailureMessage()
     {
-        if (_smtpConfigured || _brevoConfigured)
-        {
-            return "Письмо не отправлено (ошибка SMTP на этом сервере). " +
-                   "Код сохранён в OrgTechRepair-2FA-last.txt на рабочем столе ПК, где запущен сайт.";
-        }
-
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
         {
-            return "На Render не заданы переменные Email__Smtp__* (пароль приложения Gmail). " +
-                   "Добавьте их в Environment и сделайте Redeploy. Код: OrgTechRepair-2FA-last.txt на рабочем столе сервера недоступен — смотрите логи Render.";
+            if (_resendConfigured || _brevoConfigured)
+            {
+                return "Письмо не отправлено. Проверьте API-ключ почты в Environment на Render и логи сервиса.";
+            }
+
+            return "На Render обычный SMTP (Gmail/Яндекс) заблокирован. " +
+                   "Зарегистрируйтесь на resend.com → API Keys → добавьте Email__Resend__ApiKey на Render → Redeploy.";
+        }
+
+        if (_resendConfigured || _brevoConfigured)
+        {
+            return "Письмо не отправлено (ошибка API почты). Код сохранён в OrgTechRepair-2FA-last.txt на рабочем столе.";
+        }
+
+        if (_smtpConfigured)
+        {
+            return "Письмо не отправлено (ошибка SMTP). " +
+                   "Код сохранён в OrgTechRepair-2FA-last.txt на рабочем столе ПК, где запущен сайт.";
         }
 
         return "Почта не настроена: создайте appsettings.Local.json (см. example) и перезапустите сайт. " +

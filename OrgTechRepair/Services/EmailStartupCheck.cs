@@ -27,6 +27,13 @@ public sealed class EmailStartupCheck : IHostedService
 
     private async Task VerifyAsync(CancellationToken cancellationToken)
     {
+        if (EmailConfiguration.IsResendConfigured(_configuration))
+        {
+            _logger.LogInformation(
+                "Почта: Resend API (ключ задан). Отправка 2FA через HTTPS — подходит для Render.");
+            return;
+        }
+
         if (EmailConfiguration.IsBrevoConfigured(_configuration))
         {
             _logger.LogInformation(

@@ -1,38 +1,36 @@
 @echo off
 chcp 65001 >nul
 echo ============================================================
-echo  Настройка почты OrgTechRepair на Render (для руководителя)
+echo  Почта на Render для ВузяПринт (2FA на graduation-vv8e)
 echo ============================================================
 echo.
-echo Откройте: https://dashboard.render.com
-echo Сервис: orgtechrepair-web → Environment → Add Environment Variable
+echo Gmail/Яндекс SMTP на Render НЕ РАБОТАЕТ (блокируют порт 587).
+echo Нужен API по HTTPS. Проще всего — Resend (3 шага):
 echo.
-echo --- Обязательно (Gmail SMTP) ---
-echo Email__Smtp__Username     = v00zyaprint@gmail.com
-echo Email__Smtp__FromEmail    = v00zyaprint@gmail.com
-echo Email__Smtp__Password     = ^(16-значный пароль приложения Google для v00zyaprint@gmail.com^)
+echo --- ШАГ 1: Resend ---
+echo 1. Откройте https://resend.com и зарегистрируйтесь
+echo    (лучше на v00zyaprint@gmail.com — тогда письма себе бесплатно)
+echo 2. Слева: API Keys → Create API Key → скопируйте re_...
 echo.
-echo --- Куда приходит код 2FA для демо-логинов ---
-echo SeedData__SharedTwoFactorEmail = v00zyaprint@gmail.com
+echo --- ШАГ 2: Render ---
+echo https://dashboard.render.com → ваш сервис → Environment
 echo.
-echo SeedData__EnableSharedTwoFactorEmail уже true в render.yaml
+echo   Email__Resend__ApiKey     = re_xxxxxxxx  (ваш ключ)
+echo   Email__Resend__FromEmail  = onboarding@resend.dev
 echo.
-echo --- Если SMTP на Render не работает (часто на free) ---
-echo 1. Зарегистрируйтесь на https://app.brevo.com
-echo 2. SMTP ^& API → API Keys → создать ключ
-echo 3. Senders → подтвердить v00zyaprint@gmail.com
-echo 4. На Render:
-echo    Email__Brevo__ApiKey    = xkeysib-...
-echo    Email__Brevo__FromEmail = v00zyaprint@gmail.com
+echo SeedData__SharedTwoFactorEmail = v00zyaprint@gmail.com  (уже в render.yaml)
 echo.
-echo --- Данные для входа руководителя ---
-echo URL: ваш https://....onrender.com/Login
-echo Логин: demo_director  (директор, полный доступ + отчёты)
-echo        demo_manager   (менеджер, заявки и клиенты)
+echo --- ШАГ 3: Deploy ---
+echo Manual Deploy → Deploy latest commit
+echo В логах должно быть: "Режим отправки почты: Resend API"
+echo.
+echo --- Вход для руководителя ---
+echo URL:    https://graduation-vv8e.onrender.com/Login
+echo Логин:  demo_director
 echo Пароль: 111111
-echo Капча: ответ на арифметический вопрос на экране
 echo Код 2FA: письмо на v00zyaprint@gmail.com
 echo.
-echo После сохранения переменных: Manual Deploy → Deploy latest commit
+echo --- Локально (на вашем ПК) ---
+echo SMTP Gmail в appsettings.Local.json — как сейчас, без Resend.
 echo ============================================================
 pause

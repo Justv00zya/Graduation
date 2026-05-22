@@ -20,4 +20,13 @@ public static class EmailConfiguration
         var key = configuration["Email:Brevo:ApiKey"];
         return !string.IsNullOrWhiteSpace(key);
     }
+
+    public static bool IsResendConfigured(IConfiguration configuration)
+    {
+        var key = configuration["Email:Resend:ApiKey"];
+        return !string.IsNullOrWhiteSpace(key);
+    }
+
+    public static bool IsHttpsEmailApiConfigured(IConfiguration configuration) =>
+        IsResendConfigured(configuration) || IsBrevoConfigured(configuration);
 }

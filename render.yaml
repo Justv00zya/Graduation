@@ -40,7 +40,12 @@ services:
         value: "true"
       - key: SeedData__SharedTwoFactorEmail
         value: v00zyaprint@gmail.com
-      # Если Gmail SMTP на Render не работает — Brevo (бесплатно, HTTPS): https://app.brevo.com
+      # На Render SMTP (Gmail/Яндекс) не работает — Resend API (проще Brevo): https://resend.com
+      - key: Email__Resend__ApiKey
+        sync: false
+      - key: Email__Resend__FromEmail
+        value: onboarding@resend.dev
+      # Если SMTP на Render не работает — Brevo (альтернатива)
       - key: Email__Brevo__ApiKey
         sync: false
       - key: Email__Brevo__FromEmail
