@@ -132,11 +132,11 @@ public class AccountController : Controller
 
             var twoFactorUrl =
                 $"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}" +
-                $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}";
-            if (!emailSent)
-            {
-                twoFactorUrl += "&message=" + Uri.EscapeDataString(BuildTwoFactorEmailFailureMessage());
-            }
+                $"&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}" +
+                $"&emailSent={(emailSent ? "1" : "0")}";
+            twoFactorUrl += emailSent
+                ? "&message=" + Uri.EscapeDataString("Код подтверждения отправлен на ваш e-mail.")
+                : "&message=" + Uri.EscapeDataString(BuildTwoFactorEmailFailureMessage());
             return Redirect(twoFactorUrl);
         }
 
@@ -246,7 +246,11 @@ public class AccountController : Controller
             ? "Код отправлен повторно."
             : BuildTwoFactorEmailFailureMessage();
 
-        return Redirect($"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}&message={Uri.EscapeDataString(resendMsg)}");
+        return Redirect(
+            $"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}" +
+            $"&returnUrl={Uri.EscapeDataString(returnUrl ?? pending.ReturnUrl ?? "")}" +
+            $"&emailSent={(resent ? "1" : "0")}" +
+            $"&message={Uri.EscapeDataString(resendMsg)}");
     }
 
     /// <summary>Регистрация клиента: запись в БД (AspNetUsers + роль + карточка Client) и вход в ту же сессию, что и /Account/Login.</summary>

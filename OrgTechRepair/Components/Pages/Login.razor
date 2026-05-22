@@ -25,7 +25,7 @@
                     }
                     @if (!string.IsNullOrEmpty(infoMessage))
                     {
-                        <div class="alert alert-info mb-3">@infoMessage</div>
+                        <div class="alert @(twoFactorEmailSent ? "alert-info" : "alert-warning") mb-3">@infoMessage</div>
                     }
 
                 @if (isTwoFactorStep)
@@ -33,15 +33,20 @@
                     @if (captchaEnabled)
                     {
                         <div class="alert alert-secondary mb-3" role="status">
-                            Проверка «не робот» выполнена. Введите код из письма на ваш email.
+                            @if (twoFactorEmailSent)
+                            {
+                                <text>Проверка «не робот» выполнена. Введите код из письма на ваш email.</text>
+                            }
+                            else
+                            {
+                                <text>Проверка «не робот» выполнена. Письмо не доставлено — возьмите код из файла OrgTechRepair-2FA-last.txt (см. сообщение выше).</text>
+                            }
                         </div>
                     }
                     <form method="post" action="/Account/VerifyTwoFactorWeb">
                         <input type="hidden" name="__RequestVerificationToken" value="@GetAntiforgeryToken()" />
                         <input type="hidden" name="returnUrl" value="@returnUrl" />
                         <input type="hidden" name="challengeId" value="@challengeId" />
-
-                        <div class="alert alert-info">Код подтверждения отправлен на ваш e-mail.</div>
 
                         <div class="mb-3">
                             <label class="form-label">Код подтверждения</label>
@@ -187,6 +192,7 @@
     private string? infoMessage;
     private string? returnUrl;
     private bool isTwoFactorStep;
+    private bool twoFactorEmailSent = true;
     private string? challengeId;
     private string? captchaId;
     private string? captchaQuestion;
@@ -215,6 +221,10 @@
 
         isTwoFactorStep = query.ContainsKey("twoFactor") && query["twoFactor"].ToString() == "1";
         challengeId = query.ContainsKey("challengeId") ? query["challengeId"].ToString() : null;
+        if (isTwoFactorStep)
+        {
+            twoFactorEmailSent = !query.ContainsKey("emailSent") || query["emailSent"].ToString() != "0";
+        }
 
         captchaEnabled = CaptchaConfiguration.IsEnabled(Configuration);
         useExternalCaptcha = CaptchaConfiguration.UseExternalCaptcha(Configuration);
