@@ -74,7 +74,10 @@ public sealed class ResendEmailSender : IEmailSender
             ["text"] = body
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "emails");
+        var baseUrl = (_configuration["Email:Resend:BaseUrl"] ?? "https://api.resend.com").TrimEnd('/');
+        var requestUri = new Uri($"{baseUrl}/emails");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Headers.TryAddWithoutValidation("Authorization", $"Bearer {apiKey.Trim()}");
         request.Content = JsonContent.Create(payload, options: JsonOptions);
 

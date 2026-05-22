@@ -234,24 +234,22 @@ if (useResendApi)
     builder.Services.AddHttpClient<OrgTechRepair.Services.ResendEmailSender>((sp, client) =>
     {
         var cfg = sp.GetRequiredService<IConfiguration>();
-        var baseUrl = (cfg["Email:Resend:BaseUrl"] ?? "https://api.resend.com").TrimEnd('/');
-        client.BaseAddress = new Uri($"{baseUrl}/");
         var timeoutSec = Math.Clamp(cfg.GetValue<int?>("Email:Resend:TimeoutSeconds") ?? 60, 10, 300);
         client.Timeout = TimeSpan.FromSeconds(timeoutSec);
     });
-    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.ResendEmailSender>();
+    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender>(sp =>
+        sp.GetRequiredService<OrgTechRepair.Services.ResendEmailSender>());
 }
 else if (useBrevoApi)
 {
     builder.Services.AddHttpClient<OrgTechRepair.Services.BrevoTransactionalEmailSender>((sp, client) =>
     {
         var cfg = sp.GetRequiredService<IConfiguration>();
-        var baseUrl = (cfg["Email:Brevo:BaseUrl"] ?? "https://api.brevo.com").TrimEnd('/');
-        client.BaseAddress = new Uri($"{baseUrl}/v3/");
         var timeoutSec = Math.Clamp(cfg.GetValue<int?>("Email:Brevo:TimeoutSeconds") ?? 60, 10, 300);
         client.Timeout = TimeSpan.FromSeconds(timeoutSec);
     });
-    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender, OrgTechRepair.Services.BrevoTransactionalEmailSender>();
+    builder.Services.AddScoped<OrgTechRepair.Services.IEmailSender>(sp =>
+        sp.GetRequiredService<OrgTechRepair.Services.BrevoTransactionalEmailSender>());
 }
 else if (smtpEnabled)
 {

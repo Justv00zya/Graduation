@@ -72,7 +72,10 @@ public sealed class BrevoTransactionalEmailSender : IEmailSender
             ["htmlContent"] = htmlBody
         };
 
-        using var request = new HttpRequestMessage(HttpMethod.Post, "smtp/email");
+        var baseUrl = (_configuration["Email:Brevo:BaseUrl"] ?? "https://api.brevo.com").TrimEnd('/');
+        var requestUri = new Uri($"{baseUrl}/v3/smtp/email");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Headers.TryAddWithoutValidation("api-key", apiKey.Trim());
         request.Content = JsonContent.Create(payload, options: JsonOptions);
 
