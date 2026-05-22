@@ -59,6 +59,13 @@ public sealed class BrevoTransactionalEmailSender : IEmailSender
             return false;
         }
 
+        if (EmailConfiguration.IsBrevoSmtpKeyInsteadOfApi(_configuration))
+        {
+            _logger.LogError(
+                "Brevo: в Email__Brevo__ApiKey указан SMTP-ключ (xsmtpsib-). Создайте API key (xkeysib-) в Brevo → SMTP & API → API Keys.");
+            return false;
+        }
+
         var htmlBody = "<p>"
             + WebUtility.HtmlEncode(body).Replace("\r\n", "<br/>", StringComparison.Ordinal).Replace("\n", "<br/>", StringComparison.Ordinal)
             + "</p>";

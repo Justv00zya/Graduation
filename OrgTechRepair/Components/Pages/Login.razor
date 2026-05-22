@@ -37,6 +37,10 @@
                             {
                                 <text>Проверка «не робот» выполнена. Введите код из письма на ваш email.</text>
                             }
+                            else if (isRenderHost)
+                            {
+                                <text>Проверка «не робот» выполнена. Письмо не доставлено — см. жёлтое сообщение выше и логи Render.</text>
+                            }
                             else
                             {
                                 <text>Проверка «не робот» выполнена. Письмо не доставлено — возьмите код из файла OrgTechRepair-2FA-last.txt (см. сообщение выше).</text>
@@ -193,6 +197,7 @@
     private string? returnUrl;
     private bool isTwoFactorStep;
     private bool twoFactorEmailSent = true;
+    private bool isRenderHost;
     private string? challengeId;
     private string? captchaId;
     private string? captchaQuestion;
@@ -221,6 +226,7 @@
 
         isTwoFactorStep = query.ContainsKey("twoFactor") && query["twoFactor"].ToString() == "1";
         challengeId = query.ContainsKey("challengeId") ? query["challengeId"].ToString() : null;
+        isRenderHost = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER"));
         if (isTwoFactorStep)
         {
             twoFactorEmailSent = !query.ContainsKey("emailSent") || query["emailSent"].ToString() != "0";

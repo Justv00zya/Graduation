@@ -21,6 +21,14 @@ public static class EmailConfiguration
         return !string.IsNullOrWhiteSpace(key);
     }
 
+    /// <summary>xsmtpsib — ключ SMTP-реле; для API нужен xkeysib.</summary>
+    public static bool IsBrevoSmtpKeyInsteadOfApi(IConfiguration configuration)
+    {
+        var key = configuration["Email:Brevo:ApiKey"]?.Trim();
+        return !string.IsNullOrWhiteSpace(key) &&
+               key.StartsWith("xsmtpsib-", StringComparison.OrdinalIgnoreCase);
+    }
+
     public static bool IsResendConfigured(IConfiguration configuration)
     {
         var key = configuration["Email:Resend:ApiKey"];

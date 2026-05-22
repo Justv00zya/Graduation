@@ -425,6 +425,11 @@ var emailMode = useResendApi ? "Resend API"
     : smtpEnabled ? "SMTP"
     : "Development (код 2FA → лог и файл OrgTechRepair-2FA-last.txt на рабочем столе)";
 logger.LogInformation("Режим отправки почты: {EmailMode}", emailMode);
+if (useBrevoApi && EmailConfiguration.IsBrevoSmtpKeyInsteadOfApi(app.Configuration))
+{
+    logger.LogError(
+        "Brevo: в Email__Brevo__ApiKey указан SMTP-ключ (xsmtpsib-). Создайте API key (xkeysib-) в Brevo → SMTP & API → API Keys.");
+}
 if (!useResendApi && !useBrevoApi && !smtpEnabled)
 {
     logger.LogWarning(

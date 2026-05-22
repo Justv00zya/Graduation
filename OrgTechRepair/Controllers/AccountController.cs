@@ -416,9 +416,15 @@ public class AccountController : Controller
     {
         if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("RENDER")))
         {
+            if (EmailConfiguration.IsBrevoSmtpKeyInsteadOfApi(_configuration))
+            {
+                return "Неверный ключ Brevo: указан SMTP-ключ (xsmtpsib). " +
+                       "В Render задайте API-ключ (xkeysib) в Email__Brevo__ApiKey — Brevo → SMTP & API → API Keys.";
+            }
+
             if (_resendConfigured || _brevoConfigured)
             {
-                return "Письмо не отправлено. Проверьте API-ключ почты в Environment на Render и логи сервиса.";
+                return "Письмо не отправлено. Проверьте Email__Brevo__ApiKey (xkeysib) и подтверждённый отправитель в Brevo. Смотрите логи Render.";
             }
 
             return "На Render обычный SMTP (Gmail/Яндекс) заблокирован. " +
