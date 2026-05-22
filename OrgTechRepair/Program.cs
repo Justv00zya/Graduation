@@ -415,6 +415,21 @@ if (!useBrevoApi && !smtpEnabled)
     logger.LogWarning(
         "SMTP/Brevo не настроены. Создайте OrgTechRepair/appsettings.Local.json по образцу appsettings.Local.json.example");
 }
+
+var shared2Fa = app.Configuration.GetValue<bool>("SeedData:EnableSharedTwoFactorEmail");
+var shared2FaEmail = app.Configuration["SeedData:SharedTwoFactorEmail"];
+if (shared2Fa && !string.IsNullOrWhiteSpace(shared2FaEmail))
+{
+    logger.LogInformation(
+        "Демо для проверки сайта: логин demo_director (или demo_manager), пароль 111111. Код 2FA приходит на {Email}.",
+        shared2FaEmail);
+}
+else if (app.Environment.IsProduction())
+{
+    logger.LogWarning(
+        "Задайте SeedData__SharedTwoFactorEmail на Render — иначе код 2FA уйдёт на demo_*@example.com и письмо не доставится.");
+}
+
 logger.LogInformation("Запуск сервера на http://0.0.0.0:{Port}", effectivePort);
 
 try
