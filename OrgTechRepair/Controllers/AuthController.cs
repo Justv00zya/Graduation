@@ -144,7 +144,8 @@ public class AuthController : ControllerBase
 
         if ((result.Succeeded || result.RequiresTwoFactor) && _twoFactorEnabled)
         {
-            if (string.IsNullOrWhiteSpace(user.Email))
+            var deliveryEmail = TwoFactorEmailRouting.ResolveDeliveryEmail(_configuration, user);
+            if (string.IsNullOrWhiteSpace(deliveryEmail))
                 return BadRequest(new { message = "Для 2FA у пользователя не указан email." });
 
             var code = Random.Shared.Next(100000, 1000000).ToString();
@@ -161,7 +162,7 @@ public class AuthController : ControllerBase
                 DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
                 TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-            await SendApiTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
+            await SendApiTwoFactorEmailOrLogAsync(deliveryEmail, code, user.UserName);
 
             var methods = new List<string> { "email" };
             var authenticatorKey = await _userManager.GetAuthenticatorKeyAsync(user);
@@ -176,7 +177,7 @@ public class AuthController : ControllerBase
                 RequiresTwoFactor = true,
                 TwoFactorChallengeId = challengeId,
                 Username = user.UserName,
-                Email = user.Email,
+                Email = deliveryEmail,
                 Roles = new List<string>(),
                 TwoFactorMethods = methods
             });
@@ -260,8 +261,12 @@ public class AuthController : ControllerBase
         }
 
         var user = await _userManager.FindByIdAsync(pending.UserId);
-        if (user == null || string.IsNullOrWhiteSpace(user.Email))
-            return BadRequest(new { message = "Пользователь не найден или email не указан." });
+        if (user == null)
+            return BadRequest(new { message = "Пользователь не найден." });
+
+        var deliveryEmail = TwoFactorEmailRouting.ResolveDeliveryEmail(_configuration, user);
+        if (string.IsNullOrWhiteSpace(deliveryEmail))
+            return BadRequest(new { message = "Для 2FA у пользователя не указан email." });
 
         var newCode = Random.Shared.Next(100000, 1000000).ToString();
         pending.Code = newCode;
@@ -271,7 +276,7 @@ public class AuthController : ControllerBase
             DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
             TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-        await SendApiTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
+        await SendApiTwoFactorEmailOrLogAsync(deliveryEmail, newCode, user.UserName, isResend: true);
 
         return Ok(new { message = "Код подтверждения отправлен повторно.", resendAfterSeconds = _twoFactorResendCooldownSeconds });
     }

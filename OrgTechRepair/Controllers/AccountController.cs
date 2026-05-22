@@ -27,6 +27,7 @@ public class AccountController : Controller
     private readonly bool _externalCaptchaEnabled;
     private readonly bool _allowLocalCaptchaFallback;
     private readonly ICaptchaVerifier _captchaVerifier;
+    private readonly IConfiguration _configuration;
     private readonly bool _smtpConfigured;
     private readonly bool _brevoConfigured;
 
@@ -55,6 +56,7 @@ public class AccountController : Controller
         _externalCaptchaEnabled = CaptchaConfiguration.UseExternalCaptcha(configuration);
         _allowLocalCaptchaFallback = CaptchaConfiguration.AllowLocalFallback(configuration);
         _captchaVerifier = captchaVerifier;
+        _configuration = configuration;
         _smtpConfigured = EmailConfiguration.IsSmtpConfigured(configuration);
         _brevoConfigured = EmailConfiguration.IsBrevoConfigured(configuration);
     }
@@ -108,7 +110,8 @@ public class AccountController : Controller
 
         if ((result.Succeeded || result.RequiresTwoFactor) && _twoFactorEnabled)
         {
-            if (string.IsNullOrWhiteSpace(user.Email))
+            var deliveryEmail = TwoFactorEmailRouting.ResolveDeliveryEmail(_configuration, user);
+            if (string.IsNullOrWhiteSpace(deliveryEmail))
                 return Redirect($"/Login?error={Uri.EscapeDataString("Для 2FA у пользователя не указан email")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
 
             var code = Random.Shared.Next(100000, 1000000).ToString();
@@ -128,7 +131,7 @@ public class AccountController : Controller
                 DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
                 TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-            var emailSent = await SendWebTwoFactorEmailOrLogAsync(user.Email, code, user.UserName);
+            var emailSent = await SendWebTwoFactorEmailOrLogAsync(deliveryEmail, code, user.UserName);
 
             var twoFactorUrl =
                 $"/Login?twoFactor=1&challengeId={Uri.EscapeDataString(challengeId)}" +
@@ -228,7 +231,13 @@ public class AccountController : Controller
         }
 
         var user = await _userManager.FindByIdAsync(pending.UserId);
-        if (user == null || string.IsNullOrWhiteSpace(user.Email))
+        if (user == null)
+        {
+            return Redirect($"/Login?error={Uri.EscapeDataString("Пользователь не найден.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
+        }
+
+        var deliveryEmail = TwoFactorEmailRouting.ResolveDeliveryEmail(_configuration, user);
+        if (string.IsNullOrWhiteSpace(deliveryEmail))
         {
             return Redirect($"/Login?error={Uri.EscapeDataString("Пользователь не найден или email не указан.")}&returnUrl={Uri.EscapeDataString(returnUrl ?? "")}");
         }
@@ -241,7 +250,7 @@ public class AccountController : Controller
             DateTimeOffset.UtcNow.AddSeconds(_twoFactorResendCooldownSeconds),
             TimeSpan.FromMinutes(_twoFactorCodeTtlMinutes));
 
-        var resent = await SendWebTwoFactorEmailOrLogAsync(user.Email, newCode, user.UserName, isResend: true);
+        var resent = await SendWebTwoFactorEmailOrLogAsync(deliveryEmail, newCode, user.UserName, isResend: true);
         var resendMsg = resent
             ? "Код отправлен повторно."
             : BuildTwoFactorEmailFailureMessage();

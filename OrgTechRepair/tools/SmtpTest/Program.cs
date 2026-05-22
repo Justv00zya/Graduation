@@ -3,13 +3,39 @@ using MailKit.Security;
 using MimeKit;
 using Microsoft.Extensions.Configuration;
 
-var config = new ConfigurationBuilder()
-    .SetBasePath(Directory.GetCurrentDirectory())
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile("appsettings.Development.json", optional: true)
-    .AddJsonFile("appsettings.Local.json", optional: true)
-    .AddEnvironmentVariables()
-    .Build();
+static void AddCandidate(List<string> candidates, string? path)
+{
+    if (string.IsNullOrWhiteSpace(path))
+        return;
+
+    var full = Path.GetFullPath(path);
+    if (!candidates.Contains(full, StringComparer.OrdinalIgnoreCase))
+        candidates.Add(full);
+}
+
+var jsonFiles = new List<string>();
+AddCandidate(jsonFiles, Path.Combine(Directory.GetCurrentDirectory(), "appsettings.json"));
+AddCandidate(jsonFiles, Path.Combine(AppContext.BaseDirectory, "appsettings.json"));
+
+var dir = new DirectoryInfo(AppContext.BaseDirectory);
+while (dir != null)
+{
+    if (dir.GetFiles("*.csproj").Length > 0)
+    {
+        AddCandidate(jsonFiles, Path.Combine(dir.FullName, "appsettings.json"));
+        AddCandidate(jsonFiles, Path.Combine(dir.FullName, "appsettings.Development.json"));
+        AddCandidate(jsonFiles, Path.Combine(dir.FullName, "appsettings.Local.json"));
+        break;
+    }
+
+    dir = dir.Parent;
+}
+
+var builder = new ConfigurationBuilder().AddEnvironmentVariables();
+foreach (var path in jsonFiles.Where(File.Exists))
+    builder.AddJsonFile(path, optional: true);
+
+var config = builder.Build();
 
 var host = config["Email:Smtp:Host"] ?? "smtp.gmail.com";
 var port = config.GetValue<int?>("Email:Smtp:Port") ?? 587;
@@ -21,7 +47,7 @@ Console.WriteLine($"Host={host} Port={port} User={user} From={from} PassLen={pas
 
 if (string.IsNullOrWhiteSpace(pass))
 {
-    Console.WriteLine("FAIL: Password empty");
+    Console.WriteLine("FAIL: Password empty — проверьте appsettings.Local.json в корне проекта OrgTechRepair.");
     return 1;
 }
 

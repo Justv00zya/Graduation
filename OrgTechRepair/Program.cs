@@ -10,14 +10,15 @@ using Microsoft.OpenApi.Models;
 using Npgsql;
 using OrgTechRepair.Components;
 using OrgTechRepair.Data;
+using OrgTechRepair.Services;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Локальные секреты (SMTP) — последний JSON-слой, перекрывает appsettings.Development.json
-builder.Configuration.AddJsonFile("appsettings.Local.json", optional: true, reloadOnChange: true);
+// Локальные секреты (SMTP): bin-копия может быть без пароля — перекрываем файлом из корня проекта.
+builder.Configuration.AddOrgTechRepairLocalSettings(builder.Environment);
 
 var portFromEnv = Environment.GetEnvironmentVariable("PORT");
 var effectivePort = int.TryParse(portFromEnv, out var parsedPort) ? parsedPort : 5121;
@@ -222,7 +223,7 @@ var smtpEnabledExplicit = builder.Configuration.GetValue<bool?>("Email:Smtp:Enab
 var smtpConfigured = !string.IsNullOrWhiteSpace(smtpUser) &&
                      !string.IsNullOrWhiteSpace(smtpPass) &&
                      !string.IsNullOrWhiteSpace(smtpFrom);
-var smtpEnabled = smtpEnabledExplicit || smtpConfigured;
+var smtpEnabled = smtpConfigured;
 
 builder.Services.AddScoped<OrgTechRepair.Services.SmtpEmailSender>();
 builder.Services.AddScoped<OrgTechRepair.Services.DevelopmentEmailSender>();
@@ -420,6 +421,13 @@ else if (smtpEnabled && string.IsNullOrWhiteSpace(smtpPass))
     logger.LogWarning(
         "SMTP включён, но Email:Smtp:Password пустой. Задайте пароль приложения Google для {User} в appsettings.Local.json или Email__Smtp__Password на Render.",
         smtpUser ?? "(не задан Username)");
+}
+else if (smtpEnabled)
+{
+    logger.LogInformation(
+        "SMTP: пользователь {User}, пароль задан (длина {PassLen}).",
+        smtpUser,
+        smtpPass?.Length ?? 0);
 }
 
 var shared2Fa = app.Configuration.GetValue<bool>("SeedData:EnableSharedTwoFactorEmail");
